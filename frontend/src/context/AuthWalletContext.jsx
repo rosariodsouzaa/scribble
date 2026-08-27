@@ -25,6 +25,7 @@ export function AuthWalletProvider({ children }) {
             wins: 18,
             matches: 24,
             avatarColor: "#f59e0b",
+            isAuthenticated: true,
           };
     } catch {
       return {
@@ -35,6 +36,7 @@ export function AuthWalletProvider({ children }) {
         wins: 18,
         matches: 24,
         avatarColor: "#f59e0b",
+        isAuthenticated: true,
       };
     }
   });
@@ -110,12 +112,11 @@ export function AuthWalletProvider({ children }) {
         return { success: false, error: err.message || "User rejected connection." };
       }
     } else {
-      // Fallback to Instant Dragon Vault (Demo Mode) if MetaMask extension isn't found
       return connectDemoWallet();
     }
   };
 
-  // Instant Demo Dragon Vault Wallet (One-click for testing/mobile)
+  // Instant Demo Dragon Vault Wallet
   const connectDemoWallet = () => {
     const demoAddress = "0x71C" + Math.random().toString(16).substring(2, 8).toUpperCase() + "3A9E8";
     const demoWallet = {
@@ -157,8 +158,43 @@ export function AuthWalletProvider({ children }) {
       name: clean,
     }));
     try {
-      localStorage.setItem("skribl_username", clean);
+      localStorage.setItem("skribl:username", clean);
     } catch {}
+  };
+
+  // Login action
+  const login = (name, role = "Dragon Warrior", color = "#f59e0b") => {
+    const clean = String(name || "").trim().slice(0, 20) || "Warrior";
+    const newUser = {
+      name: clean,
+      role,
+      level: 12,
+      coins: 2500,
+      wins: 14,
+      matches: 20,
+      avatarColor: color,
+      isAuthenticated: true,
+    };
+    setUser(newUser);
+    localStorage.setItem("skribl:username", clean);
+  };
+
+  // Logout action
+  const logout = () => {
+    const guest = {
+      name: "Guest Warrior",
+      role: "Novice",
+      level: 1,
+      coins: 0,
+      wins: 0,
+      matches: 0,
+      avatarColor: "#64748b",
+      isAuthenticated: false,
+    };
+    setUser(guest);
+    disconnectWallet();
+    localStorage.removeItem("sr_warrior");
+    localStorage.removeItem("skribl:username");
   };
 
   return (
@@ -173,6 +209,8 @@ export function AuthWalletProvider({ children }) {
         disconnectWallet,
         addCoins,
         setWarriorName,
+        login,
+        logout,
       }}
     >
       {children}

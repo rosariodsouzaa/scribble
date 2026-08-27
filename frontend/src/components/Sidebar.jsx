@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Swords,
@@ -7,17 +7,26 @@ import {
   Wallet as WalletIcon,
   Trophy,
   Sparkles,
-  HelpCircle,
+  LogOut,
   Flame,
 } from "lucide-react";
+import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 
 export default function Sidebar() {
+  const { user, logout } = useAuthWallet();
+  const navigate = useNavigate();
+
   const navItems = [
     { to: "/dashboard", icon: <LayoutDashboard size={19} />, label: "Dashboard" },
     { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
     { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
     { to: "/leaderboard", icon: <Trophy size={19} />, label: "Hall of Fame" },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate("/dashboard");
+  };
 
   return (
     <aside className="dragon-sidebar">
@@ -36,17 +45,26 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Season 4 Pass Card */}
-      <div className="sidebar-season-card">
-        <div className="season-card-top">
-          <Sparkles size={14} className="sparkle-icon" />
-          <span>SEASON 4 LIVE</span>
+      {/* Season 4 Pass Card & Logout */}
+      <div className="sidebar-bottom-cluster">
+        <div className="sidebar-season-card">
+          <div className="season-card-top">
+            <Sparkles size={14} className="sparkle-icon" />
+            <span>SEASON 4 LIVE</span>
+          </div>
+          <div className="season-card-title">Dragon Pass</div>
+          <div className="season-progress-bar">
+            <div className="season-progress-fill" style={{ width: "68%" }} />
+          </div>
+          <span className="season-level-text">Tier 14 / 20 Completed</span>
         </div>
-        <div className="season-card-title">Dragon Pass</div>
-        <div className="season-progress-bar">
-          <div className="season-progress-fill" style={{ width: "68%" }} />
-        </div>
-        <span className="season-level-text">Tier 14 / 20 Completed</span>
+
+        {user.isAuthenticated && (
+          <button className="sidebar-logout-btn" onClick={handleLogout} title="Log Out">
+            <LogOut size={16} />
+            <span>Log Out</span>
+          </button>
+        )}
       </div>
     </aside>
   );
