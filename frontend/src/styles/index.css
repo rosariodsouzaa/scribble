@@ -1815,6 +1815,119 @@ body {
 }
 
 /* ===========================================================================
+   DRAWING TOOLBAR & CANVAS CONTROLS
+=========================================================================== */
+
+.dragon-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(14, 9, 6, 0.9);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffd700;
+  letter-spacing: 0.08em;
+}
+
+.equipped-brush-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.swatches {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.swatch:hover {
+  transform: scale(1.2);
+}
+
+.swatch.sel {
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  transform: scale(1.25);
+}
+
+.sizes {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.size-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.size-btn.sel {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #ffd700;
+}
+
+.size-dot {
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.dragon-clear-btn {
+  margin-left: auto;
+  background: rgba(220, 38, 38, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dragon-clear-btn:hover {
+  background: rgba(220, 38, 38, 0.35);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* ===========================================================================
    WORD HINT & RUNE REVEAL TILES (SKRIBBL-STYLE 📜✨)
 =========================================================================== */
 
@@ -4066,12 +4179,6 @@ body {
   .col-winrate,
   .tx-method,
   .tx-status-badge {
-    display: none;
-  }
-}
-
-  .col-title,
-  .col-winrate {
     display: none;
   }
 }

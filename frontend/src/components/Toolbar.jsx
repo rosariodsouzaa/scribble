@@ -1,4 +1,6 @@
 import { useGame } from "../state/useGame.js";
+import { usePayment } from "../context/PaymentContext.jsx";
+import { Sparkles } from "lucide-react";
 
 const COLORS = [
   "#111827", // Obsidian Ink
@@ -16,9 +18,20 @@ const SIZES = [3, 7, 14, 24];
 
 export default function Toolbar({ brush, setBrush }) {
   const { actions } = useGame();
+  const { equippedBrush, items } = usePayment();
+  const activeSkin = items.find((i) => i.id === equippedBrush);
+
   return (
     <div className="toolbar dragon-toolbar">
-      <div className="toolbar-label">🐉 BRUSH:</div>
+      <div className="toolbar-label">
+        <span>🐉 BRUSH:</span>
+        {activeSkin && activeSkin.id !== "brush_default" && (
+          <span className="equipped-brush-tag" style={{ color: activeSkin.color }}>
+            <Sparkles size={12} /> {activeSkin.name}
+          </span>
+        )}
+      </div>
+
       <div className="swatches">
         {COLORS.map((c) => (
           <button
@@ -30,6 +43,7 @@ export default function Toolbar({ brush, setBrush }) {
           />
         ))}
       </div>
+
       <div className="sizes">
         {SIZES.map((s) => (
           <button
@@ -38,10 +52,14 @@ export default function Toolbar({ brush, setBrush }) {
             onClick={() => setBrush((b) => ({ ...b, size: s }))}
             aria-label={`Brush size ${s}`}
           >
-            <span className="size-dot" style={{ width: Math.min(22, Math.max(5, s)), height: Math.min(22, Math.max(5, s)) }} />
+            <span
+              className="size-dot"
+              style={{ width: Math.min(22, Math.max(5, s)), height: Math.min(22, Math.max(5, s)) }}
+            />
           </button>
         ))}
       </div>
+
       <button className="btn dragon-clear-btn" onClick={actions.clearCanvas}>
         🧹 Purge Canvas
       </button>
