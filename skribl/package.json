@@ -1,0 +1,19 @@
+{
+  "name": "skribl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scribble Royale — real-time multiplayer drawing & guessing game (game-loop-first slice)",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev --workspace backend",
+    "dev:web": "npm run dev --workspace frontend",
+    "start:api": "npm run start --workspace backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
