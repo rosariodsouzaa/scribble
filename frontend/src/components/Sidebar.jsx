@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Swords,
-  Users,
+  ShoppingBag,
   Wallet as WalletIcon,
   Trophy,
   Sparkles,
@@ -19,6 +19,7 @@ export default function Sidebar() {
   const navItems = [
     { to: "/dashboard", icon: <LayoutDashboard size={19} />, label: "Dashboard" },
     { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
+    { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
     { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
     { to: "/leaderboard", icon: <Trophy size={19} />, label: "Hall of Fame" },
   ];
@@ -47,7 +48,7 @@ export default function Sidebar() {
 
       {/* Season 4 Pass Card & Logout */}
       <div className="sidebar-bottom-cluster">
-        <div className="sidebar-season-card">
+        <div className="sidebar-season-card" onClick={() => navigate("/store")} style={{ cursor: "pointer" }}>
           <div className="season-card-top">
             <Sparkles size={14} className="sparkle-icon" />
             <span>SEASON 4 LIVE</span>
@@ -56,7 +57,7 @@ export default function Sidebar() {
           <div className="season-progress-bar">
             <div className="season-progress-fill" style={{ width: "68%" }} />
           </div>
-          <span className="season-level-text">Tier 14 / 20 Completed</span>
+          <span className="season-level-text">Tier 14 / 20 • Upgrade VIP</span>
         </div>
 
         {user.isAuthenticated && (

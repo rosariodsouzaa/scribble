@@ -12,6 +12,8 @@ import {
   Trophy,
   ChevronDown,
   Sparkles,
+  ShoppingBag,
+  Plus,
   LogIn,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
@@ -63,11 +65,14 @@ export default function Navbar() {
 
       {/* Right widgets */}
       <div className="nav-right-cluster">
-        {/* Dragon Gold Coins */}
-        <div className="nav-coins-pill" title="Your Dragon Gold earnings">
+        {/* Dragon Gold Coins Pill with Quick Top-Up */}
+        <div className="nav-coins-pill" onClick={() => navigate("/store")} title="Your Dragon Gold earnings — Click to Top Up">
           <Coins size={16} className="coins-icon" />
           <span className="coins-amount">{user.coins.toLocaleString()}</span>
           <span className="coins-label">GOLD</span>
+          <button className="coins-topup-btn" title="Purchase Gold Coins">
+            <Plus size={12} />
+          </button>
         </div>
 
         {/* Web3 Wallet Pill */}
@@ -143,6 +148,17 @@ export default function Navbar() {
               <div className="dropdown-divider" />
 
               <div className="dropdown-actions">
+                <button
+                  className="dropdown-item-btn"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate("/store");
+                  }}
+                >
+                  <ShoppingBag size={16} color="#fbbf24" />
+                  <span>Dragon Emporium Store</span>
+                </button>
+
                 <button
                   className="dropdown-item-btn"
                   onClick={() => {

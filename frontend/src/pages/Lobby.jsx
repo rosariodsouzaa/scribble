@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
-import { Swords, PlusCircle, ArrowRight, Flame, Shield, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Swords, PlusCircle, ArrowRight, Flame, Shield, Sparkles, BookOpen } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import { createRoom } from "../api/rooms.js";
 import FireDragonLogo from "../components/FireDragonLogo.jsx";
 import Button from "../components/Button.jsx";
+
+const THEME_OPTIONS = [
+  { id: "all", label: "🌍 Universal Pack" },
+  { id: "dynasty", label: "🐉 Dragon Dynasty" },
+  { id: "tech", label: "💻 Tech & Cyber" },
+  { id: "anime", label: "⚡ Anime & Gaming" },
+  { id: "custom", label: "✍️ Custom List" },
+];
 
 export default function Lobby() {
   const navigate = useNavigate();
@@ -13,6 +21,8 @@ export default function Lobby() {
   const [nameInput, setNameInput] = useState(user.name || "Warrior");
   const [rounds, setRounds] = useState(3);
   const [duration, setDuration] = useState(60);
+  const [theme, setTheme] = useState("all");
+  const [customWordsInput, setCustomWordsInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -21,9 +31,19 @@ export default function Lobby() {
     setErr("");
     try {
       setWarriorName(nameInput);
+      const parsedCustomWords =
+        theme === "custom"
+          ? customWordsInput
+              .split(",")
+              .map((w) => w.trim())
+              .filter(Boolean)
+          : null;
+
       const { code: newCode } = await createRoom({
         maxRounds: rounds,
         roundDurationSec: duration,
+        theme,
+        customWords: parsedCustomWords,
       });
       navigate(`/room/${newCode}`);
     } catch {
@@ -107,6 +127,33 @@ export default function Lobby() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="setting-group column-group">
+            <label className="setting-label">SECRET WORD THEME</label>
+            <div className="pill-selector wrap">
+              {THEME_OPTIONS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`setting-pill ${theme === t.id ? "active" : ""}`}
+                  onClick={() => setTheme(t.id)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {theme === "custom" && (
+              <div className="custom-words-input-wrap">
+                <input
+                  className="input dragon-input"
+                  placeholder="Type words separated by commas (e.g. goku, matrix, hoverboard)"
+                  value={customWordsInput}
+                  onChange={(e) => setCustomWordsInput(e.target.value)}
+                />
+              </div>
+            )}
           </div>
         </div>
 

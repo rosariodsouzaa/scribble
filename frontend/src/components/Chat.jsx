@@ -1,15 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "../state/useGame.js";
+import { sound } from "../lib/sound.js";
 
 export default function Chat() {
   const { state, actions, amDrawer } = useGame();
   const [text, setText] = useState("");
   const listRef = useRef(null);
+  const prevChatCount = useRef(0);
 
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [state.chat.length]);
+
+    if (state.chat.length > prevChatCount.current) {
+      const latest = state.chat[state.chat.length - 1];
+      if (latest && latest.type === "correct") {
+        sound.playCorrectGuess();
+      }
+      prevChatCount.current = state.chat.length;
+    }
+  }, [state.chat]);
 
   const disabled = amDrawer || state.state !== "playing" || state.guessedCorrect;
 

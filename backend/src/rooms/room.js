@@ -38,6 +38,8 @@ export function createRoom(code, options = {}) {
     settings: {
       maxRounds: Number(options.maxRounds) || config.maxRoundsDefault,
       roundDurationSec: Number(options.roundDurationSec) || config.roundDurationSec,
+      theme: options.theme || "all",
+      customWords: Array.isArray(options.customWords) ? options.customWords : null,
     },
     players: new Map(), // socketId -> player (insertion order drives drawer rotation)
     round: {
@@ -218,7 +220,7 @@ export function startRound(io, room) {
   }
 
   const drawerId = nextDrawer(room);
-  const word = pickWord(room.usedWords);
+  const word = pickWord(room.usedWords, room.settings);
   room.usedWords.add(word.toLowerCase());
 
   room.round.drawerId = drawerId;
