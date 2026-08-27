@@ -1,9 +1,9 @@
 import { useGame } from "../state/useGame.js";
 
 const REASONS = {
-  "all-guessed": "Everyone guessed it! 🎉",
-  timeout: "Time's up! ⏰",
-  "drawer-left": "The drawer left 🚪",
+  "all-guessed": "All Warriors Deciphered the Riddle! 🐉🔥",
+  timeout: "The Hourglass Has Run Out! ⏳",
+  "drawer-left": "The Dragon Brush Was Abandoned 🚪",
 };
 
 export default function RoundSummary() {
@@ -14,26 +14,30 @@ export default function RoundSummary() {
   const sorted = [...re.players].sort((a, b) => b.score - a.score);
 
   return (
-    <div className="overlay">
-      <div className="summary card">
-        <h3>{REASONS[re.reason] || "Round over"}</h3>
-        <p className="reveal">
-          The word was <strong>{re.word}</strong>
-        </p>
-        <ul className="summary-scores">
+    <div className="overlay dragon-overlay">
+      <div className="summary card dragon-card dragon-summary-card">
+        <div className="dragon-seal-mini">📜 ROUND DECREE</div>
+        <h3 className="summary-title">{REASONS[re.reason] || "Round Concluded"}</h3>
+        <div className="reveal dragon-reveal">
+          The secret rune was <strong className="dragon-word-highlight">{re.word}</strong>
+        </div>
+        <ul className="summary-scores dragon-summary-scores">
           {sorted.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} className="summary-score-row">
               <span className="pname">{p.username}</span>
               <span className={"delta" + (p.roundDelta > 0 ? " pos" : "")}>
-                {p.roundDelta > 0 ? `+${p.roundDelta}` : p.roundDelta || 0}
+                {p.roundDelta > 0 ? `+${p.roundDelta} pts` : `${p.roundDelta || 0} pts`}
               </span>
               <span className="total">{p.score}</span>
             </li>
           ))}
         </ul>
-        <p className="muted tiny">
-          {re.nextIn > 0 ? "Next round starting…" : "Final results coming up…"}
-        </p>
+        <div className="summary-footer">
+          <span className="pulsing-flame">🔥</span>
+          <p className="muted tiny">
+            {re.nextIn > 0 ? "Next clash commences shortly…" : "Final dragon coronation coming up…"}
+          </p>
+        </div>
       </div>
     </div>
   );

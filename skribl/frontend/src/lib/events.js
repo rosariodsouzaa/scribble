@@ -24,6 +24,7 @@ export const S2C = {
   GUESS_RESULT: "guess-result",
   SCORE_UPDATE: "score-update",
   TIMER_TICK: "timer-tick",
+  HINT_UPDATE: "hint-update",
   ROUND_END: "round-end",
   GAME_END: "game-end",
   ERROR: "game-error",

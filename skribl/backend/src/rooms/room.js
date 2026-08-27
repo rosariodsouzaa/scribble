@@ -1,12 +1,31 @@
-// The authoritative game state machine. The server owns the word, the timer, and
-// all scoring; clients only render what they're told. Everything that could leak
-// the secret word flows through serializeRoom(), the single choke point.
+// Authoritative game state machine & scoring engine for Scribble Royale.
+// Owns word selection, timers, progressive hints, dynamic time-based point distribution,
+// and anti-leak room serialization.
+
 import { config } from "../config.js";
 import { store } from "./store.js";
 import { pickWord } from "./words.js";
-import { maskWord } from "./mask.js";
+import { maskWord, getEligibleHintIndices } from "./mask.js";
 
 const roomChannel = (code) => `room:${code}`;
+
+// ---------------------------------------------------------------------------
+// Dynamic Scoring Calculations
+// ---------------------------------------------------------------------------
+function calculateGuesserPoints(remainingSec, totalSec, rankIndex) {
+  const ratio = Math.max(0, Math.min(1, remainingSec / totalSec));
+  const base = config.scoring.guesser.base;
+  const speedBonus = Math.round(ratio * config.scoring.guesser.speedMax);
+  const rankBonus = config.scoring.guesser.rankBonuses[rankIndex] ?? 10;
+  return base + speedBonus + rankBonus;
+}
+
+function calculateDrawerPoints(remainingSec, totalSec) {
+  const ratio = Math.max(0, Math.min(1, remainingSec / totalSec));
+  const base = config.scoring.drawer.basePerGuesser;
+  const speedBonus = Math.round(ratio * config.scoring.drawer.speedMaxPerGuesser);
+  return base + speedBonus;
+}
 
 // ---------------------------------------------------------------------------
 // Factory
@@ -24,16 +43,19 @@ export function createRoom(code) {
     round: {
       number: 0,
       drawerId: null,
-      word: null, // SERVER-ONLY — never broadcast except to the drawer / at round end
+      word: null, // SERVER-ONLY — never broadcast except to drawer / at round end
       maskedWord: null,
       wordLength: 0,
       endsAt: 0,
+      revealedIndices: new Set(),
+      hintsGiven: 0,
+      firstGuessHappened: false,
       correctGuessers: new Set(),
-      roundScores: new Map(),
+      roundScores: new Map(), // playerId -> points earned this round
     },
     usedWords: new Set(),
     timers: { tick: null, nextRound: null },
-    emptySince: Date.now(), // set now; cleared when the first player joins
+    emptySince: Date.now(),
   };
   store.set(code, room);
   return room;
@@ -52,7 +74,7 @@ function makePlayer(socketId, username, clientId, isHost) {
 }
 
 // ---------------------------------------------------------------------------
-// Serialization — the anti-leak choke point
+// Serialization — Anti-Leak Protection
 // ---------------------------------------------------------------------------
 export function serializePlayer(p) {
   return {
@@ -82,7 +104,6 @@ export function serializeRoom(room, forSocketId) {
       endsAt: room.round.endsAt,
       maskedWord: room.round.maskedWord,
       wordLength: room.round.wordLength,
-      // The real word is included ONLY for the drawer.
       word: amDrawer ? room.round.word : undefined,
     },
   };
@@ -92,7 +113,6 @@ export function serializeRoom(room, forSocketId) {
 // Membership
 // ---------------------------------------------------------------------------
 export function addPlayer(io, room, socket, { username, clientId }) {
-  // Idempotent re-join (buffered emit + reconnect can double-fire): just resync.
   if (room.players.has(socket.id)) {
     socket.emit("room-state", serializeRoom(room, socket.id));
     return room.players.get(socket.id);
@@ -100,12 +120,12 @@ export function addPlayer(io, room, socket, { username, clientId }) {
   if (room.state !== "waiting") {
     socket.emit("game-error", {
       code: "game-in-progress",
-      message: "This game has already started.",
+      message: "This dragon battle has already started.",
     });
     return null;
   }
 
-  const cleanName = String(username || "").trim().slice(0, 20) || "Player";
+  const cleanName = String(username || "").trim().slice(0, 20) || "Warrior";
   const isHost = room.players.size === 0;
   const player = makePlayer(socket.id, cleanName, clientId, isHost);
   room.players.set(socket.id, player);
@@ -167,15 +187,15 @@ export function removePlayer(io, room, socketId, reason) {
 }
 
 // ---------------------------------------------------------------------------
-// Game lifecycle
+// Game & Round Lifecycle
 // ---------------------------------------------------------------------------
 export function startGame(io, room, socketId) {
-  if (room.state !== "waiting") return err(io, socketId, "not-waiting", "Game can't start now.");
+  if (room.state !== "waiting") return err(io, socketId, "not-waiting", "Game cannot start now.");
   if (socketId !== room.hostId) return err(io, socketId, "not-host", "Only the host can start.");
   if (room.players.size < config.minPlayers)
-    return err(io, socketId, "not-enough-players", `Need at least ${config.minPlayers} players.`);
+    return err(io, socketId, "not-enough-players", `Need at least ${config.minPlayers} players to ignite the battle.`);
   if (![...room.players.values()].every((p) => p.isReady))
-    return err(io, socketId, "not-ready", "Everyone must be ready first.");
+    return err(io, socketId, "not-ready", "All clan members must be ready.");
 
   for (const p of room.players.values()) p.score = 0;
   room.usedWords.clear();
@@ -199,11 +219,14 @@ export function startRound(io, room) {
 
   const drawerId = nextDrawer(room);
   const word = pickWord(room.usedWords);
-  room.usedWords.add(word);
+  room.usedWords.add(word.toLowerCase());
 
   room.round.drawerId = drawerId;
   room.round.word = word;
-  room.round.maskedWord = maskWord(word);
+  room.round.revealedIndices = new Set();
+  room.round.hintsGiven = 0;
+  room.round.firstGuessHappened = false;
+  room.round.maskedWord = maskWord(word, room.round.revealedIndices);
   room.round.wordLength = word.replace(/\s/g, "").length;
   room.round.endsAt = Date.now() + room.settings.roundDurationSec * 1000;
   room.round.correctGuessers = new Set();
@@ -216,37 +239,65 @@ export function startRound(io, room) {
     number: room.round.number,
     maxRounds: room.settings.maxRounds,
     drawerId,
-    drawerName: room.players.get(drawerId)?.username ?? null,
+    drawerName: room.players.get(drawerId)?.username ?? "Unknown Warrior",
     endsAt: room.round.endsAt,
     roundDurationSec: room.settings.roundDurationSec,
     maskedWord: room.round.maskedWord,
     wordLength: room.round.wordLength,
   });
-  // The real word goes ONLY to the drawer's socket.
+
+  // Reveal the secret word solely to the drawer
   io.to(drawerId).emit("new-word", { word });
 
   clearInterval(room.timers.tick);
   room.timers.tick = setInterval(() => {
+    const totalSec = room.settings.roundDurationSec;
     const remaining = Math.max(0, Math.ceil((room.round.endsAt - Date.now()) / 1000));
+    
+    // Progressive Letter Hint Unlocks
+    const wordLen = room.round.wordLength;
+    if (wordLen >= 4 && room.round.hintsGiven === 0 && remaining <= totalSec * 0.5) {
+      revealHintLetter(io, room);
+    } else if (wordLen >= 6 && room.round.hintsGiven === 1 && remaining <= totalSec * 0.25) {
+      revealHintLetter(io, room);
+    }
+
     io.to(channel).emit("timer-tick", { remaining });
-    if (remaining <= 0) endRound(io, room, "timeout");
+    if (remaining <= 0) {
+      endRound(io, room, "timeout");
+    }
   }, 1000);
 }
 
+function revealHintLetter(io, room) {
+  const eligible = getEligibleHintIndices(room.round.word, room.round.revealedIndices);
+  if (eligible.length > 0) {
+    const chosenIndex = eligible[Math.floor(Math.random() * eligible.length)];
+    room.round.revealedIndices.add(chosenIndex);
+    room.round.hintsGiven += 1;
+    room.round.maskedWord = maskWord(room.round.word, room.round.revealedIndices);
+    
+    io.to(roomChannel(room.code)).emit("hint-update", {
+      maskedWord: room.round.maskedWord,
+      hintsGiven: room.round.hintsGiven,
+    });
+  }
+}
+
 export function endRound(io, room, reason) {
-  if (room.state !== "playing") return; // idempotent guard
+  if (room.state !== "playing") return;
   clearInterval(room.timers.tick);
   room.timers.tick = null;
   room.state = "roundEnd";
 
+  const isLastRound = room.round.number >= room.settings.maxRounds;
   const players = [...room.players.values()].map((p) => ({
     ...serializePlayer(p),
     roundDelta: room.round.roundScores.get(p.id) || 0,
   }));
-  const isLastRound = room.round.number >= room.settings.maxRounds;
 
   io.to(roomChannel(room.code)).emit("round-end", {
-    word: room.round.word, // safe to reveal now
+    word: room.round.word, // Now safe to broadcast to all
     reason,
     players,
     number: room.round.number,
@@ -256,7 +307,7 @@ export function endRound(io, room, reason) {
 
   clearTimeout(room.timers.nextRound);
   room.timers.nextRound = setTimeout(() => {
-    if (!store.has(room.code)) return; // room may have been torn down
+    if (!store.has(room.code)) return;
     if (isLastRound) endGame(io, room);
     else startRound(io, room);
   }, config.roundEndDelayMs);
@@ -280,14 +331,14 @@ export function endGame(io, room) {
 }
 
 // ---------------------------------------------------------------------------
-// Guessing
+// Dynamic Time & Rank-Based Guessing Logic
 // ---------------------------------------------------------------------------
 export function handleGuess(io, room, socketId, text) {
   if (room.state !== "playing") return;
   const guesser = room.players.get(socketId);
   if (!guesser) return;
-  if (socketId === room.round.drawerId) return; // the drawer can't guess
-  if (room.round.correctGuessers.has(socketId)) return; // already solved — ignore
+  if (socketId === room.round.drawerId) return; // Drawer cannot guess their own word
+  if (room.round.correctGuessers.has(socketId)) return; // Already solved
 
   const raw = String(text || "");
   const normalized = normalize(raw);
@@ -296,28 +347,56 @@ export function handleGuess(io, room, socketId, text) {
   const channel = roomChannel(room.code);
 
   if (normalized === normalize(room.round.word)) {
+    const remaining = Math.max(1, Math.ceil((room.round.endsAt - Date.now()) / 1000));
+    const rankIndex = room.round.correctGuessers.size; // 0 for 1st, 1 for 2nd, etc.
+    const guesserPoints = calculateGuesserPoints(remaining, room.settings.roundDurationSec, rankIndex);
+    const drawerPoints = calculateDrawerPoints(remaining, room.settings.roundDurationSec);
+
     room.round.correctGuessers.add(socketId);
-    guesser.score += config.points.correctGuesser;
-    bumpRoundScore(room, socketId, config.points.correctGuesser);
+    guesser.score += guesserPoints;
+    bumpRoundScore(room, socketId, guesserPoints);
 
     const drawer = room.players.get(room.round.drawerId);
     if (drawer) {
-      drawer.score += config.points.drawerPerGuesser;
-      bumpRoundScore(room, drawer.id, config.points.drawerPerGuesser);
+      drawer.score += drawerPoints;
+      bumpRoundScore(room, drawer.id, drawerPoints);
     }
 
-    // NOTE: no word and no guess text in this payload — nothing to leak.
+    // Time-shortening acceleration: If first person guesses and timer > 30s, cap timer to 30s
+    if (!room.round.firstGuessHappened) {
+      room.round.firstGuessHappened = true;
+      if (remaining > config.firstGuessMaxTimeSec) {
+        room.round.endsAt = Date.now() + config.firstGuessMaxTimeSec * 1000;
+        io.to(channel).emit("timer-tick", { remaining: config.firstGuessMaxTimeSec });
+      }
+    }
+
+    // Broadcast guess success with points earned and rank
     io.to(channel).emit("guess-result", {
       correct: true,
       playerId: socketId,
       username: guesser.username,
+      points: guesserPoints,
+      rank: rankIndex + 1,
+      drawerPoints,
+      drawerName: drawer?.username,
     });
+
     io.to(channel).emit("score-update", {
       players: [...room.players.values()].map(serializePlayer),
     });
 
-    if (allGuessed(room)) endRound(io, room, "all-guessed");
+    // Check if all non-drawers have solved
+    if (allGuessed(room)) {
+      // Award Master Clan bonus to the drawer
+      if (drawer) {
+        drawer.score += config.scoring.drawer.allGuessedBonus;
+        bumpRoundScore(room, drawer.id, config.scoring.drawer.allGuessedBonus);
+      }
+      endRound(io, room, "all-guessed");
+    }
   } else {
+    // Regular chat guess broadcast
     io.to(channel).emit("guess-result", {
       correct: false,
       playerId: socketId,
@@ -360,7 +439,10 @@ function bumpRoundScore(room, id, delta) {
 }
 
 function normalize(s) {
-  return String(s || "").trim().toLowerCase().replace(/\s+/g, " ");
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, ""); // Strips spaces/punctuation for forgiving matching (e.g. "ice-cream" vs "ice cream")
 }
 
 function err(io, socketId, code, message) {
@@ -369,7 +451,7 @@ function err(io, socketId, code, message) {
 }
 
 // ---------------------------------------------------------------------------
-// Teardown + housekeeping
+// Teardown & Room Sweeper
 // ---------------------------------------------------------------------------
 export function destroyRoom(room) {
   clearInterval(room.timers.tick);
@@ -379,7 +461,6 @@ export function destroyRoom(room) {
   store.delete(room.code);
 }
 
-// Backstop: delete rooms that sit empty (e.g. created via POST but never joined).
 export function startSweeper() {
   return setInterval(() => {
     const now = Date.now();

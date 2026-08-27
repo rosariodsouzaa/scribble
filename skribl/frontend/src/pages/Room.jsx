@@ -6,6 +6,8 @@ import WaitingRoom from "../components/WaitingRoom.jsx";
 import GameRoom from "../components/GameRoom.jsx";
 import GameEnd from "../components/GameEnd.jsx";
 
+import DragonLoader from "../components/DragonLoader.jsx";
+
 export default function Room() {
   const { code } = useParams();
   const nav = useNavigate();
@@ -36,11 +38,12 @@ export default function Room() {
   if (fatal) {
     return (
       <div className="screen center">
-        <div className="card">
-          <h2>Can't join room {upperCode}</h2>
+        <div className="card dragon-card text-center">
+          <div className="dragon-seal-icon">⚠️</div>
+          <h2 className="title sm">Chamber {upperCode} Sealed</h2>
           <p className="muted">{state.error.message}</p>
-          <button className="btn primary" onClick={() => nav("/lobby")}>
-            Back to lobby
+          <button className="btn primary block" onClick={() => nav("/lobby")}>
+            Return to Sanctuary
           </button>
         </div>
       </div>
@@ -50,8 +53,8 @@ export default function Room() {
   if (!joined) {
     return (
       <div className="screen center">
-        <div className="card">
-          <p className="muted">Joining room {upperCode}…</p>
+        <div className="card dragon-card dragon-loading-card">
+          <DragonLoader message={`Entering Dragon Chamber ${upperCode}…`} />
         </div>
       </div>
     );

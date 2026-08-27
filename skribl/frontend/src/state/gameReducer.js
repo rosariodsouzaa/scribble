@@ -129,10 +129,15 @@ export function gameReducer(state, action) {
     case "GUESS_RESULT": {
       if (action.correct) {
         const mine = action.playerId === state.myId;
+        const pts = action.points ? ` (+${action.points} pts)` : "";
+        const rankLabel = action.rank === 1 ? "🥇 1st" : action.rank === 2 ? "🥈 2nd" : action.rank === 3 ? "🥉 3rd" : "";
+        const rankPrefix = rankLabel ? `[${rankLabel}] ` : "";
         return pushChat(mine ? { ...state, guessedCorrect: true } : state, {
           type: "correct",
           username: action.username,
-          text: `${action.username} guessed the word!`,
+          points: action.points,
+          rank: action.rank,
+          text: `${rankPrefix}${action.username} guessed the word!${pts}`,
         });
       }
       return pushChat(state, {
@@ -141,6 +146,15 @@ export function gameReducer(state, action) {
         text: action.text,
       });
     }
+
+    case "HINT_UPDATE":
+      return {
+        ...state,
+        round: {
+          ...state.round,
+          maskedWord: action.maskedWord,
+        },
+      };
 
     case "SCORE_UPDATE":
       return { ...state, players: action.players };
@@ -151,7 +165,7 @@ export function gameReducer(state, action) {
     case "ROUND_END":
       return pushChat(
         { ...state, state: "roundEnd", roundEnd: action, players: action.players, remaining: 0 },
-        { type: "system", text: `The word was "${action.word}"` }
+        { type: "system", text: `Round over! The secret rune was "${action.word}"` }
       );
 
     case "GAME_END":

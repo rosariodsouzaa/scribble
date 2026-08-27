@@ -1,21 +1,32 @@
-// Central place for all game + server tunables.
+// Central configuration for Scribble Royale game rules, scoring, and server settings.
 export const config = {
   port: Number(process.env.PORT) || 3001,
   clientOrigin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
 
   // Game rules
-  roundDurationSec: 60, // seconds a drawer has per turn
-  maxRoundsDefault: 3, // total drawer-turns per game (low for fast testing)
-  minPlayers: 2, // needed to start
-  points: {
-    correctGuesser: 10, // awarded to each player who guesses correctly
-    drawerPerGuesser: 5, // awarded to the drawer for each correct guesser
+  roundDurationSec: 60, // Total seconds a drawer has per turn
+  maxRoundsDefault: 3, // Default total rounds
+  minPlayers: 2, // Minimum warriors needed to start
+
+  // Dynamic Time-Based & Rank-Based Scoring System
+  scoring: {
+    guesser: {
+      base: 100, // Base points for guessing correctly
+      speedMax: 300, // Max speed bonus (scaled by timeLeft / totalDuration)
+      rankBonuses: [100, 60, 30, 10], // 1st, 2nd, 3rd, 4th+ place guessers
+    },
+    drawer: {
+      basePerGuesser: 50, // Base points per correct guesser
+      speedMaxPerGuesser: 50, // Speed bonus per guesser
+      allGuessedBonus: 100, // Bonus if 100% of warriors guess correctly
+    },
   },
 
-  // Pacing
-  roundEndDelayMs: 5000, // how long the round summary shows before next round
+  // Pacing & Hints
+  firstGuessMaxTimeSec: 30, // Cap timer to 30s when first player guesses correctly
+  roundEndDelayMs: 4500, // Duration to show round summary before next turn
 
   // Housekeeping for in-memory rooms
-  emptyRoomGraceMs: 60_000, // delete rooms that stay empty this long (e.g. created but never joined)
-  sweepIntervalMs: 30_000, // how often the sweeper runs
+  emptyRoomGraceMs: 60_000,
+  sweepIntervalMs: 30_000,
 };

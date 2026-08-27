@@ -19,43 +19,55 @@ export default function WaitingRoom() {
 
   return (
     <div className="screen center">
-      <div className="card waiting">
+      <div className="card waiting dragon-card">
+        {/* Imperial Corner Brackets */}
+        <div className="imperial-bracket tl" />
+        <div className="imperial-bracket tr" />
+        <div className="imperial-bracket bl" />
+        <div className="imperial-bracket br" />
+
+        <div className="imperial-tag-sm text-center">🐉 DRAGON CHAMBER 🐉</div>
         <div className="waiting-head">
           <div>
-            <p className="muted tiny">ROOM CODE</p>
-            <div className="code-big" onClick={copyCode} title="Click to copy">
+            <p className="muted tiny uppercase">CHAMBER CODE</p>
+            <div className="code-big" onClick={copyCode} title="Click to copy secret seal">
               {state.code}
             </div>
           </div>
-          <button className="btn ghost" onClick={copyCode}>
-            {copied ? "Copied!" : "Copy"}
+          <button className={`btn dragon-copy-btn ${copied ? "copied" : ""}`} onClick={copyCode}>
+            {copied ? "✓ Copied Seal" : "📋 Copy Seal"}
           </button>
         </div>
 
-        <p className="muted">Share the code with friends. You need at least 2 players to start.</p>
+        <p className="muted small">
+          Gather your clan. At least <strong>2 dragon warriors</strong> must prepare before the battle ignites.
+        </p>
 
         <PlayerList />
 
-        <div className="row gap end">
+        <div className="row gap end waiting-actions">
           <button
-            className={"btn " + (me?.isReady ? "" : "primary")}
+            className={`btn ${me?.isReady ? "dragon-ready-btn-active" : "dragon-ready-btn"}`}
             onClick={() => actions.ready(!me?.isReady)}
           >
-            {me?.isReady ? "Not ready" : "I'm ready"}
+            {me?.isReady ? "⚔️ Stance: Ready" : "⚡ Ready Up"}
           </button>
           {amHost && (
             <button
-              className="btn primary"
+              className="btn primary flame-btn"
               disabled={!allReady}
               onClick={actions.start}
-              title={allReady ? "" : "Everyone must be ready (min 2 players)"}
+              title={allReady ? "" : "All warriors must be ready (minimum 2 warriors)"}
             >
-              Start game
+              <span>🔥 Ignite Game</span>
+              <span className="btn-glow" />
             </button>
           )}
         </div>
         {amHost && !allReady && (
-          <p className="muted tiny center-text">Waiting for everyone to ready up…</p>
+          <p className="muted tiny center-text waiting-subnote">
+            ⏳ Waiting for all clan members to take their stance…
+          </p>
         )}
       </div>
     </div>

@@ -63,11 +63,11 @@ const gUpd = drawerSock === A ? updates.B : updates.A; // guesser's inbox
 const dUpd = drawerSock === A ? updates.A : updates.B; // drawer's inbox
 
 const near = (a, b) => Math.abs(a - b) < 1e-6;
-const gotStart = gUpd.find((d) => d.type === "draw-start" && near(d.x, 0.1) && d.color === "#ff0000" && d.size === 8);
-const gotMove = gUpd.find((d) => d.type === "draw-move" && d.points?.length === 2 && near(d.points[1].x, 0.4));
+const gotStart = gUpd.find((d) => d.type === "start" && near(d.x, 0.1) && d.color === "#ff0000" && d.size === 8);
+const gotMove = gUpd.find((d) => d.type === "move" && d.points?.length === 2 && near(d.points[1].x, 0.4));
 const illegalLeaked =
-  dUpd.find((d) => d.type === "draw-start" && near(d.x ?? -1, 0.9)) ||
-  gUpd.find((d) => d.type === "draw-start" && near(d.x ?? -1, 0.9));
+  dUpd.find((d) => d.type === "start" && near(d.x ?? -1, 0.9)) ||
+  gUpd.find((d) => d.type === "start" && near(d.x ?? -1, 0.9));
 const drawerEchoedOwn = dUpd.length > 0;
 
 console.log("guesser received draw-update events:", gUpd.length);

@@ -8,10 +8,11 @@ export default function Timer() {
   const low = r <= 10;
 
   return (
-    <div className="timer">
+    <div className={`timer dragon-timer ${low ? "timer-critical" : ""}`}>
+      <span className="timer-icon">{low ? "🔥" : "⏳"}</span>
       <div className={"timer-num" + (low ? " low" : "")}>{r}s</div>
-      <div className="timer-bar">
-        <div className={"timer-fill" + (low ? " low" : "")} style={{ width: pct + "%" }} />
+      <div className="timer-bar dragon-timer-bar">
+        <div className={"timer-fill dragon-timer-fill" + (low ? " low" : "")} style={{ width: pct + "%" }} />
       </div>
     </div>
   );

@@ -28,26 +28,33 @@ export default function Chat() {
     : "Type your guess…";
 
   return (
-    <div className="chat">
-      <div className="chat-list" ref={listRef}>
+    <div className="chat dragon-chat">
+      <div className="chat-header">
+        <span>💬 IMPERIAL CHAT & GUESSES</span>
+      </div>
+      <div className="chat-list dragon-chat-list" ref={listRef}>
+        {state.chat.length === 0 && (
+          <div className="chat-empty-hint">Type your guesses here to score points! 🐉</div>
+        )}
         {state.chat.map((m) => (
-          <div key={m.id} className={"chat-msg " + m.type}>
+          <div key={m.id} className={"chat-msg dragon-chat-msg " + m.type}>
             {m.type === "guess" && <span className="cu">{m.username}: </span>}
+            {m.type === "correct" && <span className="dragon-correct-badge">🔥 </span>}
             <span className="ct">{m.text}</span>
           </div>
         ))}
       </div>
-      <form className="chat-input" onSubmit={submit}>
+      <form className="chat-input dragon-chat-input" onSubmit={submit}>
         <input
-          className="input"
+          className="input dragon-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={60}
         />
-        <button className="btn primary" type="submit" disabled={disabled}>
-          Send
+        <button className="btn primary dragon-send-btn" type="submit" disabled={disabled}>
+          Send 🏹
         </button>
       </form>
     </div>

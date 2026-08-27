@@ -5,17 +5,19 @@ export default function WordHint() {
 
   if (amDrawer && state.myWord) {
     return (
-      <div className="wordhint drawer">
-        Draw: <strong>{state.myWord}</strong>
+      <div className="wordhint dragon-wordhint drawer">
+        <span className="scroll-tag">📜 Secret Scroll:</span>
+        <strong className="secret-word">{state.myWord}</strong>
       </div>
     );
   }
 
   return (
-    <div className="wordhint">
-      <span className="masked">{state.round.maskedWord || "…"}</span>
+    <div className="wordhint dragon-wordhint">
+      <span className="masked-label">Riddle:</span>
+      <span className="masked dragon-masked">{state.round.maskedWord || "…"}</span>
       {state.round.wordLength > 0 && (
-        <span className="wl">{state.round.wordLength} letters</span>
+        <span className="wl dragon-wl">{state.round.wordLength} Runes</span>
       )}
     </div>
   );
