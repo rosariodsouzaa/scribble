@@ -5,7 +5,7 @@
 import { config } from "../config.js";
 import { store } from "./store.js";
 import { pickWord } from "./words.js";
-import { maskWord, getEligibleHintIndices } from "./mask.js";
+import { maskWord, getEligibleHintIndices, getMaxHints } from "./mask.js";
 
 const roomChannel = (code) => `room:${code}`;
 
@@ -254,11 +254,15 @@ export function startRound(io, room) {
     const totalSec = room.settings.roundDurationSec;
     const remaining = Math.max(0, Math.ceil((room.round.endsAt - Date.now()) / 1000));
     
-    // Progressive Letter Hint Unlocks
+    // Progressive Letter Hint Unlocks (Skribbl-style)
     const wordLen = room.round.wordLength;
-    if (wordLen >= 4 && room.round.hintsGiven === 0 && remaining <= totalSec * 0.5) {
+    const maxHints = getMaxHints(wordLen);
+    
+    if (maxHints >= 1 && room.round.hintsGiven === 0 && remaining <= totalSec * 0.65) {
       revealHintLetter(io, room);
-    } else if (wordLen >= 6 && room.round.hintsGiven === 1 && remaining <= totalSec * 0.25) {
+    } else if (maxHints >= 2 && room.round.hintsGiven === 1 && remaining <= totalSec * 0.40) {
+      revealHintLetter(io, room);
+    } else if (maxHints >= 3 && room.round.hintsGiven === 2 && remaining <= totalSec * 0.20) {
       revealHintLetter(io, room);
     }
 
@@ -272,14 +276,24 @@ export function startRound(io, room) {
 function revealHintLetter(io, room) {
   const eligible = getEligibleHintIndices(room.round.word, room.round.revealedIndices);
   if (eligible.length > 0) {
-    const chosenIndex = eligible[Math.floor(Math.random() * eligible.length)];
-    room.round.revealedIndices.add(chosenIndex);
+    const chosen = eligible[Math.floor(Math.random() * eligible.length)];
+    room.round.revealedIndices.add(chosen.index);
     room.round.hintsGiven += 1;
     room.round.maskedWord = maskWord(room.round.word, room.round.revealedIndices);
     
-    io.to(roomChannel(room.code)).emit("hint-update", {
+    const channel = roomChannel(room.code);
+    io.to(channel).emit("hint-update", {
       maskedWord: room.round.maskedWord,
       hintsGiven: room.round.hintsGiven,
+      letter: chosen.letter,
+      index: chosen.index,
+    });
+
+    // Notify players in the chat stream
+    io.to(channel).emit("guess-result", {
+      correct: false,
+      isSystem: true,
+      text: `💡 Hint: Letter "${chosen.letter}" revealed!`,
     });
   }
 }

@@ -127,6 +127,12 @@ export function gameReducer(state, action) {
       return { ...state, myWord: action.word };
 
     case "GUESS_RESULT": {
+      if (action.isSystem) {
+        return pushChat(state, {
+          type: "system",
+          text: action.text,
+        });
+      }
       if (action.correct) {
         const mine = action.playerId === state.myId;
         const pts = action.points ? ` (+${action.points} pts)` : "";
