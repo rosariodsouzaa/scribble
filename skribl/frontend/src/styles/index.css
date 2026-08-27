@@ -1648,7 +1648,20 @@ body {
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+.scoreboard-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fb923c;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
 .score-list {
   list-style: none;
   margin: 0;
@@ -1669,8 +1682,9 @@ body {
   transition: all 0.2s ease;
 }
 .dragon-score-row.leader {
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.15);
 }
 .dragon-score-row.drawing {
   background: rgba(220, 38, 38, 0.18);
@@ -1698,6 +1712,16 @@ body {
   align-items: center;
   gap: 6px;
 }
+.crown-icon {
+  font-size: 13px;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+  animation: crownBob 2s ease-in-out infinite alternate;
+}
+@keyframes crownBob {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2px) rotate(4deg); }
+}
+
 .drawer-indicator {
   font-size: 11px;
   font-weight: 700;
@@ -1716,6 +1740,29 @@ body {
   font-size: 11px;
   font-weight: 500;
   color: #fb923c;
+}
+
+/* Word Meta Pills */
+.word-meta-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hint-pill {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fef08a;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  padding: 3px 10px;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+  animation: hintPulse 1.8s ease-in-out infinite alternate;
+}
+@keyframes hintPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
 }
 
 /* ===========================================================================

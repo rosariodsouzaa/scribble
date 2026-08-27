@@ -22,10 +22,20 @@ export default function WordHint() {
   const wordGroups = useMemo(() => {
     if (!maskedStr) return [];
     return maskedStr.split(/\s{3,}/).map((group) => {
-      // Split individual characters in the word group (separated by single space)
       return group.split(/\s+/).filter(Boolean);
     });
   }, [maskedStr]);
+
+  // Count revealed letters
+  const revealedCount = useMemo(() => {
+    let count = 0;
+    for (const group of wordGroups) {
+      for (const token of group) {
+        if (token !== "_" && /[A-Z0-9]/i.test(token)) count++;
+      }
+    }
+    return count;
+  }, [wordGroups]);
 
   return (
     <div className="wordhint dragon-wordhint">
@@ -52,9 +62,16 @@ export default function WordHint() {
         )}
       </div>
 
-      {state.round.wordLength > 0 && (
-        <span className="wl dragon-wl">{state.round.wordLength} letters</span>
-      )}
+      <div className="word-meta-pills">
+        {state.round.wordLength > 0 && (
+          <span className="wl dragon-wl">{state.round.wordLength} letters</span>
+        )}
+        {revealedCount > 0 && (
+          <span className="hint-pill" title={`${revealedCount} letters revealed`}>
+            💡 {revealedCount} hint{revealedCount > 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
