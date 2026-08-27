@@ -1,15 +1,31 @@
-// Stubbed identity for the game-loop-first slice: a nickname + a stable clientId,
-// both in localStorage. When real auth lands, clientId becomes the userId and this
-// file is the only place that changes.
+// Authoritative identity resolver for Scribble Royale.
 const USERNAME_KEY = "skribl:username";
+const WARRIOR_KEY = "sr_warrior";
 const CLIENT_ID_KEY = "skribl:clientId";
 
 export function getUsername() {
-  return localStorage.getItem(USERNAME_KEY) || "";
+  const direct = localStorage.getItem(USERNAME_KEY);
+  if (direct && direct.trim()) return direct.trim();
+  try {
+    const warrior = JSON.parse(localStorage.getItem(WARRIOR_KEY) || "{}");
+    if (warrior.name && warrior.name.trim()) {
+      localStorage.setItem(USERNAME_KEY, warrior.name.trim());
+      return warrior.name.trim();
+    }
+  } catch {}
+  const fallback = "Warrior_" + Math.floor(100 + Math.random() * 900);
+  localStorage.setItem(USERNAME_KEY, fallback);
+  return fallback;
 }
 
 export function setUsername(name) {
-  localStorage.setItem(USERNAME_KEY, String(name).trim().slice(0, 20));
+  const clean = String(name || "").trim().slice(0, 20) || "Warrior";
+  localStorage.setItem(USERNAME_KEY, clean);
+  try {
+    const warrior = JSON.parse(localStorage.getItem(WARRIOR_KEY) || "{}");
+    warrior.name = clean;
+    localStorage.setItem(WARRIOR_KEY, JSON.stringify(warrior));
+  } catch {}
 }
 
 export function getClientId() {
