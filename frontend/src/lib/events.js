@@ -27,5 +27,6 @@ export const S2C = {
   HINT_UPDATE: "hint-update",
   ROUND_END: "round-end",
   GAME_END: "game-end",
+  GAME_ABORTED: "game-aborted",
   ERROR: "game-error",
 };

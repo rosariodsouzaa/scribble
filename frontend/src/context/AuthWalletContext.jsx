@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { walletService } from "../services/wallet/index.js";
+import { IdentityManager } from "../services/identity/index.js";
 
 const AuthWalletContext = createContext(null);
 
@@ -13,34 +14,7 @@ export const useAuthWallet = () => {
 
 export function AuthWalletProvider({ children }) {
   // Warrior Profile State
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem("sr_warrior");
-      return saved
-        ? JSON.parse(saved)
-        : {
-            name: "Vedansh",
-            role: "Dragon Emperor",
-            level: 14,
-            coins: 3500,
-            wins: 18,
-            matches: 24,
-            avatarColor: "#f59e0b",
-            isAuthenticated: true,
-          };
-    } catch {
-      return {
-        name: "Vedansh",
-        role: "Dragon Emperor",
-        level: 14,
-        coins: 3500,
-        wins: 18,
-        matches: 24,
-        avatarColor: "#f59e0b",
-        isAuthenticated: true,
-      };
-    }
-  });
+  const [user, setUser] = useState(() => IdentityManager.getWarriorProfile());
 
   // Web3 Wallet State
   const [wallet, setWallet] = useState(() => {
@@ -69,11 +43,9 @@ export function AuthWalletProvider({ children }) {
   // Sound toggle
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Sync to local storage
+  // Sync to local storage with anti-tamper sanitation
   useEffect(() => {
-    try {
-      localStorage.setItem("sr_warrior", JSON.stringify(user));
-    } catch {}
+    IdentityManager.saveWarriorProfile(user);
   }, [user]);
 
   useEffect(() => {
@@ -86,13 +58,14 @@ export function AuthWalletProvider({ children }) {
   useEffect(() => {
     const metaMaskAdapter = walletService.getAdapter("metamask");
 
-    const cleanupAccounts = metaMaskAdapter.onAccountsChanged((accounts) => {
-      if (!accounts || accounts.length === 0) {
+    const cleanupAccounts = metaMaskAdapter.onAccountsChanged(({ accounts, address, balance }) => {
+      if (!accounts || accounts.length === 0 || !address) {
         disconnectWallet();
       } else if (wallet.isConnected && wallet.isMetaMask) {
         setWallet((prev) => ({
           ...prev,
-          address: accounts[0],
+          address,
+          balance: balance || prev.balance,
         }));
       }
     });

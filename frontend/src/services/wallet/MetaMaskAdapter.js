@@ -2,7 +2,7 @@ import { WalletAdapter } from "./WalletAdapter.js";
 
 /**
  * Concrete MetaMask Wallet Adapter
- * Encapsulates communication with window.ethereum provider and listener cleanup.
+ * Encapsulates communication with window.ethereum provider, auto-balance syncing, and listener cleanup.
  */
 export class MetaMaskAdapter extends WalletAdapter {
   constructor() {
@@ -74,7 +74,16 @@ export class MetaMaskAdapter extends WalletAdapter {
   onAccountsChanged(callback) {
     if (typeof window === "undefined" || !window.ethereum?.on) return () => {};
 
-    const handler = (accounts) => callback(accounts);
+    const handler = async (accounts) => {
+      if (!accounts || accounts.length === 0) {
+        callback({ accounts: [], address: null, balance: "0.00 ETH" });
+        return;
+      }
+      const address = accounts[0];
+      const balance = await this.getBalance(address);
+      callback({ accounts, address, balance });
+    };
+
     window.ethereum.on("accountsChanged", handler);
 
     return () => {

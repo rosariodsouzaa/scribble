@@ -1,11 +1,23 @@
 /**
  * IdentityManager
- * Encapsulates client UUID generation, username validation, and warrior profile persistence.
+ * Encapsulates client UUID generation, username validation, anti-tamper profile validation,
+ * and persistent storage.
  */
 export class IdentityManager {
   static USERNAME_KEY = "skribl:username";
   static WARRIOR_KEY = "sr_warrior";
   static CLIENT_ID_KEY = "skribl:clientId";
+
+  static DEFAULT_WARRIOR = {
+    name: "Vedansh",
+    role: "Dragon Emperor",
+    level: 14,
+    coins: 3500,
+    wins: 18,
+    matches: 24,
+    avatarColor: "#f59e0b",
+    isAuthenticated: true,
+  };
 
   /**
    * Retrieves or initializes persistent warrior username
@@ -15,19 +27,10 @@ export class IdentityManager {
     if (typeof localStorage === "undefined") return "Warrior";
 
     const direct = localStorage.getItem(IdentityManager.USERNAME_KEY);
-    if (direct && direct.trim()) return direct.trim();
+    if (direct && direct.trim()) return direct.trim().slice(0, 20);
 
-    try {
-      const warrior = JSON.parse(localStorage.getItem(IdentityManager.WARRIOR_KEY) || "{}");
-      if (warrior.name && warrior.name.trim()) {
-        localStorage.setItem(IdentityManager.USERNAME_KEY, warrior.name.trim());
-        return warrior.name.trim();
-      }
-    } catch {}
-
-    const fallback = "Warrior_" + Math.floor(100 + Math.random() * 900);
-    localStorage.setItem(IdentityManager.USERNAME_KEY, fallback);
-    return fallback;
+    const profile = IdentityManager.getWarriorProfile();
+    return profile.name;
   }
 
   /**
@@ -40,11 +43,66 @@ export class IdentityManager {
     const clean = String(name || "").trim().slice(0, 20) || "Warrior";
     localStorage.setItem(IdentityManager.USERNAME_KEY, clean);
 
+    const profile = IdentityManager.getWarriorProfile();
+    profile.name = clean;
+    IdentityManager.saveWarriorProfile(profile);
+  }
+
+  /**
+   * Retrieves, sanitizes, and bounds warrior profile from storage
+   * @returns {object}
+   */
+  static getWarriorProfile() {
+    if (typeof localStorage === "undefined") return { ...IdentityManager.DEFAULT_WARRIOR };
+
     try {
-      const warrior = JSON.parse(localStorage.getItem(IdentityManager.WARRIOR_KEY) || "{}");
-      warrior.name = clean;
-      localStorage.setItem(IdentityManager.WARRIOR_KEY, JSON.stringify(warrior));
-    } catch {}
+      const raw = localStorage.getItem(IdentityManager.WARRIOR_KEY);
+      if (!raw) return { ...IdentityManager.DEFAULT_WARRIOR };
+
+      const parsed = JSON.parse(raw);
+      return IdentityManager.sanitizeWarriorProfile(parsed);
+    } catch {
+      return { ...IdentityManager.DEFAULT_WARRIOR };
+    }
+  }
+
+  /**
+   * Validates and saves warrior profile
+   * @param {object} profile 
+   */
+  static saveWarriorProfile(profile) {
+    if (typeof localStorage === "undefined") return;
+    const sanitized = IdentityManager.sanitizeWarriorProfile(profile);
+    localStorage.setItem(IdentityManager.WARRIOR_KEY, JSON.stringify(sanitized));
+  }
+
+  /**
+   * Bounds and sanitizes profile fields against corrupt/tampered values
+   * @param {object} data 
+   * @returns {object}
+   */
+  static sanitizeWarriorProfile(data) {
+    if (!data || typeof data !== "object") return { ...IdentityManager.DEFAULT_WARRIOR };
+
+    const name = String(data.name || "Warrior").trim().slice(0, 20) || "Warrior";
+    const role = String(data.role || "Dragon Warrior").slice(0, 30);
+    const level = Math.max(1, Math.min(100, Number(data.level) || 1));
+    const coins = Math.max(0, Math.min(10_000_000, Number(data.coins) || 0));
+    const wins = Math.max(0, Math.min(100_000, Number(data.wins) || 0));
+    const matches = Math.max(wins, Math.min(200_000, Number(data.matches) || wins));
+    const avatarColor = typeof data.avatarColor === "string" ? data.avatarColor.slice(0, 10) : "#f59e0b";
+    const isAuthenticated = Boolean(data.isAuthenticated);
+
+    return {
+      name,
+      role,
+      level,
+      coins,
+      wins,
+      matches,
+      avatarColor,
+      isAuthenticated,
+    };
   }
 
   /**

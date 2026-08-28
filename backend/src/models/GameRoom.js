@@ -1,13 +1,13 @@
 import { config } from "../config.js";
 import { Player } from "./Player.js";
 import { Round } from "./Round.js";
-import { StandardScoringStrategy } from "../services/ScoringStrategy.js";
-import { pickWord } from "../rooms/words.js";
+import { StandardScoringStrategy } from "../services/scoring/StandardScoringStrategy.js";
+import { WordDictionary } from "../services/words/WordDictionary.js";
 
 /**
  * GameRoom Domain Aggregate & State Machine
  * Encapsulates game lifecycle, player management, round progression, timer execution,
- * dynamic scoring, and anti-leak state serialization.
+ * dynamic scoring, anti-leak state serialization, and session reconnection.
  */
 export class GameRoom {
   /**
@@ -62,17 +62,73 @@ export class GameRoom {
   }
 
   /**
-   * Add a player to the room
+   * Find an existing player by persistent clientId
+   * @param {string} clientId 
+   * @returns {Player|null}
+   */
+  findPlayerByClientId(clientId) {
+    if (!clientId) return null;
+    for (const player of this.players.values()) {
+      if (player.clientId === clientId) return player;
+    }
+    return null;
+  }
+
+  /**
+   * Add or re-attach a player to the room
    * @param {import("socket.io").Socket} socket 
    * @param {object} param1 
    * @returns {Player|null}
    */
   addPlayer(socket, { username, clientId }) {
+    // 1. Check if the exact socket is already registered
     if (this.players.has(socket.id)) {
       socket.emit("room-state", this.serialize(socket.id));
       return this.players.get(socket.id);
     }
 
+    // 2. Check for session reconnection by clientId
+    const existingPlayer = this.findPlayerByClientId(clientId);
+    if (existingPlayer) {
+      const oldSocketId = existingPlayer.id;
+      this.players.delete(oldSocketId);
+
+      existingPlayer.updateSocketId(socket.id);
+      if (username) {
+        existingPlayer.username = Player.sanitizeName(username);
+      }
+      this.players.set(socket.id, existingPlayer);
+
+      // Transfer host status if applicable
+      if (this.hostId === oldSocketId) {
+        this.hostId = socket.id;
+      }
+
+      // Transfer drawer status if currently drawing
+      if (this.round && this.round.drawerId === oldSocketId) {
+        this.round.drawerId = socket.id;
+      }
+
+      this.emptySince = null;
+      socket.join(this.channel);
+      socket.data.roomCode = this.code;
+
+      // Deliver state and secret word if drawer
+      socket.emit("room-state", this.serialize(socket.id));
+      if (this.state === "playing" && this.round && this.round.drawerId === socket.id) {
+        socket.emit("new-word", { word: this.round.word });
+      }
+
+      this.broadcast("player-updated", {
+        playerId: socket.id,
+        isReady: existingPlayer.isReady,
+        players: this.serializePlayers(),
+      });
+
+      return existingPlayer;
+    }
+
+    // 3. New player joining during active match -> reject
     if (this.state !== "waiting") {
       socket.emit("game-error", {
         code: "game-in-progress",
@@ -81,6 +137,7 @@ export class GameRoom {
       return null;
     }
 
+    // 4. New player joining in waiting room
     const isHost = this.players.size === 0;
     const player = new Player(socket.id, username, clientId, isHost);
     this.players.set(socket.id, player);
@@ -151,6 +208,12 @@ export class GameRoom {
       reason,
     });
 
+    // Check if player count dropped below minPlayers during an active match
+    if ((this.state === "playing" || this.state === "roundEnd") && this.getConnectedPlayersCount() < config.minPlayers) {
+      this.abortGame("not-enough-players", "Battle paused: Not enough clan warriors to continue.");
+      return;
+    }
+
     if (this.state === "playing") {
       if (wasDrawer) {
         this.endRound("drawer-left");
@@ -158,6 +221,30 @@ export class GameRoom {
         this.endRound("all-guessed");
       }
     }
+  }
+
+  /**
+   * Abort game match when players drop out, restoring waiting lobby
+   * @param {string} code 
+   * @param {string} message 
+   */
+  abortGame(code, message) {
+    this.clearTimers();
+    this.state = "waiting";
+    this.round = null;
+    this.roundNumber = 0;
+
+    for (const p of this.players.values()) {
+      p.setReady(false);
+    }
+
+    this.broadcast("game-aborted", {
+      code,
+      message,
+      players: this.serializePlayers(),
+    });
+
+    this.broadcast("room-state", this.serialize());
   }
 
   /**
@@ -212,7 +299,7 @@ export class GameRoom {
     }
 
     const drawerId = this.getNextDrawerId();
-    const word = pickWord(this.usedWords, this.settings);
+    const word = WordDictionary.pickWord(this.usedWords, this.settings);
     this.usedWords.add(word.toLowerCase());
 
     this.round = new Round(this.roundNumber, drawerId, word, this.settings.roundDurationSec);
@@ -360,8 +447,9 @@ export class GameRoom {
   endRound(reason) {
     if (this.state !== "playing" || !this.round) return;
 
-    this.clearTickTimer();
+    // Atomic state mutation prevents concurrent timer races
     this.state = "roundEnd";
+    this.clearTickTimer();
 
     const isLastRound = this.roundNumber >= this.settings.maxRounds;
     const playersWithDelta = [...this.players.values()].map((p) => ({
@@ -440,6 +528,18 @@ export class GameRoom {
       if (p && p.connected) return p.id;
     }
     return ids[0];
+  }
+
+  /**
+   * Number of total connected players
+   * @returns {number}
+   */
+  getConnectedPlayersCount() {
+    let count = 0;
+    for (const p of this.players.values()) {
+      if (p.connected) count++;
+    }
+    return count;
   }
 
   /**

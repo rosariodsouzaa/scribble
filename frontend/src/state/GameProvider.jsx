@@ -31,6 +31,7 @@ export function GameProvider({ children }) {
       [S2C.HINT_UPDATE]: (d) => dispatch({ type: "HINT_UPDATE", ...d }),
       [S2C.ROUND_END]: (d) => dispatch({ type: "ROUND_END", ...d }),
       [S2C.GAME_END]: (d) => dispatch({ type: "GAME_END", ...d }),
+      [S2C.GAME_ABORTED]: (d) => dispatch({ type: "GAME_ABORTED", ...d }),
     };
 
     for (const [event, fn] of Object.entries(handlers)) socket.on(event, fn);

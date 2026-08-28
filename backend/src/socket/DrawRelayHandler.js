@@ -1,8 +1,10 @@
 /**
  * DrawRelayHandler
- * Encapsulates drawer authentication, stroke data sanitization, and broadcasting.
+ * Encapsulates drawer authentication, stroke rate limiting, data sanitization, and broadcasting.
  */
 export class DrawRelayHandler {
+  static MAX_PACKETS_PER_SEC = 60;
+
   /**
    * @param {import("socket.io").Server} io 
    * @param {import("../repositories/RoomRepository.js").RoomRepository} repository 
@@ -10,6 +12,26 @@ export class DrawRelayHandler {
   constructor(io, repository) {
     this.io = io;
     this.repository = repository;
+    this.rateLimits = new Map(); // socketId -> { count: number, resetAt: number }
+  }
+
+  /**
+   * Check and enforce rate limits for incoming draw streams
+   * @param {string} socketId 
+   * @returns {boolean} true if within limit, false if exceeding
+   */
+  checkRateLimit(socketId) {
+    const now = Date.now();
+    let limit = this.rateLimits.get(socketId);
+
+    if (!limit || now > limit.resetAt) {
+      limit = { count: 1, resetAt: now + 1000 };
+      this.rateLimits.set(socketId, limit);
+      return true;
+    }
+
+    limit.count++;
+    return limit.count <= DrawRelayHandler.MAX_PACKETS_PER_SEC;
   }
 
   /**
@@ -21,6 +43,11 @@ export class DrawRelayHandler {
   relay(socket, type, data = {}) {
     const room = this.getCurrentRoom(socket);
     if (!room || !room.round || room.round.drawerId !== socket.id) return;
+
+    // Rate-limit move packets to prevent flooding
+    if (type === "move" && !this.checkRateLimit(socket.id)) {
+      return;
+    }
 
     socket.to(room.channel).emit("draw-update", {
       type,

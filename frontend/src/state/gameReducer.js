@@ -177,6 +177,23 @@ export function gameReducer(state, action) {
     case "GAME_END":
       return { ...state, state: "gameEnd", gameEnd: action };
 
+    case "GAME_ABORTED":
+      return pushChat(
+        {
+          ...state,
+          state: "waiting",
+          roundEnd: null,
+          myWord: null,
+          guessedCorrect: false,
+          remaining: 0,
+          players: action.players || state.players.map((p) => ({ ...p, isReady: false })),
+        },
+        {
+          type: "system",
+          text: `⚠️ ${action.message || "Match aborted: Not enough players to continue."}`,
+        }
+      );
+
     case "RESET":
       return { ...initialState, connected: state.connected, myId: state.myId };
 

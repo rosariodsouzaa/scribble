@@ -57,6 +57,15 @@ export class Player {
   }
 
   /**
+   * Updates socket ID upon client reconnection
+   * @param {string} newSocketId 
+   */
+  updateSocketId(newSocketId) {
+    this.id = newSocketId;
+    this.connected = true;
+  }
+
+  /**
    * Sets player connection status
    * @param {boolean} connected 
    */
