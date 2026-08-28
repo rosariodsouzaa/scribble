@@ -1,21 +1,19 @@
 import { Router } from "express";
-import { store } from "../rooms/store.js";
-import { createRoom } from "../rooms/room.js";
+import { roomRepository } from "../repositories/RoomRepository.js";
 
 const router = Router();
 
-// Create a room: reserve a code now; the first socket to join-room becomes host.
+// Create a room: reserve a code and instantiate GameRoom
 router.post("/", (req, res) => {
-  const code = store.genCode();
   const options = req.body || {};
-  createRoom(code, options);
-  res.status(201).json({ code });
+  const room = roomRepository.createRoom(null, options);
+  res.status(201).json({ code: room.code });
 });
 
-// Lightweight existence/joinability check (used before navigating to a room).
+// Lightweight existence/joinability check (used before navigating to a room)
 router.get("/:code", (req, res) => {
   const code = String(req.params.code || "").toUpperCase();
-  const room = store.get(code);
+  const room = roomRepository.get(code);
   if (!room) return res.status(404).json({ error: "Room not found" });
   res.json({
     code: room.code,

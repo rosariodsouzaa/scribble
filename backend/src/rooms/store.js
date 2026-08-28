@@ -1,27 +1,14 @@
-import { customAlphabet } from "nanoid";
+import { roomRepository } from "../repositories/RoomRepository.js";
 
-// Unambiguous alphabet (no O/0, I/1) for human-friendly room codes.
-const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const makeCode = customAlphabet(ALPHABET, 6);
-
-// The single source of truth for all live rooms. Behind this wrapper so it can
-// later be swapped for Redis/Mongo without touching the game engine.
-const rooms = new Map();
-
+/**
+ * Backward compatibility wrapper for roomRepository
+ */
 export const store = {
-  has: (code) => rooms.has(code),
-  get: (code) => rooms.get(code),
-  set: (code, room) => (rooms.set(code, room), room),
-  delete: (code) => rooms.delete(code),
-  size: () => rooms.size,
-  values: () => rooms.values(),
-
-  // Generate a room code that isn't currently in use.
-  genCode() {
-    let code;
-    do {
-      code = makeCode();
-    } while (rooms.has(code));
-    return code;
-  },
+  has: (code) => roomRepository.has(code),
+  get: (code) => roomRepository.get(code),
+  set: (code, room) => roomRepository.set(code, room),
+  delete: (code) => roomRepository.delete(code),
+  size: () => roomRepository.size,
+  values: () => roomRepository.values(),
+  genCode: () => roomRepository.generateCode(),
 };
