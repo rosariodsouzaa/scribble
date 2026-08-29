@@ -9,14 +9,17 @@ export class IdentityManager {
   static CLIENT_ID_KEY = "skribl:clientId";
 
   static DEFAULT_WARRIOR = {
-    name: "Vedansh",
-    role: "Dragon Emperor",
-    level: 14,
-    coins: 3500,
-    wins: 18,
-    matches: 24,
-    avatarColor: "#f59e0b",
-    isAuthenticated: true,
+    name: "",
+    email: "",
+    role: "user",
+    title: "Novice Warrior",
+    level: 1,
+    coins: 0,
+    wins: 0,
+    matches: 0,
+    avatarColor: "#64748b",
+    bio: "",
+    isAuthenticated: false,
   };
 
   /**

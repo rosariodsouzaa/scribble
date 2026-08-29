@@ -17,6 +17,7 @@ import Auth from "./pages/Auth.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
   return (
@@ -26,25 +27,88 @@ export default function App() {
           <PaymentProvider>
             <AppLayout>
               <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard />} />
+                {/* Public Auth Routes */}
                 <Route path="/login" element={<Auth />} />
                 <Route path="/signup" element={<Auth />} />
-                <Route path="/profile" element={<UserProfile />} />
+
+                {/* Mandatory Authenticated Protected Game Routes */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <UserProfile />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/admin"
                   element={
-                    <AdminRoute>
-                      <AdminPanel />
-                    </AdminRoute>
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AdminPanel />
+                      </AdminRoute>
+                    </ProtectedRoute>
                   }
                 />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/store" element={<Store />} />
-                <Route path="/lobby" element={<Lobby />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/room/:code" element={<Room />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route
+                  path="/wallet"
+                  element={
+                    <ProtectedRoute>
+                      <Wallet />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/store"
+                  element={
+                    <ProtectedRoute>
+                      <Store />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/lobby"
+                  element={
+                    <ProtectedRoute>
+                      <Lobby />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/leaderboard"
+                  element={
+                    <ProtectedRoute>
+                      <Leaderboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/room/:code"
+                  element={
+                    <ProtectedRoute>
+                      <Room />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Catch-all fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AppLayout>
           </PaymentProvider>

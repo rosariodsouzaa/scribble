@@ -6082,4 +6082,55 @@ body {
   justify-content: center;
 }
 
+/* ==========================================================================
+   AUTH GUARD LOADING SCREEN
+   ========================================================================== */
+.auth-guard-loading-screen {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: transparent;
+}
+
+.dragon-spinner-ring {
+  width: 54px;
+  height: 54px;
+  border: 3px solid rgba(245, 158, 11, 0.15);
+  border-top-color: var(--gold-bright);
+  border-right-color: var(--amber);
+  border-radius: 50%;
+  animation: dragonSpin 0.9s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
+  filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.6));
+}
+
+@keyframes dragonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.guard-loading-text {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.gold-shimmer-text {
+  background: linear-gradient(90deg, #ffd700 0%, #f59e0b 50%, #ffd700 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShimmer 2s linear infinite;
+}
+
+@keyframes goldShimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
 

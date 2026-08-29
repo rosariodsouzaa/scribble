@@ -64,10 +64,21 @@ export function AuthWalletProvider({ children }) {
               isAuthenticated: true,
             });
             IdentityManager.saveWarriorProfile(backendUser);
+          } else if (isMounted) {
+            AuthService.setToken(null);
+            setToken("");
+            setUser({ ...IdentityManager.DEFAULT_WARRIOR, isAuthenticated: false });
           }
+        } else if (isMounted) {
+          setUser({ ...IdentityManager.DEFAULT_WARRIOR, isAuthenticated: false });
         }
       } catch (err) {
         console.warn("[AuthWallet] Session restore failed:", err.message);
+        if (isMounted) {
+          AuthService.setToken(null);
+          setToken("");
+          setUser({ ...IdentityManager.DEFAULT_WARRIOR, isAuthenticated: false });
+        }
       } finally {
         if (isMounted) setAuthLoading(false);
       }

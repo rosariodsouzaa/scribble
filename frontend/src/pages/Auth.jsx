@@ -89,11 +89,11 @@ export default function Auth() {
 
   // Auto redirect if already authenticated
   useEffect(() => {
-    if (user && user.isAuthenticated) {
+    if (user && user.isAuthenticated && user.email) {
       if (user.role === "admin") {
         navigate("/admin", { replace: true });
       } else {
-        const from = location.state?.from || "/dashboard";
+        const from = location.state?.from?.pathname || location.state?.from || "/dashboard";
         navigate(from, { replace: true });
       }
     }
