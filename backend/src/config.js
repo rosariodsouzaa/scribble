@@ -30,16 +30,14 @@ export const config = {
   emptyRoomGraceMs: 60_000,
   sweepIntervalMs: 30_000,
 
-  // Database & Auth Configuration
-  databaseUrl:
-    process.env.DATABASE_URL ||
-    "postgresql://neondb_owner:npg_cfSQlabh9n2L@ep-purple-rain-a57fkpk7-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
-  mongoUri: process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/scribble_royale",
-  jwtSecret: process.env.JWT_SECRET || "scribble_royale_dragon_secret_key_2026_super_secure",
+  // Database & Auth Configuration (Loaded securely from .env)
+  databaseUrl: process.env.DATABASE_URL || "",
+  mongoUri: process.env.MONGODB_URI || "",
+  jwtSecret: process.env.JWT_SECRET || "scribble_royale_dragon_secret_dev_key",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   otpExpiryMinutes: 10,
   resendApiKey: process.env.RESEND_API_KEY || "",
-  resendFrom: process.env.RESEND_FROM || "Scribble Royale <onboarding@resend.dev>",
+  resendFrom: process.env.RESEND_FROM || "Scribble Royale <noreply@bestere.in>",
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT) || 587,
