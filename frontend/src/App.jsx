@@ -13,6 +13,10 @@ import Lobby from "./pages/Lobby.jsx";
 import Leaderboard from "./pages/Leaderboard.jsx";
 import Store from "./pages/Store.jsx";
 import Room from "./pages/Room.jsx";
+import Auth from "./pages/Auth.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
+import AdminPanel from "./pages/AdminPanel.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 
 export default function App() {
   return (
@@ -24,6 +28,17 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/login" element={<Auth />} />
+                <Route path="/signup" element={<Auth />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminRoute>
+                      <AdminPanel />
+                    </AdminRoute>
+                  }
+                />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/store" element={<Store />} />
                 <Route path="/lobby" element={<Lobby />} />

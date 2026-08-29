@@ -11,10 +11,11 @@ import {
   Shield,
   Trophy,
   ChevronDown,
-  Sparkles,
   ShoppingBag,
   Plus,
   LogIn,
+  Crown,
+  UserPlus,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import WalletStatus from "./WalletStatus.jsx";
@@ -23,6 +24,7 @@ import Avatar from "./Avatar.jsx";
 export default function Navbar() {
   const {
     user,
+    isAdmin,
     wallet,
     soundEnabled,
     setSoundEnabled,
@@ -47,7 +49,7 @@ export default function Navbar() {
   const handleLogout = () => {
     setDropdownOpen(false);
     logout();
-    navigate("/dashboard");
+    navigate("/login");
   };
 
   return (
@@ -65,10 +67,26 @@ export default function Navbar() {
 
       {/* Right widgets */}
       <div className="nav-right-cluster">
-        {/* Dragon Gold Coins Pill with Quick Top-Up */}
-        <div className="nav-coins-pill" onClick={() => navigate("/store")} title="Your Dragon Gold earnings — Click to Top Up">
+        {/* Admin Console Shortcut Pill (if Admin) */}
+        {isAdmin && (
+          <button
+            className="nav-admin-badge-btn"
+            onClick={() => navigate("/admin")}
+            title="Imperial Admin Command Center"
+          >
+            <Crown size={15} color="#ffd700" />
+            <span>Admin Console</span>
+          </button>
+        )}
+
+        {/* Dragon Gold Coins Pill */}
+        <div
+          className="nav-coins-pill"
+          onClick={() => navigate("/store")}
+          title="Your Dragon Gold earnings — Click to Top Up"
+        >
           <Coins size={16} className="coins-icon" />
-          <span className="coins-amount">{user.coins.toLocaleString()}</span>
+          <span className="coins-amount">{(user.coins || 0).toLocaleString()}</span>
           <span className="coins-label">GOLD</span>
           <button className="coins-topup-btn" title="Purchase Gold Coins">
             <Plus size={12} />
@@ -104,6 +122,20 @@ export default function Navbar() {
           {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
         </button>
 
+        {/* Unauthenticated Quick Auth CTA */}
+        {!user.isAuthenticated && (
+          <div className="nav-auth-cta-group">
+            <button className="nav-login-btn" onClick={() => navigate("/login")}>
+              <LogIn size={15} />
+              <span>Log In</span>
+            </button>
+            <button className="nav-signup-btn" onClick={() => navigate("/signup")}>
+              <UserPlus size={15} />
+              <span>Join Free</span>
+            </button>
+          </div>
+        )}
+
         {/* Warrior Profile with Dropdown */}
         <div className="nav-profile-wrapper" ref={dropdownRef}>
           <div
@@ -114,7 +146,9 @@ export default function Navbar() {
             <Avatar name={user.name} size={30} color={user.avatarColor} />
             <div className="profile-info-mini">
               <span className="profile-name">{user.name}</span>
-              <span className="profile-level">LVL {user.level}</span>
+              <span className="profile-level">
+                {isAdmin ? "ADMIN" : `LVL ${user.level || 1}`}
+              </span>
             </div>
             <ChevronDown size={14} className={`dropdown-arrow ${dropdownOpen ? "rotated" : ""}`} />
           </div>
@@ -126,21 +160,23 @@ export default function Navbar() {
                 <Avatar name={user.name} size={42} color={user.avatarColor} />
                 <div className="dropdown-user-details">
                   <span className="dropdown-user-name">{user.name}</span>
-                  <span className="dropdown-user-role">{user.role}</span>
+                  <span className="dropdown-user-role">
+                    {user.title || (isAdmin ? "Imperial Grandmaster" : "Dragon Warrior")}
+                  </span>
                 </div>
               </div>
 
               <div className="dropdown-stats-grid">
                 <div className="dropdown-stat">
-                  <span className="stat-num">{user.wins}</span>
+                  <span className="stat-num">{user.wins || 0}</span>
                   <span className="stat-lbl">Victories</span>
                 </div>
                 <div className="dropdown-stat">
-                  <span className="stat-num">🪙 {user.coins}</span>
+                  <span className="stat-num">🪙 {user.coins || 0}</span>
                   <span className="stat-lbl">Gold</span>
                 </div>
                 <div className="dropdown-stat">
-                  <span className="stat-num">LVL {user.level}</span>
+                  <span className="stat-num">LVL {user.level || 1}</span>
                   <span className="stat-lbl">Rank</span>
                 </div>
               </div>
@@ -148,6 +184,32 @@ export default function Navbar() {
               <div className="dropdown-divider" />
 
               <div className="dropdown-actions">
+                {/* User Panel Link */}
+                <button
+                  className="dropdown-item-btn"
+                  onClick={() => {
+                    setDropdownOpen(false);
+                    navigate("/profile");
+                  }}
+                >
+                  <User size={16} color="#3b82f6" />
+                  <span>Warrior Dossier (Profile)</span>
+                </button>
+
+                {/* Admin Console Link (if Admin) */}
+                {isAdmin && (
+                  <button
+                    className="dropdown-item-btn admin-highlight"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      navigate("/admin");
+                    }}
+                  >
+                    <Crown size={16} color="#ffd700" />
+                    <span>Imperial Admin Panel</span>
+                  </button>
+                )}
+
                 <button
                   className="dropdown-item-btn"
                   onClick={() => {
@@ -168,17 +230,6 @@ export default function Navbar() {
                 >
                   <Flame size={16} color="#f59e0b" />
                   <span>Summon Battle Chamber</span>
-                </button>
-
-                <button
-                  className="dropdown-item-btn"
-                  onClick={() => {
-                    setDropdownOpen(false);
-                    navigate("/wallet");
-                  }}
-                >
-                  <WalletIcon size={16} color="#10b981" />
-                  <span>Dragon Vault Wallet</span>
                 </button>
 
                 <button
@@ -206,11 +257,11 @@ export default function Navbar() {
                     className="dropdown-item-btn login-btn"
                     onClick={() => {
                       setDropdownOpen(false);
-                      navigate("/lobby");
+                      navigate("/login");
                     }}
                   >
                     <LogIn size={15} />
-                    <span>Change Nickname</span>
+                    <span>Sign In to Save Progress</span>
                   </button>
                 )}
               </div>

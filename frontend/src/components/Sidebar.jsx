@@ -8,17 +8,23 @@ import {
   Trophy,
   Sparkles,
   LogOut,
-  Flame,
+  User,
+  Crown,
+  LogIn,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 
 export default function Sidebar() {
-  const { user, logout } = useAuthWallet();
+  const { user, isAdmin, logout } = useAuthWallet();
   const navigate = useNavigate();
 
   const navItems = [
     { to: "/dashboard", icon: <LayoutDashboard size={19} />, label: "Dashboard" },
     { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
+    { to: "/profile", icon: <User size={19} />, label: "Warrior Hub", badge: user.isAuthenticated ? "MY HUB" : null },
+    ...(isAdmin
+      ? [{ to: "/admin", icon: <Crown size={19} color="#ffd700" />, label: "Admin Panel", badge: "VIP" }]
+      : []),
     { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
     { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
     { to: "/leaderboard", icon: <Trophy size={19} />, label: "Hall of Fame" },
@@ -26,7 +32,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/dashboard");
+    navigate("/login");
   };
 
   return (
@@ -60,10 +66,15 @@ export default function Sidebar() {
           <span className="season-level-text">Tier 14 / 20 • Upgrade VIP</span>
         </div>
 
-        {user.isAuthenticated && (
+        {user.isAuthenticated ? (
           <button className="sidebar-logout-btn" onClick={handleLogout} title="Log Out">
             <LogOut size={16} />
-            <span>Log Out</span>
+            <span>Log Out Warrior</span>
+          </button>
+        ) : (
+          <button className="sidebar-login-prompt-btn" onClick={() => navigate("/login")}>
+            <LogIn size={15} />
+            <span>Log In / Sign Up</span>
           </button>
         )}
       </div>
