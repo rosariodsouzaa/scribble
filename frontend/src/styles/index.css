@@ -4373,6 +4373,7 @@ body {
   letter-spacing: 2px;
   margin: 0;
   background: var(--gold-metallic);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -6122,6 +6123,7 @@ body {
 .gold-shimmer-text {
   background: linear-gradient(90deg, #ffd700 0%, #f59e0b 50%, #ffd700 100%);
   background-size: 200% auto;
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: goldShimmer 2s linear infinite;
