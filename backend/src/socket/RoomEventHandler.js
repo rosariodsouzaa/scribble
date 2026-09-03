@@ -53,6 +53,13 @@ export class RoomEventHandler {
     }
   }
 
+  handlePlayAgain(socket) {
+    const room = this.getCurrentRoom(socket);
+    if (room) {
+      room.resetToWaiting(socket.id);
+    }
+  }
+
   handleDisconnect(socket) {
     const room = this.getCurrentRoom(socket);
     if (room) {

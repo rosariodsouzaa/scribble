@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
-import { Trophy, Coins, Sparkles, ArrowRight } from "lucide-react";
+import { Trophy, Coins, Sparkles, ArrowRight, Swords, RotateCcw, LogOut } from "lucide-react";
 import { useGame } from "../state/useGame.js";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import FireDragonLogo from "./FireDragonLogo.jsx";
@@ -9,15 +9,17 @@ import Button from "./Button.jsx";
 
 export default function GameEnd() {
   const nav = useNavigate();
-  const { state, actions } = useGame();
+  const { state, actions, amHost } = useGame();
   const { addCoins, user } = useAuthWallet();
+  const [countdown, setCountdown] = useState(15);
+  const [autoReturnPaused, setAutoReturnPaused] = useState(false);
 
   const ge = state.gameEnd;
   const standings = ge?.standings || [...state.players].sort((a, b) => b.score - a.score);
   const winner = standings[0];
   const isWinner = winner && winner.id === state.myId;
 
-  // Trigger celebration confetti
+  // Trigger celebration confetti & awards
   useEffect(() => {
     try {
       confetti({
@@ -34,10 +36,25 @@ export default function GameEnd() {
     } catch {}
   }, [isWinner]);
 
-  function backToLobby() {
+  // Optional countdown to keep all teammates together automatically
+  useEffect(() => {
+    if (autoReturnPaused) return;
+    if (countdown <= 0) {
+      actions.playAgain();
+      return;
+    }
+    const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [countdown, autoReturnPaused, actions]);
+
+  const handleRematch = () => {
+    actions.playAgain();
+  };
+
+  const handleLeaveChamber = () => {
     actions.leave();
     nav("/dashboard");
-  }
+  };
 
   const RANK_TITLES = ["🐉 DRAGON EMPEROR", "🐯 TIGER CHAMPION", "🦅 PHOENIX MASTER", "⚔️ DRAGON WARRIOR"];
 
@@ -82,9 +99,40 @@ export default function GameEnd() {
           ))}
         </ol>
 
-        <Button variant="flame" size="lg" className="block" onClick={backToLobby}>
-          <span>Return to Sanctuary ⛩️</span>
-        </Button>
+        {/* Rematch & Chamber Retention Controls */}
+        <div className="gameend-actions" style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%", marginTop: "16px" }}>
+          <Button variant="flame" size="lg" className="block" onClick={handleRematch}>
+            <Swords size={18} />
+            <span>Rematch with Teammates (Stay in Room)</span>
+          </Button>
+
+          <p className="muted tiny center-text" style={{ margin: "2px 0 6px" }}>
+            {countdown > 0 ? (
+              <span>
+                ⏳ Automatically returning all teammates to chamber lobby in <strong>{countdown}s</strong>{" "}
+                <button
+                  type="button"
+                  onClick={() => setAutoReturnPaused(true)}
+                  style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", textDecoration: "underline", fontSize: "11px" }}
+                >
+                  (Pause)
+                </button>
+              </span>
+            ) : (
+              <span>Preparing chamber for the next clash…</span>
+            )}
+          </p>
+
+          <button
+            type="button"
+            className="dragon-btn secondary sm"
+            style={{ width: "100%", opacity: 0.75 }}
+            onClick={handleLeaveChamber}
+          >
+            <LogOut size={14} />
+            <span>Leave Chamber & Return to Dashboard</span>
+          </button>
+        </div>
       </div>
     </div>
   );

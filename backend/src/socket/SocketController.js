@@ -30,6 +30,7 @@ export class SocketController {
     socket.on("leave-room", () => this.roomHandler.handleLeave(socket));
     socket.on("player-ready", (data) => this.roomHandler.handleReady(socket, data));
     socket.on("start-game", () => this.roomHandler.handleStartGame(socket));
+    socket.on("play-again", () => this.roomHandler.handlePlayAgain(socket));
     socket.on("disconnect", () => this.roomHandler.handleDisconnect(socket));
 
     // Drawing pipeline (drawer only, zero server stroke storage)

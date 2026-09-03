@@ -25,6 +25,7 @@ export function useGame() {
       clearError: () => dispatch({ type: "CLEAR_ERROR" }),
       ready: (ready) => dispatcher.setReady(ready),
       start: () => dispatcher.startGame(),
+      playAgain: () => dispatcher.playAgain(),
       guess: (text) => dispatcher.submitGuess(text),
       drawStart: (p) => dispatcher.drawStart(p),
       drawMove: (points) => dispatcher.drawMove(points),

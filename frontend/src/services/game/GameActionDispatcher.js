@@ -28,6 +28,10 @@ export class GameActionDispatcher {
     this.socket.emit(C2S.START);
   }
 
+  playAgain() {
+    this.socket.emit(C2S.PLAY_AGAIN);
+  }
+
   submitGuess(text) {
     this.socket.emit(C2S.GUESS, { text });
   }

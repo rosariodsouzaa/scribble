@@ -492,6 +492,31 @@ export class GameRoom {
   }
 
   /**
+   * Reset the chamber back to waiting state so all teammates stay in the room for another match
+   * @param {string} [socketId]
+   */
+  resetToWaiting(socketId = null) {
+    this.clearTimers();
+    this.round = null;
+    this.roundNumber = 0;
+    this.usedWords.clear();
+    this.state = "waiting";
+
+    for (const player of this.players.values()) {
+      player.resetScore();
+      player.setReady(false);
+    }
+
+    console.log(`[GameRoom] 🔄 Chamber ${this.code} returned to waiting room. Teammates retained: ${this.players.size}`);
+
+    this.broadcast("room-state", this.serialize());
+    this.broadcast("player-updated", {
+      players: this.serializePlayers(),
+    });
+    return true;
+  }
+
+  /**
    * Clean up all timers and resources
    */
   destroy() {

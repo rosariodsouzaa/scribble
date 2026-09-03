@@ -55,6 +55,7 @@ export function gameReducer(state, action) {
 
     case "ROOM_STATE": {
       const r = action.room;
+      const isWaiting = r.state === "waiting";
       return {
         ...state,
         error: null,
@@ -63,6 +64,10 @@ export function gameReducer(state, action) {
         state: r.state,
         settings: r.settings,
         players: r.players,
+        gameEnd: isWaiting ? null : state.gameEnd,
+        roundEnd: isWaiting ? null : state.roundEnd,
+        myWord: isWaiting ? null : (r.round.word ?? state.myWord),
+        guessedCorrect: isWaiting ? false : state.guessedCorrect,
         round: {
           number: r.round.number,
           maxRounds: r.settings.maxRounds,
@@ -72,7 +77,6 @@ export function gameReducer(state, action) {
           maskedWord: r.round.maskedWord || "",
           wordLength: r.round.wordLength || 0,
         },
-        myWord: r.round.word ?? state.myWord,
         remaining: r.round.endsAt ? secondsLeft(r.round.endsAt) : 0,
       };
     }

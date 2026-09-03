@@ -9,6 +9,7 @@ export const C2S = {
   DRAW_END: "draw-end",
   CLEAR: "clear-canvas",
   GUESS: "submit-guess",
+  PLAY_AGAIN: "play-again",
 };
 
 export const S2C = {
