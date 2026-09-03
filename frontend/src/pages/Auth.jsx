@@ -8,6 +8,7 @@ import {
   User,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
   Eye,
   EyeOff,
   CheckCircle2,
@@ -17,6 +18,8 @@ import {
   Swords,
   RefreshCw,
   Zap,
+  KeyRound,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import { AuthService } from "../services/auth/AuthService.js";
@@ -58,9 +61,14 @@ export default function Auth() {
   const navigate = useNavigate();
   const { loginWithCredentials, signupWithOtp, user } = useAuthWallet();
 
-  // Route determines initial mode: /signup or /login
-  const isInitialSignup = location.pathname.includes("signup");
-  const [activeTab, setActiveTab] = useState(isInitialSignup ? "signup" : "login");
+  // Route determines initial mode: /signup, /forgot-password, or /login
+  const getInitialTab = (pathname) => {
+    if (pathname.includes("signup")) return "signup";
+    if (pathname.includes("forgot-password")) return "forgot";
+    return "login";
+  };
+
+  const [activeTab, setActiveTab] = useState(() => getInitialTab(location.pathname));
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -73,19 +81,32 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
-  const [otpTimer, setOtpTimer] = useState(60);
-  const [canResendOtp, setCanResendOtp] = useState(false);
+  const [signupOtpDigits, setSignupOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [signupOtpTimer, setSignupOtpTimer] = useState(60);
+  const [canResendSignupOtp, setCanResendSignupOtp] = useState(false);
   const [selectedColor, setSelectedColor] = useState("#f59e0b");
   const [selectedTitle, setSelectedTitle] = useState("Dragon Novice");
-  const [lastDispatchedOtp, setLastDispatchedOtp] = useState("");
+  const [signupLastDispatchedOtp, setSignupLastDispatchedOtp] = useState("");
+
+  // Forgot Password multi-step state
+  const [forgotStep, setForgotStep] = useState(1); // 1: Email -> 2: OTP -> 3: New Passcode -> 4: Done
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtpDigits, setForgotOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [forgotOtpTimer, setForgotOtpTimer] = useState(60);
+  const [canResendForgotOtp, setCanResendForgotOtp] = useState(false);
+  const [forgotLastDispatchedOtp, setForgotLastDispatchedOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Status & loading
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const otpInputRefs = useRef([]);
+  const signupOtpInputRefs = useRef([]);
+  const forgotOtpInputRefs = useRef([]);
 
   // Auto redirect if already authenticated
   useEffect(() => {
@@ -101,21 +122,32 @@ export default function Auth() {
 
   // Sync tab with URL
   useEffect(() => {
-    setActiveTab(location.pathname.includes("signup") ? "signup" : "login");
+    setActiveTab(getInitialTab(location.pathname));
     setErrorMsg("");
     setSuccessMsg("");
   }, [location.pathname]);
 
-  // Countdown timer for OTP resend
+  // Countdown timer for Signup OTP resend
   useEffect(() => {
     let interval = null;
-    if (signupStep === 2 && otpTimer > 0) {
-      interval = setInterval(() => setOtpTimer((prev) => prev - 1), 1000);
-    } else if (otpTimer === 0) {
-      setCanResendOtp(true);
+    if (activeTab === "signup" && signupStep === 2 && signupOtpTimer > 0) {
+      interval = setInterval(() => setSignupOtpTimer((prev) => prev - 1), 1000);
+    } else if (signupOtpTimer === 0) {
+      setCanResendSignupOtp(true);
     }
     return () => clearInterval(interval);
-  }, [signupStep, otpTimer]);
+  }, [activeTab, signupStep, signupOtpTimer]);
+
+  // Countdown timer for Forgot Password OTP resend
+  useEffect(() => {
+    let interval = null;
+    if (activeTab === "forgot" && forgotStep === 2 && forgotOtpTimer > 0) {
+      interval = setInterval(() => setForgotOtpTimer((prev) => prev - 1), 1000);
+    } else if (forgotOtpTimer === 0) {
+      setCanResendForgotOtp(true);
+    }
+    return () => clearInterval(interval);
+  }, [activeTab, forgotStep, forgotOtpTimer]);
 
   const handleRandomName = () => {
     const random = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
@@ -125,7 +157,7 @@ export default function Auth() {
 
   // --- Login Handler ---
   const handleLoginSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
     setLoading(true);
@@ -179,7 +211,7 @@ export default function Auth() {
   };
 
   // --- Signup Step 1: Send OTP ---
-  const handleSendOtpStep1 = async (e) => {
+  const handleSendSignupOtpStep1 = async (e) => {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -201,12 +233,12 @@ export default function Auth() {
     try {
       const res = await AuthService.sendOtp(signupEmail, "signup");
       if (res.simulatedOtp) {
-        setLastDispatchedOtp(res.simulatedOtp);
+        setSignupLastDispatchedOtp(res.simulatedOtp);
       }
       setSuccessMsg(res.message || `Verification code sent to ${signupEmail}`);
       setSignupStep(2);
-      setOtpTimer(60);
-      setCanResendOtp(false);
+      setSignupOtpTimer(60);
+      setCanResendSignupOtp(false);
     } catch (err) {
       setErrorMsg(err.message || "Failed to send verification code");
     } finally {
@@ -214,50 +246,50 @@ export default function Auth() {
     }
   };
 
-  // Handle OTP digit input
-  const handleOtpDigitChange = (index, val) => {
+  // Signup OTP handlers
+  const handleSignupOtpDigitChange = (index, val) => {
     const clean = val.replace(/\D/g, "").slice(-1);
-    const updated = [...otpDigits];
+    const updated = [...signupOtpDigits];
     updated[index] = clean;
-    setOtpDigits(updated);
+    setSignupOtpDigits(updated);
 
     if (clean && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
+      signupOtpInputRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
+  const handleSignupOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !signupOtpDigits[index] && index > 0) {
+      signupOtpInputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleOtpPaste = (e) => {
+  const handleSignupOtpPaste = (e) => {
     e.preventDefault();
     const paste = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (!paste) return;
     const digits = paste.split("");
-    const updated = [...otpDigits];
+    const updated = [...signupOtpDigits];
     for (let i = 0; i < 6; i++) {
       updated[i] = digits[i] || "";
     }
-    setOtpDigits(updated);
+    setSignupOtpDigits(updated);
     const focusIdx = Math.min(paste.length, 5);
-    otpInputRefs.current[focusIdx]?.focus();
+    signupOtpInputRefs.current[focusIdx]?.focus();
   };
 
-  const handleAutoFillDemoOtp = () => {
-    if (lastDispatchedOtp && lastDispatchedOtp.length === 6) {
-      const digits = lastDispatchedOtp.split("");
-      setOtpDigits(digits);
-      otpInputRefs.current[5]?.focus();
+  const handleAutoFillSignupOtp = () => {
+    if (signupLastDispatchedOtp && signupLastDispatchedOtp.length === 6) {
+      const digits = signupLastDispatchedOtp.split("");
+      setSignupOtpDigits(digits);
+      signupOtpInputRefs.current[5]?.focus();
     }
   };
 
-  // --- Signup Step 2: Verify OTP ---
-  const handleVerifyOtpStep2 = async (e) => {
+  // Signup Step 2: Verify OTP
+  const handleVerifySignupOtpStep2 = async (e) => {
     e.preventDefault();
-    const enteredOtp = otpDigits.join("");
+    const enteredOtp = signupOtpDigits.join("");
     if (enteredOtp.length < 6) {
       setErrorMsg("Please enter all 6 digits of your verification code");
       return;
@@ -276,11 +308,11 @@ export default function Auth() {
     }
   };
 
-  // --- Signup Step 3: Finalize Registration ---
+  // Signup Step 3: Finalize
   const handleFinalizeSignup = async () => {
     setErrorMsg("");
     setLoading(true);
-    const enteredOtp = otpDigits.join("");
+    const enteredOtp = signupOtpDigits.join("");
 
     try {
       const res = await signupWithOtp({
@@ -303,6 +335,159 @@ export default function Auth() {
     }
   };
 
+  // ======================= FORGOT PASSWORD WORKFLOW =======================
+
+  // Forgot Step 1: Request Password Reset OTP
+  const handleSendForgotOtpStep1 = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!forgotEmail.trim() || !forgotEmail.includes("@")) {
+      setErrorMsg("Please enter a valid warrior email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await AuthService.sendOtp(forgotEmail, "reset_password");
+      if (res.simulatedOtp) {
+        setForgotLastDispatchedOtp(res.simulatedOtp);
+      }
+      setSuccessMsg(res.message || `Password reset code dispatched to ${forgotEmail}`);
+      setForgotStep(2);
+      setForgotOtpTimer(60);
+      setCanResendForgotOtp(false);
+    } catch (err) {
+      setErrorMsg(err.message || "No warrior account found with this email.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot OTP Input Handlers
+  const handleForgotOtpDigitChange = (index, val) => {
+    const clean = val.replace(/\D/g, "").slice(-1);
+    const updated = [...forgotOtpDigits];
+    updated[index] = clean;
+    setForgotOtpDigits(updated);
+
+    if (clean && index < 5) {
+      forgotOtpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleForgotOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !forgotOtpDigits[index] && index > 0) {
+      forgotOtpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleForgotOtpPaste = (e) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!paste) return;
+    const digits = paste.split("");
+    const updated = [...forgotOtpDigits];
+    for (let i = 0; i < 6; i++) {
+      updated[i] = digits[i] || "";
+    }
+    setForgotOtpDigits(updated);
+    const focusIdx = Math.min(paste.length, 5);
+    forgotOtpInputRefs.current[focusIdx]?.focus();
+  };
+
+  const handleAutoFillForgotOtp = () => {
+    if (forgotLastDispatchedOtp && forgotLastDispatchedOtp.length === 6) {
+      const digits = forgotLastDispatchedOtp.split("");
+      setForgotOtpDigits(digits);
+      forgotOtpInputRefs.current[5]?.focus();
+    }
+  };
+
+  // Forgot Step 2: Pre-validate OTP
+  const handleVerifyForgotOtpStep2 = async (e) => {
+    e.preventDefault();
+    const enteredOtp = forgotOtpDigits.join("");
+    if (enteredOtp.length < 6) {
+      setErrorMsg("Please enter all 6 digits of your recovery code.");
+      return;
+    }
+
+    setErrorMsg("");
+    setLoading(true);
+    try {
+      await AuthService.verifyOtp(forgotEmail, enteredOtp, "reset_password");
+      setSuccessMsg("Recovery code verified! Enter your new battle passcode.");
+      setForgotStep(3);
+    } catch (err) {
+      setErrorMsg(err.message || "Invalid or expired recovery code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot Step 3: Reset Passcode
+  const handleResetPasswordStep3 = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!newPassword || newPassword.length < 6) {
+      setErrorMsg("New passcode must be at least 6 characters long.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMsg("Passcodes do not match. Please verify.");
+      return;
+    }
+
+    const enteredOtp = forgotOtpDigits.join("");
+    setLoading(true);
+    try {
+      const res = await AuthService.resetPassword({
+        email: forgotEmail,
+        otp: enteredOtp,
+        newPassword,
+      });
+
+      setSuccessMsg(res.message || "Battle passcode successfully reset!");
+      setForgotStep(4);
+      // Pre-fill login credentials for seamless entry
+      setLoginEmail(forgotEmail);
+      setLoginPassword(newPassword);
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to reset passcode. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Switch to Forgot Password View
+  const handleOpenForgotPassword = () => {
+    if (loginEmail.trim()) {
+      setForgotEmail(loginEmail.trim());
+    }
+    setForgotStep(1);
+    setForgotOtpDigits(["", "", "", "", "", ""]);
+    setNewPassword("");
+    setConfirmPassword("");
+    setErrorMsg("");
+    setSuccessMsg("");
+    setActiveTab("forgot");
+    navigate("/forgot-password");
+  };
+
+  // Switch back to Login View
+  const handleBackToLogin = () => {
+    setActiveTab("login");
+    setErrorMsg("");
+    setSuccessMsg("");
+    setForgotStep(1);
+    navigate("/login");
+  };
+
   return (
     <div className="dragon-auth-page">
       <div className="auth-ambient-glow glow-1" />
@@ -315,34 +500,48 @@ export default function Auth() {
             <Flame size={28} className="auth-flame-icon" />
           </div>
           <h1 className="auth-brand-title">SCRIBBLE ROYALE</h1>
-          <p className="auth-brand-subtitle">Dragon Dynasty Authentication Sanctuary</p>
+          <p className="auth-brand-subtitle">
+            {activeTab === "forgot"
+              ? "Battle Passcode Recovery Chamber"
+              : "Dragon Dynasty Authentication Sanctuary"}
+          </p>
         </div>
 
-        {/* Tab Selector */}
-        <div className="auth-tabs">
-          <button
-            type="button"
-            className={`auth-tab-btn ${activeTab === "login" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("login");
-              navigate("/login");
-            }}
-          >
-            <Shield size={16} />
-            <span>Warrior Portal (Login)</span>
-          </button>
-          <button
-            type="button"
-            className={`auth-tab-btn ${activeTab === "signup" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("signup");
-              navigate("/signup");
-            }}
-          >
-            <Crown size={16} />
-            <span>Join Dynasty (Sign Up)</span>
-          </button>
-        </div>
+        {/* Tab Selector (Shown for Login & Sign Up) */}
+        {activeTab !== "forgot" ? (
+          <div className="auth-tabs">
+            <button
+              type="button"
+              className={`auth-tab-btn ${activeTab === "login" ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab("login");
+                navigate("/login");
+              }}
+            >
+              <Shield size={16} />
+              <span>Warrior Portal (Login)</span>
+            </button>
+            <button
+              type="button"
+              className={`auth-tab-btn ${activeTab === "signup" ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab("signup");
+                navigate("/signup");
+              }}
+            >
+              <Crown size={16} />
+              <span>Join Dynasty (Sign Up)</span>
+            </button>
+          </div>
+        ) : (
+          <div className="forgot-header-bar">
+            <button type="button" className="forgot-back-btn" onClick={handleBackToLogin}>
+              <ArrowLeft size={16} />
+              <span>Back to Login</span>
+            </button>
+            <span className="forgot-header-title">Passcode Recovery</span>
+          </div>
+        )}
 
         {/* Alert Banners */}
         {errorMsg && (
@@ -378,10 +577,20 @@ export default function Auth() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">
-                <Lock size={15} />
-                <span>Secret Passcode</span>
-              </label>
+              <div className="form-label-row">
+                <label className="form-label">
+                  <Lock size={15} />
+                  <span>Secret Passcode</span>
+                </label>
+                <button
+                  type="button"
+                  className="forgot-password-trigger"
+                  onClick={handleOpenForgotPassword}
+                >
+                  <KeyRound size={13} />
+                  <span>Forgot Passcode?</span>
+                </button>
+              </div>
               <div className="password-input-wrapper">
                 <input
                   type={showLoginPassword ? "text" : "password"}
@@ -450,6 +659,272 @@ export default function Auth() {
           </form>
         )}
 
+        {/* ======================= FORGOT PASSWORD WORKFLOW ======================= */}
+        {activeTab === "forgot" && (
+          <div className="auth-forgot-workflow">
+            {/* Step Progress Indicators */}
+            {forgotStep <= 3 && (
+              <div className="signup-steps-bar">
+                <div className={`step-item ${forgotStep >= 1 ? "active" : ""} ${forgotStep > 1 ? "done" : ""}`}>
+                  <span className="step-num">1</span>
+                  <span className="step-label">Email</span>
+                </div>
+                <div className="step-connector" />
+                <div className={`step-item ${forgotStep >= 2 ? "active" : ""} ${forgotStep > 2 ? "done" : ""}`}>
+                  <span className="step-num">2</span>
+                  <span className="step-label">Email OTP</span>
+                </div>
+                <div className="step-connector" />
+                <div className={`step-item ${forgotStep >= 3 ? "active" : ""}`}>
+                  <span className="step-num">3</span>
+                  <span className="step-label">New Passcode</span>
+                </div>
+              </div>
+            )}
+
+            {/* FORGOT STEP 1: Enter Email */}
+            {forgotStep === 1 && (
+              <form className="auth-form" onSubmit={handleSendForgotOtpStep1}>
+                <div className="form-info-banner">
+                  <KeyRound size={18} className="info-icon" />
+                  <p>
+                    Enter the email registered with your warrior account. We will send a 6-digit passcode recovery scroll code.
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <Mail size={15} />
+                    <span>Warrior Account Email</span>
+                  </label>
+                  <input
+                    type="email"
+                    className="dragon-input"
+                    placeholder="e.g. warrior@scribbleroyale.io"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    autoFocus
+                    autoComplete="email"
+                  />
+                </div>
+
+                <button type="submit" className="dragon-btn primary auth-submit-btn" disabled={loading}>
+                  {loading ? (
+                    <span>Dispatching Recovery Scroll...</span>
+                  ) : (
+                    <>
+                      <span>Send Recovery Code</span>
+                      <ArrowRight size={17} />
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="dragon-btn secondary"
+                  style={{ width: "100%", marginTop: "4px" }}
+                  onClick={handleBackToLogin}
+                  disabled={loading}
+                >
+                  <ArrowLeft size={16} />
+                  <span>Return to Login</span>
+                </button>
+              </form>
+            )}
+
+            {/* FORGOT STEP 2: Enter & Verify OTP */}
+            {forgotStep === 2 && (
+              <form className="auth-form" onSubmit={handleVerifyForgotOtpStep2}>
+                <div className="otp-intro-card">
+                  <p className="otp-intro-text">
+                    Enter the 6-digit recovery code sent to <strong>{forgotEmail}</strong>:
+                  </p>
+
+                  {/* Discrete OTP Digit Boxes */}
+                  <div className="otp-boxes-grid" onPaste={handleForgotOtpPaste}>
+                    {forgotOtpDigits.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => (forgotOtpInputRefs.current[idx] = el)}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        className="otp-digit-box"
+                        value={digit}
+                        onChange={(e) => handleForgotOtpDigitChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleForgotOtpKeyDown(idx, e)}
+                        autoFocus={idx === 0}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Auto-fill Simulated OTP for dev convenience */}
+                  {forgotLastDispatchedOtp && (
+                    <div className="otp-autofill-banner">
+                      <div className="autofill-left">
+                        <Zap size={14} color="#ffd700" />
+                        <span>Code: <strong>{forgotLastDispatchedOtp}</strong></span>
+                      </div>
+                      <button type="button" className="autofill-btn" onClick={handleAutoFillForgotOtp}>
+                        ⚡ Auto-Fill Code
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Resend Countdown */}
+                  <div className="otp-timer-row">
+                    {canResendForgotOtp ? (
+                      <button
+                        type="button"
+                        className="resend-otp-btn"
+                        onClick={handleSendForgotOtpStep1}
+                        disabled={loading}
+                      >
+                        <RefreshCw size={13} />
+                        <span>Resend Recovery Code</span>
+                      </button>
+                    ) : (
+                      <span className="resend-countdown">Resend code in {forgotOtpTimer}s</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="otp-actions-row">
+                  <button
+                    type="button"
+                    className="dragon-btn secondary"
+                    onClick={() => setForgotStep(1)}
+                    disabled={loading}
+                  >
+                    Edit Email
+                  </button>
+                  <button type="submit" className="dragon-btn primary" disabled={loading}>
+                    {loading ? "Verifying..." : "Verify Code"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* FORGOT STEP 3: Enter New Passcode */}
+            {forgotStep === 3 && (
+              <form className="auth-form" onSubmit={handleResetPasswordStep3}>
+                <div className="form-info-banner">
+                  <ShieldCheck size={18} className="info-icon" />
+                  <p>Recovery code verified! Create your new battle passcode below.</p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <Lock size={15} />
+                    <span>New Battle Passcode</span>
+                  </label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      className="dragon-input"
+                      placeholder="Minimum 6 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoFocus
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <Lock size={15} />
+                    <span>Confirm New Passcode</span>
+                  </label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      className={`dragon-input ${
+                        confirmPassword && newPassword !== confirmPassword ? "input-mismatch" : ""
+                      }`}
+                      placeholder="Re-enter new passcode"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <span className="field-validation-error">Passcodes do not match</span>
+                  )}
+                  {confirmPassword && newPassword === confirmPassword && (
+                    <span className="field-validation-success">✓ Passcodes match</span>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  className="dragon-btn primary auth-submit-btn"
+                  disabled={loading || (confirmPassword && newPassword !== confirmPassword)}
+                >
+                  {loading ? (
+                    <span>Forging New Passcode...</span>
+                  ) : (
+                    <>
+                      <span>Reset Battle Passcode</span>
+                      <Sparkles size={17} />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* FORGOT STEP 4: Success Confirmation */}
+            {forgotStep === 4 && (
+              <div className="forgot-success-card">
+                <div className="success-icon-badge">
+                  <CheckCircle2 size={48} className="success-flame" />
+                </div>
+                <h3 className="success-title">Passcode Reset Complete!</h3>
+                <p className="success-description">
+                  Your battle passcode for <strong>{forgotEmail}</strong> has been updated. You can now enter the arena.
+                </p>
+
+                <button
+                  type="button"
+                  className="dragon-btn primary auth-submit-btn"
+                  onClick={handleLoginSubmit}
+                  disabled={loading}
+                >
+                  {loading ? "Entering Arena..." : "Log In with New Passcode"}
+                </button>
+
+                <button
+                  type="button"
+                  className="dragon-btn secondary"
+                  style={{ width: "100%", marginTop: "8px" }}
+                  onClick={handleBackToLogin}
+                >
+                  Return to Login Screen
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ======================= SIGN UP VIEW (MULTI-STEP) ======================= */}
         {activeTab === "signup" && (
           <div className="auth-signup-workflow">
@@ -473,7 +948,7 @@ export default function Auth() {
 
             {/* STEP 1: Name, Email, Password */}
             {signupStep === 1 && (
-              <form className="auth-form" onSubmit={handleSendOtpStep1}>
+              <form className="auth-form" onSubmit={handleSendSignupOtpStep1}>
                 <div className="form-group">
                   <div className="form-label-row">
                     <label className="form-label">
@@ -553,38 +1028,38 @@ export default function Auth() {
 
             {/* STEP 2: Live OTP Verification */}
             {signupStep === 2 && (
-              <form className="auth-form" onSubmit={handleVerifyOtpStep2}>
+              <form className="auth-form" onSubmit={handleVerifySignupOtpStep2}>
                 <div className="otp-intro-card">
                   <p className="otp-intro-text">
                     Enter the 6-digit scroll code sent to <strong>{signupEmail}</strong>:
                   </p>
 
                   {/* Discrete OTP Digit Boxes */}
-                  <div className="otp-boxes-grid" onPaste={handleOtpPaste}>
-                    {otpDigits.map((digit, idx) => (
+                  <div className="otp-boxes-grid" onPaste={handleSignupOtpPaste}>
+                    {signupOtpDigits.map((digit, idx) => (
                       <input
                         key={idx}
-                        ref={(el) => (otpInputRefs.current[idx] = el)}
+                        ref={(el) => (signupOtpInputRefs.current[idx] = el)}
                         type="text"
                         inputMode="numeric"
                         maxLength={1}
                         className="otp-digit-box"
                         value={digit}
-                        onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
-                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        onChange={(e) => handleSignupOtpDigitChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleSignupOtpKeyDown(idx, e)}
                         autoFocus={idx === 0}
                       />
                     ))}
                   </div>
 
                   {/* Auto-fill Simulated OTP for instant dev convenience */}
-                  {lastDispatchedOtp && (
+                  {signupLastDispatchedOtp && (
                     <div className="otp-autofill-banner">
                       <div className="autofill-left">
                         <Zap size={14} color="#ffd700" />
-                        <span>Code: <strong>{lastDispatchedOtp}</strong></span>
+                        <span>Code: <strong>{signupLastDispatchedOtp}</strong></span>
                       </div>
-                      <button type="button" className="autofill-btn" onClick={handleAutoFillDemoOtp}>
+                      <button type="button" className="autofill-btn" onClick={handleAutoFillSignupOtp}>
                         ⚡ Auto-Fill Code
                       </button>
                     </div>
@@ -592,18 +1067,18 @@ export default function Auth() {
 
                   {/* Resend Countdown */}
                   <div className="otp-timer-row">
-                    {canResendOtp ? (
+                    {canResendSignupOtp ? (
                       <button
                         type="button"
                         className="resend-otp-btn"
-                        onClick={handleSendOtpStep1}
+                        onClick={handleSendSignupOtpStep1}
                         disabled={loading}
                       >
                         <RefreshCw size={13} />
                         <span>Resend Verification Code</span>
                       </button>
                     ) : (
-                      <span className="resend-countdown">Resend code in {otpTimer}s</span>
+                      <span className="resend-countdown">Resend code in {signupOtpTimer}s</span>
                     )}
                   </div>
                 </div>

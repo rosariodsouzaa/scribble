@@ -69,6 +69,57 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 /**
+ * POST /api/auth/reset-password
+ * Resets user battle passcode after verifying OTP
+ */
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
+
+    if (!otp) {
+      return res.status(400).json({ error: "Verification code is required." });
+    }
+
+    if (!newPassword || String(newPassword).length < 6) {
+      return res.status(400).json({ error: "New passcode must be at least 6 characters long." });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await UserRepository.findByEmail(cleanEmail);
+    if (!user) {
+      return res.status(404).json({ error: "No warrior account found with this email." });
+    }
+
+    // Verify and consume OTP for reset_password
+    const verification = await OtpService.verifyOtp(cleanEmail, otp, "reset_password", true);
+    if (!verification.valid) {
+      return res.status(400).json({ error: verification.error || "Invalid or expired verification code." });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update user password in database
+    await UserRepository.updateById(user.id || user._id, { passwordHash });
+
+    console.log(`[Auth] 🔑 Passcode reset successfully for warrior: ${user.name} (${cleanEmail})`);
+
+    res.json({
+      success: true,
+      message: "Battle passcode reset successfully! You may now enter the battle arena.",
+    });
+  } catch (err) {
+    console.error("[Auth] reset-password error:", err);
+    res.status(500).json({ error: "Failed to reset passcode. Please try again." });
+  }
+});
+
+/**
  * POST /api/auth/signup
  * Registers a new user after verifying OTP code
  */

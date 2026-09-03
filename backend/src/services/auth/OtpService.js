@@ -15,23 +15,29 @@ export class OtpService {
   /**
    * Generates the styled Dragon HTML email template
    */
-  static getEmailHtml(otp, purpose) {
+  static getEmailHtml(otp, purpose = "signup") {
+    const isReset = purpose === "reset_password";
+    const title = isReset ? "Passcode Recovery Sanctuary" : "Dragon Dynasty Authentication";
+    const message = isReset
+      ? "We received a scroll requesting to reset your battle passcode. Use the one-time recovery code below to forge a new password:"
+      : "Use the one-time verification scroll code below to complete your registration and claim your battle chamber:";
+
     return `
       <div style="background-color: #090706; color: #fef3c7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 36px 24px; border-radius: 14px; border: 1px solid #f59e0b; max-width: 520px; margin: 0 auto;">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #fbbf24; font-size: 26px; text-transform: uppercase; margin: 0; letter-spacing: 2px;">🐉 Scribble Royale</h1>
-          <p style="color: #fcd34d; font-size: 14px; margin: 6px 0 0; opacity: 0.85;">Dragon Dynasty Authentication</p>
+          <p style="color: #fcd34d; font-size: 14px; margin: 6px 0 0; opacity: 0.85;">${title}</p>
         </div>
         <hr style="border: 0; border-top: 1px solid rgba(245, 158, 11, 0.3); margin: 20px 0;" />
         <p style="font-size: 16px; line-height: 1.5; color: #fef3c7;">Greetings Warrior,</p>
         <p style="font-size: 14px; line-height: 1.6; color: #fef3c7; opacity: 0.9;">
-          Use the one-time verification scroll code below to complete your registration and claim your battle chamber:
+          ${message}
         </p>
         <div style="background: rgba(245, 158, 11, 0.12); border: 2px dashed #fbbf24; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0;">
           <span style="font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #ffd700; font-family: monospace;">${otp}</span>
         </div>
         <p style="color: #d97706; font-size: 12px; text-align: center; margin: 20px 0 0;">
-          This code is valid for ${config.otpExpiryMinutes} minutes. If you did not request this scroll, please disregard.
+          This code is valid for ${config.otpExpiryMinutes} minutes. If you did not request this scroll, your kingdom credentials remain safe and you may ignore this message.
         </p>
       </div>
     `;

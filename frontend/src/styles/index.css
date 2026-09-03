@@ -4987,6 +4987,160 @@ body {
 }
 
 /* ==========================================================================
+   FORGOT PASSWORD & RECOVERY STYLES
+   ========================================================================== */
+
+.forgot-password-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.forgot-password-trigger:hover {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+  transform: translateY(-1px);
+}
+
+.forgot-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.forgot-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--gold-bright);
+  padding: 6px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.forgot-back-btn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: var(--gold-bright);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+.forgot-header-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold-bright);
+}
+
+.form-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 6px;
+}
+
+.form-info-banner .info-icon {
+  color: var(--gold-bright);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.form-info-banner p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fef3c7;
+  opacity: 0.9;
+}
+
+.input-mismatch {
+  border-color: rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
+}
+
+.field-validation-error {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f87171;
+  margin-top: 3px;
+}
+
+.field-validation-success {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+  margin-top: 3px;
+}
+
+.forgot-success-card {
+  text-align: center;
+  padding: 24px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: var(--radius-sm);
+}
+
+.success-icon-badge {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  border: 2px solid #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+}
+
+.success-flame {
+  color: #34d399;
+}
+
+.success-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 8px;
+  letter-spacing: 0.5px;
+}
+
+.success-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-light);
+  margin: 0 0 20px;
+}
+
+.auth-forgot-workflow {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ==========================================================================
    USER PROFILE (USER PANEL) STYLES
    ========================================================================== */
 

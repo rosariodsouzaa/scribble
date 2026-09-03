@@ -55,6 +55,17 @@ export class AuthService {
     return data;
   }
 
+  static async resetPassword({ email, otp, newPassword }) {
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to reset passcode");
+    return data;
+  }
+
   static async signup({ name, email, password, otp, avatarColor, title }) {
     const res = await fetch("/api/auth/signup", {
       method: "POST",

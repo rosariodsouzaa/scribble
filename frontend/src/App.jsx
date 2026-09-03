@@ -30,6 +30,7 @@ export default function App() {
                 {/* Public Auth Routes */}
                 <Route path="/login" element={<Auth />} />
                 <Route path="/signup" element={<Auth />} />
+                <Route path="/forgot-password" element={<Auth />} />
 
                 {/* Mandatory Authenticated Protected Game Routes */}
                 <Route

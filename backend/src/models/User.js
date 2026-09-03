@@ -255,6 +255,10 @@ export const UserRepository = {
           fields.push(`ban_reason = $${index++}`);
           values.push(updates.banReason);
         }
+        if (updates.passwordHash !== undefined || updates.password_hash !== undefined) {
+          fields.push(`password_hash = $${index++}`);
+          values.push(updates.passwordHash || updates.password_hash);
+        }
         if (updates.lastLoginAt !== undefined) {
           fields.push(`last_login_at = $${index++}`);
           values.push(new Date(updates.lastLoginAt));
