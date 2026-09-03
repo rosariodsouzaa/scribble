@@ -4,19 +4,7 @@ import { useGame } from "../state/useGame.js";
 export default function WordHint() {
   const { state, amDrawer } = useGame();
 
-  // If Drawer: show the full secret word
-  if (amDrawer && state.myWord) {
-    return (
-      <div className="wordhint dragon-wordhint drawer">
-        <span className="scroll-tag">📜 Secret Scroll:</span>
-        <strong className="secret-word">{state.myWord}</strong>
-        <span className="wl dragon-wl">({state.round.wordLength || state.myWord.length} letters)</span>
-      </div>
-    );
-  }
-
-  // If Guesser: render Skribbl-style character rune slots
-  const maskedStr = state.round.maskedWord || "";
+  const maskedStr = state.round?.maskedWord || "";
 
   // Split multiple words (separated by triple spaces "   ")
   const wordGroups = useMemo(() => {
@@ -36,6 +24,17 @@ export default function WordHint() {
     }
     return count;
   }, [wordGroups]);
+
+  // If Drawer: show the full secret word
+  if (amDrawer && state.myWord) {
+    return (
+      <div className="wordhint dragon-wordhint drawer">
+        <span className="scroll-tag">📜 Secret Scroll:</span>
+        <strong className="secret-word">{state.myWord}</strong>
+        <span className="wl dragon-wl">({state.round?.wordLength || state.myWord.length} letters)</span>
+      </div>
+    );
+  }
 
   return (
     <div className="wordhint dragon-wordhint">
