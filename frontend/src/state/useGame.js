@@ -7,14 +7,22 @@ import { GameActionDispatcher } from "../services/game/index.js";
  * Provides game state, player roles, and OOP GameActionDispatcher methods.
  */
 export function useGame() {
-  const { state, socket } = useGameContext();
+  const { state, dispatch, socket } = useGameContext();
 
   const dispatcher = useMemo(() => new GameActionDispatcher(socket), [socket]);
 
   const actions = useMemo(
     () => ({
-      join: (code, username, clientId) => dispatcher.join(code, username, clientId),
-      leave: () => dispatcher.leave(),
+      join: (code, username, clientId) => {
+        dispatch({ type: "CLEAR_ERROR" });
+        dispatcher.join(code, username, clientId);
+      },
+      leave: () => {
+        dispatcher.leave();
+        dispatch({ type: "RESET" });
+      },
+      reset: () => dispatch({ type: "RESET" }),
+      clearError: () => dispatch({ type: "CLEAR_ERROR" }),
       ready: (ready) => dispatcher.setReady(ready),
       start: () => dispatcher.startGame(),
       guess: (text) => dispatcher.submitGuess(text),
@@ -23,7 +31,7 @@ export function useGame() {
       drawEnd: () => dispatcher.drawEnd(),
       clearCanvas: () => dispatcher.clearCanvas(),
     }),
-    [dispatcher]
+    [dispatcher, dispatch]
   );
 
   const me = state.players.find((p) => p.id === state.myId) || null;

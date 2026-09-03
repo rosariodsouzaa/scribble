@@ -16,6 +16,7 @@ export default function Room() {
   const upperCode = (code || "").toUpperCase();
 
   useEffect(() => {
+    actions.clearError();
     if (!username) return undefined;
     const clientId = getClientId();
     const join = () => actions.join(upperCode, username, clientId);
@@ -35,16 +36,26 @@ export default function Room() {
   const fatal =
     state.error && !joined && ["room-not-found", "game-in-progress"].includes(state.error.code);
 
+  const handleReturnToSanctuary = () => {
+    actions.reset();
+    nav("/lobby");
+  };
+
   if (fatal) {
     return (
       <div className="screen center">
         <div className="card dragon-card text-center">
           <div className="dragon-seal-icon">⚠️</div>
           <h2 className="title sm">Chamber {upperCode} Sealed</h2>
-          <p className="muted">{state.error.message}</p>
-          <button className="btn primary block" onClick={() => nav("/lobby")}>
-            Return to Sanctuary
-          </button>
+          <p className="muted">{state.error.message || "Room not found on this server."}</p>
+          <div className="row gap" style={{ marginTop: "16px", justifyContent: "center" }}>
+            <button className="btn secondary" onClick={() => actions.join(upperCode, username, getClientId())}>
+              Try Again
+            </button>
+            <button className="btn primary" onClick={handleReturnToSanctuary}>
+              Return to Sanctuary
+            </button>
+          </div>
         </div>
       </div>
     );

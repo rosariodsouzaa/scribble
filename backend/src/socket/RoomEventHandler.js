@@ -13,12 +13,21 @@ export class RoomEventHandler {
   }
 
   handleJoin(socket, { code, username, clientId } = {}) {
-    const room = this.repository.get(code);
+    const cleanCode = String(code || "").trim().toUpperCase();
+    console.log(`[Socket] 🚪 Player "${username}" (${socket.id}) attempting to join room: "${cleanCode}"`);
+    console.log(`[Socket] 📋 Currently active rooms:`, Array.from(this.repository.rooms.keys()));
+
+    const room = this.repository.get(cleanCode);
     if (!room) {
-      socket.emit("game-error", { code: "room-not-found", message: "Room not found." });
+      console.warn(`[Socket] ⚠️ Room "${cleanCode}" not found in this server instance!`);
+      socket.emit("game-error", {
+        code: "room-not-found",
+        message: `Chamber ${cleanCode || "code"} was not found on this server.`,
+      });
       return;
     }
     room.addPlayer(socket, { username, clientId });
+    console.log(`[Socket] ✅ Player "${username}" joined room ${cleanCode}. Total players: ${room.players.size}`);
   }
 
   handleLeave(socket) {
