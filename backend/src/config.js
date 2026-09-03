@@ -27,8 +27,8 @@ export const config = {
   roundEndDelayMs: 4500, // Duration to show round summary before next turn
 
   // Housekeeping for in-memory rooms
-  emptyRoomGraceMs: 60_000,
-  sweepIntervalMs: 30_000,
+  emptyRoomGraceMs: 10 * 60_000, // 10 minutes grace period before an empty chamber is closed
+  sweepIntervalMs: 60_000, // Run cleanup sweep every 60 seconds
 
   // Database & Auth Configuration (Loaded securely from .env)
   databaseUrl: process.env.DATABASE_URL || "",
