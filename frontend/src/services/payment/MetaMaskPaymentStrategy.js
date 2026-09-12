@@ -16,9 +16,18 @@ export class MetaMaskPaymentStrategy extends PaymentStrategy {
     let modeLabel = "MetaMask (ETH - Instant Vault)";
 
     // If MetaMask is connected in browser, attempt on-chain payment or sign
-    if (typeof window !== "undefined" && window.ethereum?.selectedAddress) {
+    let fromAddress = null;
+    if (typeof window !== "undefined" && window.ethereum) {
       try {
-        const fromAddress = window.ethereum.selectedAddress;
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        if (accounts && accounts.length > 0) {
+          fromAddress = accounts[0];
+        }
+      } catch {}
+    }
+
+    if (fromAddress) {
+      try {
         // Convert ETH price to Wei hex string (approx for demo safety)
         const ethAmount = parseFloat(item.priceEth || "0.001");
         const weiHex = "0x" + Math.floor(ethAmount * 1e18).toString(16);

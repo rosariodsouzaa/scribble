@@ -201,6 +201,17 @@ export default function Navbar() {
                       className="dropdown-item-btn"
                       onClick={() => {
                         setDropdownOpen(false);
+                        navigate("/practice");
+                      }}
+                    >
+                      <Sparkles size={16} color="#fbbf24" />
+                      <span>AI Practice Dojo</span>
+                    </button>
+
+                    <button
+                      className="dropdown-item-btn"
+                      onClick={() => {
+                        setDropdownOpen(false);
                         navigate("/store");
                       }}
                     >

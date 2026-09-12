@@ -39,7 +39,6 @@ router.get("/stats", async (_req, res) => {
         database: {
           provider: pgStatus.provider,
           isConnected: pgStatus.isConnected,
-          uri: pgStatus.uri,
           error: pgStatus.error,
         },
         memory: {

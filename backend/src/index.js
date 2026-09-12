@@ -27,7 +27,6 @@ app.get("/api/health", (_req, res) => {
     db: {
       provider: pgStatus.provider,
       connected: pgStatus.isConnected,
-      uri: pgStatus.uri,
       error: pgStatus.error,
     },
   });

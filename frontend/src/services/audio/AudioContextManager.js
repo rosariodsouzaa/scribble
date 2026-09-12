@@ -11,7 +11,9 @@ export class AudioContextManager {
     if (!this.ctx && typeof window !== "undefined") {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
-        this.ctx = new AudioCtx();
+        try {
+          this.ctx = new AudioCtx();
+        } catch {}
       }
     }
     if (this.ctx && this.ctx.state === "suspended") {

@@ -17,9 +17,6 @@ export const pgStatus = {
   get provider() {
     return "Neon PostgreSQL (AWS us-east-2)";
   },
-  get uri() {
-    return config.databaseUrl.replace(/:\/\/[^:]+:[^@]+@/, "://***:***@");
-  },
 };
 
 /**
@@ -31,7 +28,7 @@ export async function initPostgres() {
     return false;
   }
 
-  console.log(`[PostgreSQL] Connecting to Neon DB at ${pgStatus.uri}...`);
+  console.log("[PostgreSQL] Connecting to Neon DB...");
 
   try {
     pool = new Pool({

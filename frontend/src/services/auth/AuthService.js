@@ -31,6 +31,22 @@ export class AuthService {
     };
   }
 
+  static async _parseResponse(res, fallbackErrMsg = "Request failed") {
+    let data = {};
+    const text = await res.text();
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: text };
+      }
+    }
+    if (!res.ok) {
+      throw new Error(data.error || data.message || `${fallbackErrMsg} (Status ${res.status})`);
+    }
+    return data;
+  }
+
   // --- Auth API ---
 
   static async sendOtp(email, purpose = "signup") {
@@ -39,9 +55,7 @@ export class AuthService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, purpose }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to send verification code");
-    return data;
+    return AuthService._parseResponse(res, "Failed to send verification code");
   }
 
   static async verifyOtp(email, otp, purpose = "signup") {
@@ -50,9 +64,7 @@ export class AuthService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp, purpose }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Invalid verification code");
-    return data;
+    return AuthService._parseResponse(res, "Invalid verification code");
   }
 
   static async resetPassword({ email, otp, newPassword }) {
@@ -61,9 +73,7 @@ export class AuthService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp, newPassword }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to reset passcode");
-    return data;
+    return AuthService._parseResponse(res, "Failed to reset passcode");
   }
 
   static async signup({ name, email, password, otp, avatarColor, title }) {
@@ -72,8 +82,7 @@ export class AuthService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, otp, avatarColor, title }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Signup failed");
+    const data = await AuthService._parseResponse(res, "Signup failed");
     if (data.token) AuthService.setToken(data.token);
     return data;
   }
@@ -84,8 +93,7 @@ export class AuthService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Login failed");
+    const data = await AuthService._parseResponse(res, "Login failed");
     if (data.token) AuthService.setToken(data.token);
     return data;
   }
@@ -94,15 +102,19 @@ export class AuthService {
     const token = AuthService.getToken();
     if (!token) return null;
 
-    const res = await fetch("/api/auth/me", {
-      headers: AuthService.getAuthHeaders(),
-    });
-    if (!res.ok) {
-      AuthService.setToken(null);
+    try {
+      const res = await fetch("/api/auth/me", {
+        headers: AuthService.getAuthHeaders(),
+      });
+      if (!res.ok) {
+        AuthService.setToken(null);
+        return null;
+      }
+      const data = await AuthService._parseResponse(res, "Session expired");
+      return data.user || null;
+    } catch {
       return null;
     }
-    const data = await res.json();
-    return data.user;
   }
 
   static async updateProfile(profileUpdates) {
@@ -111,15 +123,13 @@ export class AuthService {
       headers: AuthService.getAuthHeaders(),
       body: JSON.stringify(profileUpdates),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to update profile");
+    const data = await AuthService._parseResponse(res, "Failed to update profile");
     return data.user;
   }
 
   static async seedDemoAccounts() {
     const res = await fetch("/api/auth/seed-demo", { method: "POST" });
-    const data = await res.json();
-    return data;
+    return AuthService._parseResponse(res, "Failed to seed demo accounts");
   }
 
   // --- Admin API ---
@@ -128,8 +138,7 @@ export class AuthService {
     const res = await fetch("/api/admin/stats", {
       headers: AuthService.getAuthHeaders(),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch admin stats");
+    const data = await AuthService._parseResponse(res, "Failed to fetch admin stats");
     return data.stats;
   }
 
@@ -138,8 +147,7 @@ export class AuthService {
     const res = await fetch(`/api/admin/users?${query}`, {
       headers: AuthService.getAuthHeaders(),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch users");
+    const data = await AuthService._parseResponse(res, "Failed to fetch users");
     return data.users;
   }
 
@@ -149,8 +157,7 @@ export class AuthService {
       headers: AuthService.getAuthHeaders(),
       body: JSON.stringify({ role }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to update user role");
+    const data = await AuthService._parseResponse(res, "Failed to update user role");
     return data.user;
   }
 
@@ -160,8 +167,7 @@ export class AuthService {
       headers: AuthService.getAuthHeaders(),
       body: JSON.stringify({ isBanned, banReason }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to update ban status");
+    const data = await AuthService._parseResponse(res, "Failed to update ban status");
     return data.user;
   }
 
@@ -171,8 +177,7 @@ export class AuthService {
       headers: AuthService.getAuthHeaders(),
       body: JSON.stringify({ amount }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to grant gold");
+    const data = await AuthService._parseResponse(res, "Failed to grant gold");
     return data.user;
   }
 
@@ -180,8 +185,7 @@ export class AuthService {
     const res = await fetch("/api/admin/rooms", {
       headers: AuthService.getAuthHeaders(),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch live rooms");
+    const data = await AuthService._parseResponse(res, "Failed to fetch live rooms");
     return data.rooms;
   }
 
@@ -190,17 +194,14 @@ export class AuthService {
       method: "DELETE",
       headers: AuthService.getAuthHeaders(),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to terminate room");
-    return data;
+    return AuthService._parseResponse(res, "Failed to terminate room");
   }
 
   static async getWordPacks() {
     const res = await fetch("/api/admin/wordpacks", {
       headers: AuthService.getAuthHeaders(),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch word packs");
+    const data = await AuthService._parseResponse(res, "Failed to fetch word packs");
     return data.packs;
   }
 
@@ -210,9 +211,7 @@ export class AuthService {
       headers: AuthService.getAuthHeaders(),
       body: JSON.stringify({ category, words }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to add word pack");
-    return data;
+    return AuthService._parseResponse(res, "Failed to add word pack");
   }
 }
 

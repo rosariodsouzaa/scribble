@@ -109,6 +109,15 @@ export default function Dashboard() {
             </Button>
 
             <Button
+              variant="emerald"
+              size="lg"
+              onClick={() => navigate("/practice")}
+              icon={<Sparkles size={18} />}
+            >
+              AI Practice Dojo
+            </Button>
+
+            <Button
               variant="secondary"
               size="lg"
               onClick={() => navigate("/lobby")}

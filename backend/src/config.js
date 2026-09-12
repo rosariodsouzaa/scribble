@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 // Central configuration for Scribble Royale game rules, scoring, and server settings.
 export const config = {
   port: Number(process.env.PORT) || 3001,
