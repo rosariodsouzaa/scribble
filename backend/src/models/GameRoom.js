@@ -671,7 +671,7 @@ export class GameRoom {
       return;
     }
 
-    const cost = WordClueService.HINT_COST; // 100 Dragon Gold
+    const cost = WordClueService.HINT_COST; // 250 Dragon Gold
 
     // Deduct coins if registered in database
     if (userId) {

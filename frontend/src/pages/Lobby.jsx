@@ -4,6 +4,7 @@ import { Swords, PlusCircle, ArrowRight, Flame, Shield, Sparkles, BookOpen } fro
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import { createRoom } from "../api/rooms.js";
 import FireDragonLogo from "../components/FireDragonLogo.jsx";
+import DragonEmblem from "../components/DragonEmblem.jsx";
 import Button from "../components/Button.jsx";
 
 const THEME_OPTIONS = [
@@ -74,7 +75,7 @@ export default function Lobby() {
 
         <div className="lobby-head">
           <div className="row gap">
-            <FireDragonLogo size="sm" showFireRing={false} />
+            <DragonEmblem size="sm" animated={true} glow={true} />
             <div>
               <span className="imperial-tag-sm">CLAN SANCTUARY</span>
               <h1 className="title sm">Chamber Summoner</h1>

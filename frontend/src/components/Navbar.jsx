@@ -20,6 +20,7 @@ import {
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import WalletStatus from "./WalletStatus.jsx";
 import Avatar from "./Avatar.jsx";
+import DragonEmblem from "./DragonEmblem.jsx";
 
 export default function Navbar() {
   const {
@@ -57,7 +58,7 @@ export default function Navbar() {
       {/* Brand */}
       <Link to="/dashboard" className="nav-brand">
         <div className="nav-logo-icon">
-          <Flame size={20} className="flame-icon-glow" />
+          <DragonEmblem size="sm" animated={true} glow={true} />
         </div>
         <div className="nav-brand-text">
           <span className="brand-title">SCRIBBLE ROYALE</span>

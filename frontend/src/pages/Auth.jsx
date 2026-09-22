@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import { AuthService } from "../services/auth/AuthService.js";
+import DragonEmblem from "../components/DragonEmblem.jsx";
 import Avatar from "../components/Avatar.jsx";
 
 const RANDOM_NAMES = [
@@ -497,7 +498,7 @@ export default function Auth() {
         {/* Brand Banner */}
         <div className="auth-brand-header">
           <div className="auth-logo-badge">
-            <Flame size={28} className="auth-flame-icon" />
+            <DragonEmblem size="md" animated={true} glow={true} />
           </div>
           <h1 className="auth-brand-title">SCRIBBLE ROYALE</h1>
           <p className="auth-brand-subtitle">

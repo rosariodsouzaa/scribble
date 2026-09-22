@@ -1,14 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ec4899" />
-      <stop offset="50%" stop-color="#8b5cf6" />
-      <stop offset="100%" stop-color="#3b82f6" />
+    <linearGradient id="favGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="25%" stop-color="#fef08a" />
+      <stop offset="60%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="favFlame" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#dc2626" />
+      <stop offset="40%" stop-color="#ea580c" />
+      <stop offset="75%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#fef08a" />
+    </linearGradient>
+    <radialGradient id="favBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2a0d06" />
+      <stop offset="70%" stop-color="#120502" />
+      <stop offset="100%" stop-color="#050201" />
+    </radialGradient>
+    <linearGradient id="favBrush" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78350f" />
+      <stop offset="100%" stop-color="#271005" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="#0f172a" />
-  <!-- Brush / Pen Icon -->
-  <path d="M46.7 13.3a4.2 4.2 0 0 1 6 6L23.4 48.6l-8.5 2.5 2.5-8.5L46.7 13.3z" fill="url(#grad)" />
-  <!-- Scribble Wave -->
-  <path d="M14 54c4-3 8-1 12-4s8-2 12-4 8-1 12-4" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+  <!-- Circular Medallion Background -->
+  <circle cx="32" cy="32" r="30" fill="url(#favBg)" stroke="url(#favGold)" stroke-width="2" />
+  <circle cx="32" cy="32" r="26" stroke="rgba(245, 158, 11, 0.4)" stroke-width="0.8" stroke-dasharray="2 2" />
+
+  <!-- Solar Tooth Cardinal Rays -->
+  <path d="M32 3 L32 6 M32 58 L32 61 M3 32 L6 32 M58 32 L61 32" stroke="url(#favGold)" stroke-width="1.2" stroke-linecap="round" />
+
+  <!-- Crossing Imperial Calligraphy Brush -->
+  <line x1="12" y1="52" x2="52" y2="12" stroke="url(#favBrush)" stroke-width="2.8" stroke-linecap="round" />
+  <circle cx="18" cy="46" r="2" fill="url(#favGold)" />
+  <path d="M10 54 C8 56, 7 58, 6 60 C9 58, 11 56, 13 53 Z" fill="#f59e0b" />
+
+  <!-- Dragon Roaring Crest & Head Silhouette -->
+  <path
+    d="M18 41 
+       C17 34, 20 26, 27 21 
+       C25 16, 21 12, 15 9 
+       C22 10, 28 15, 30 19 
+       C34 16, 40 15, 47 18 
+       C45 20, 42 21, 40 21 
+       C46 22, 50 25, 52 31 
+       C53 34, 51 37, 47 39 
+       C41 43, 33 45, 27 44 
+       C21 43, 19 44, 18 41 Z"
+    fill="url(#favFlame)"
+  />
+
+  <!-- Sharp Golden Horns -->
+  <path d="M30 19 C28 15, 22 10, 15 9 C20 12, 23 16, 26 21" stroke="url(#favGold)" stroke-width="1.5" stroke-linecap="round" />
+  <path d="M34 16 C39 13, 45 11, 51 8 C47 12, 45 16, 43 19" stroke="url(#favGold)" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Dragon Gleaming Eye -->
+  <ellipse cx="36" cy="25" rx="2" ry="1.6" fill="#ffffff" />
+  <circle cx="36.3" cy="25" r="0.8" fill="#450a0a" />
+
+  <!-- Snout & Whisker -->
+  <path d="M41 29 L47 30 L41 33" stroke="#ffffff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M38 31 C43 33, 47 32, 50 35" stroke="url(#favGold)" stroke-width="0.9" fill="none" stroke-linecap="round" />
+
+  <!-- Underbelly Golden Scales -->
+  <path d="M24 29 Q29 31 32 28" stroke="url(#favGold)" stroke-width="1" stroke-linecap="round" />
+  <path d="M22 34 Q27 36 30 33" stroke="url(#favGold)" stroke-width="1" stroke-linecap="round" />
+  <path d="M21 39 Q25 41 29 38" stroke="url(#favGold)" stroke-width="1" stroke-linecap="round" />
+
+  <!-- Mini Golden Pearl Accent -->
+  <circle cx="32" cy="50" r="2.5" fill="url(#favGold)" />
+  <circle cx="31.2" cy="49.2" r="0.8" fill="#ffffff" />
 </svg>

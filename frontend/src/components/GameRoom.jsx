@@ -9,6 +9,7 @@ import WordHint from "./WordHint.jsx";
 import RoundSummary from "./RoundSummary.jsx";
 
 import FireDragonLogo from "./FireDragonLogo.jsx";
+import DragonEmblem from "./DragonEmblem.jsx";
 
 export default function GameRoom() {
   const { state, amDrawer } = useGame();
@@ -19,7 +20,7 @@ export default function GameRoom() {
     <div className="gameroom dragon-gameroom">
       <header className="game-top dragon-game-top">
         <div className="dragon-round-pill">
-          <FireDragonLogo size="xs" showFireRing={false} />
+          <DragonEmblem size="xs" animated={false} glow={true} />
           <div className="round-info">
             ROUND <strong>{state.round.number}</strong> <span className="round-max">/ {state.round.maxRounds}</span>
           </div>
