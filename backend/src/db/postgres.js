@@ -17,6 +17,10 @@ export const pgStatus = {
   get provider() {
     return "Neon PostgreSQL (AWS us-east-2)";
   },
+  get uri() {
+    if (!config.databaseUrl) return "in-memory";
+    return config.databaseUrl.replace(/:\/\/[^:]+:[^@]+@/, "://***:***@");
+  },
 };
 
 /**
@@ -31,8 +35,13 @@ export async function initPostgres() {
   console.log("[PostgreSQL] Connecting to Neon DB...");
 
   try {
+    let connectionString = config.databaseUrl;
+    if (connectionString.includes("sslmode=require") && !connectionString.includes("uselibpqcompat")) {
+      connectionString = connectionString.replace("sslmode=require", "sslmode=verify-full");
+    }
+
     pool = new Pool({
-      connectionString: config.databaseUrl,
+      connectionString,
       ssl: {
         rejectUnauthorized: false,
       },

@@ -165,6 +165,44 @@ export function AuthWalletProvider({ children }) {
     []
   );
 
+  // Refresh connected wallet balance from provider
+  const refreshWalletBalance = useCallback(async () => {
+    if (!wallet.isConnected || !wallet.address) return;
+    try {
+      const adapterType = wallet.adapterType || (wallet.isMetaMask ? "metamask" : "demo");
+      const adapter = walletService.getAdapter(adapterType);
+      if (adapter && typeof adapter.getBalance === "function") {
+        const freshBalance = await adapter.getBalance(wallet.address);
+        setWallet((prev) => ({
+          ...prev,
+          balance: freshBalance,
+        }));
+      }
+    } catch (err) {
+      console.warn("[AuthWallet] Failed to refresh wallet balance:", err.message);
+    }
+  }, [wallet.isConnected, wallet.address, wallet.adapterType, wallet.isMetaMask]);
+
+  // Deduct tokens from wallet balance and update UI immediately
+  const deductWalletBalance = useCallback((amountEth) => {
+    const deductNum = parseFloat(amountEth) || 0;
+    if (deductNum <= 0) return;
+
+    setWallet((prev) => {
+      const currentNum = parseFloat(String(prev.balance || "0").replace(/[^0-9.]/g, "")) || 0;
+      const nextNum = Math.max(0, currentNum - deductNum);
+      const nextBalance = `${nextNum.toFixed(4)} ETH`;
+      const updated = {
+        ...prev,
+        balance: nextBalance,
+      };
+      try {
+        localStorage.setItem("sr_wallet", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
   // Update warrior name locally
   const setWarriorName = (name) => {
     const clean = String(name || "").trim().slice(0, 20);
@@ -295,6 +333,8 @@ export function AuthWalletProvider({ children }) {
         connectMetaMask,
         connectDemoWallet,
         disconnectWallet,
+        refreshWalletBalance,
+        deductWalletBalance,
         addCoins,
         setWarriorName,
         loginWithCredentials,

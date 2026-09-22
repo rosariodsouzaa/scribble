@@ -102,8 +102,8 @@ if (rounds.length !== 3) errors.push(`expected 3 rounds, saw ${rounds.length}`);
 if (leaks.length) errors.push("anti-leak violations present");
 if (!winner) errors.push("no winner resolved");
 const byName = Object.fromEntries(end.standings.map((p) => [p.username, p.score]));
-if (byName.Bob !== 25) errors.push(`Bob score ${byName.Bob} != 25`);
-if (byName.Alice !== 20) errors.push(`Alice score ${byName.Alice} != 20`);
+if (byName.Bob !== 1200) errors.push(`Bob score ${byName.Bob} != 1200`);
+if (byName.Alice !== 900) errors.push(`Alice score ${byName.Alice} != 900`);
 if (winner && winner.username !== "Bob") errors.push(`winner ${winner.username} != Bob`);
 
 say("\n=== RESULT ===");

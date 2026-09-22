@@ -1,7 +1,4 @@
 import { MetaMaskPaymentStrategy } from "./MetaMaskPaymentStrategy.js";
-import { StripeCardPaymentStrategy } from "./StripeCardPaymentStrategy.js";
-import { UpiPaymentStrategy } from "./UpiPaymentStrategy.js";
-import { PayPalPaymentStrategy } from "./PayPalPaymentStrategy.js";
 import { GoldVaultPaymentStrategy } from "./GoldVaultPaymentStrategy.js";
 
 /**
@@ -11,9 +8,7 @@ import { GoldVaultPaymentStrategy } from "./GoldVaultPaymentStrategy.js";
 export class PaymentProcessorFactory {
   static strategies = {
     web3: new MetaMaskPaymentStrategy(),
-    card: new StripeCardPaymentStrategy(),
-    upi: new UpiPaymentStrategy(),
-    paypal: new PayPalPaymentStrategy(),
+    metamask: new MetaMaskPaymentStrategy(),
     gold: new GoldVaultPaymentStrategy(),
   };
 
@@ -23,6 +18,6 @@ export class PaymentProcessorFactory {
    * @returns {import("./PaymentStrategy.js").PaymentStrategy}
    */
   static getStrategy(method) {
-    return this.strategies[method] || this.strategies.card;
+    return this.strategies[method] || this.strategies.metamask;
   }
 }

@@ -56,20 +56,20 @@ export default function Dashboard() {
         <div className="dashboard-greeting">
           <div className="greeting-pill">
             <Flame size={14} className="flame-spark" />
-            <span>DRAGON DYNASTY ARENA</span>
+            <span>DRAGON DYNASTY ARENA • LEVEL {user?.level || 1} • {user?.title || "Dragon Novice"}</span>
           </div>
           <h1>
-            Welcome back, <span className="gold-gradient-text">{user.name}</span> 
+            Welcome back, <span className="gold-gradient-text">{user?.name || "Warrior"}</span> ⚔️
           </h1>
           <p>Sharpen your brush. Jump into the live arena, create a clan chamber, or claim your rewards.</p>
         </div>
 
         <div className="dashboard-top-actions">
           <WalletStatus
-            isConnected={wallet.isConnected}
-            address={wallet.address}
-            balance={wallet.balance}
-            network={wallet.network}
+            isConnected={wallet?.isConnected}
+            address={wallet?.address}
+            balance={wallet?.balance}
+            network={wallet?.network}
           />
         </div>
       </div>
@@ -212,16 +212,20 @@ export default function Dashboard() {
           <div className="warrior-stats-list">
             <div className="stat-item">
               <span className="stat-label">Total Gold</span>
-              <span className="stat-value gold"> {user.coins.toLocaleString()}</span>
+              <span className="stat-value gold">🪙 {(user?.coins || 0).toLocaleString()}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Victories</span>
-              <span className="stat-value">{user.wins} Wins</span>
+              <span className="stat-value">{user?.wins || 0} Wins</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Battles Played</span>
+              <span className="stat-value">{user?.matches || 0} Matches</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Win Rate</span>
               <span className="stat-value">
-                {user.matches > 0 ? Math.round((user.wins / user.matches) * 100) : 75}%
+                {user?.matches > 0 ? Math.round(((user?.wins || 0) / user.matches) * 100) : 0}%
               </span>
             </div>
           </div>

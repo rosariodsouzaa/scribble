@@ -41,5 +41,13 @@ export class SocketController {
 
     // Guessing events
     socket.on("submit-guess", (data) => this.guessHandler.handleGuess(socket, data));
+
+    // Special Oracle Clue hint request
+    socket.on("request-special-hint", (data) => {
+      const room = this.roomHandler.getCurrentRoom(socket);
+      if (room) {
+        room.handleRequestSpecialHint(socket.id, data);
+      }
+    });
   }
 }

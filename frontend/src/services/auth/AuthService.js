@@ -127,6 +127,17 @@ export class AuthService {
     return data.user;
   }
 
+  static async changePassword({ currentPassword, newPassword }) {
+    const res = await fetch("/api/auth/change-password", {
+      method: "PATCH",
+      headers: AuthService.getAuthHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to change passcode");
+    return data;
+  }
+
   static async seedDemoAccounts() {
     const res = await fetch("/api/auth/seed-demo", { method: "POST" });
     return AuthService._parseResponse(res, "Failed to seed demo accounts");

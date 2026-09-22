@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { useGame } from "../state/useGame.js";
 import { sound } from "../lib/sound.js";
 
@@ -50,6 +51,11 @@ export default function Chat() {
           <div key={m.id} className={"chat-msg dragon-chat-msg " + m.type}>
             {m.type === "guess" && <span className="cu">{m.username}: </span>}
             {m.type === "correct" && <span className="dragon-correct-badge"> </span>}
+            {m.type === "oracle-hint" && (
+              <span className="dragon-oracle-badge" title="Dragon Oracle Secret Clue">
+                <Sparkles size={13} />
+              </span>
+            )}
             <span className="ct">{m.text}</span>
           </div>
         ))}

@@ -1,17 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
-  CreditCard,
   Wallet as WalletIcon,
-  QrCode,
   CheckCircle2,
   ShieldCheck,
   Lock,
   Sparkles,
-  ArrowRight,
-  ExternalLink,
   Coins,
-  Flame,
+  ArrowRight,
+  Mail,
+  Printer,
+  Copy,
+  Check,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { usePayment } from "../context/PaymentContext.jsx";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
@@ -19,131 +21,270 @@ import Button from "./Button.jsx";
 
 export default function PaymentModal() {
   const { activeItem, checkoutModalOpen, closeCheckout, processPayment } = usePayment();
-  const { wallet, connectMetaMask } = useAuthWallet();
+  const { wallet, user, connectMetaMask, connectDemoWallet } = useAuthWallet();
 
-  const [paymentMethod, setPaymentMethod] = useState("card"); // card | web3 | upi | paypal
+  // Receipt delivery email
+  const [email, setEmail] = useState("");
+  const [copiedHash, setCopiedHash] = useState(false);
+
+  // Stepper & Payment State
   const [processing, setProcessing] = useState(false);
-  const [successTx, setSuccessTx] = useState(null);
+  const [currentStep, setCurrentStep] = useState(null); // 'PREPARING' | 'SIGNING' | 'BROADCASTING' | 'CONFIRMING' | 'COMPLETED'
+  const [stepMessage, setStepMessage] = useState("");
+  const [receipt, setReceipt] = useState(null);
   const [error, setError] = useState("");
 
-  // Card Form State
-  const [cardNumber, setCardNumber] = useState("4532 8901 2345 6789");
-  const [cardName, setCardName] = useState("VEDANSH DHARGALKAR");
-  const [cardExpiry, setCardExpiry] = useState("08/28");
-  const [cardCvc, setCardCvc] = useState("789");
+  // Pre-fill email from logged-in user profile
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
-  // UPI State
-  const [upiId, setUpiId] = useState("vedansh@oksbi");
+  if (!checkoutModalOpen || !activeItem) return null;
 
-  if (!checkoutModalOpen ||!activeItem) return null;
+  const itemPriceEth = parseFloat(activeItem.priceEth || "0.002");
+  const walletEthBalance = parseFloat(String(wallet?.balance || "0").replace(/[^0-9.]/g, "")) || 0;
+  const hasSufficientBalance = Boolean(wallet?.isConnected && walletEthBalance >= itemPriceEth);
+
+  const stepsList = [
+    { key: "PREPARING", label: "Payload Ready" },
+    { key: "SIGNING", label: "MetaMask Signature" },
+    { key: "BROADCASTING", label: "Mempool Broadcast" },
+    { key: "CONFIRMING", label: "Block Verification" },
+    { key: "COMPLETED", label: "Receipt Minted" },
+  ];
+
+  const getStepIndex = (stepKey) => {
+    return stepsList.findIndex((s) => s.key === stepKey);
+  };
+
+  const handleConnectWallet = async () => {
+    setError("");
+    const res = await connectMetaMask();
+    if (!res?.success) {
+      setError(res?.error || "Failed to connect to MetaMask.");
+    }
+  };
 
   const handlePay = async (e) => {
     e?.preventDefault();
-    setProcessing(true);
     setError("");
+
+    if (!wallet?.isConnected) {
+      setError("Please connect your MetaMask wallet first.");
+      return;
+    }
+
+    if (!hasSufficientBalance) {
+      setError(
+        `Insufficient ETH balance. Your wallet currently has ${wallet.balance || "0.0000 ETH"}, but this purchase requires ${itemPriceEth} ETH (+ network gas). Please top up your wallet.`
+      );
+      return;
+    }
+
+    setProcessing(true);
+    setCurrentStep("PREPARING");
+    setStepMessage("Preparing on-chain transaction payload & verifying balance...");
 
     try {
       const res = await processPayment({
         item: activeItem,
-        method: paymentMethod,
-        cardDetails: { cardNumber, cardName, cardExpiry, cardCvc },
-        upiId,
+        method: wallet?.isMetaMask ? "metamask" : (wallet?.isConnected ? "demo" : "metamask"),
+        email: email.trim(),
+        onStepChange: (step, msg) => {
+          setCurrentStep(step);
+          if (msg) setStepMessage(msg);
+        },
       });
 
       if (res.success) {
-        setSuccessTx(res.transaction);
+        setReceipt(res.receipt || res.transaction);
       } else {
-        setError(res.error || "Payment failed to authorize.");
+        setError(res.error || "Transaction signature was cancelled or failed.");
+        setCurrentStep(null);
       }
-    } catch {
-      setError("Payment gateway timeout. Please try again.");
+    } catch (err) {
+      setError(err.message || "Network transaction error. Please try again.");
+      setCurrentStep(null);
     } finally {
       setProcessing(false);
     }
   };
 
   const handleClose = () => {
-    setSuccessTx(null);
+    if (processing) return; // prevent close during signing
+    setReceipt(null);
+    setCurrentStep(null);
+    setStepMessage("");
     setError("");
     closeCheckout();
   };
 
+  const handleCopyHash = (hash) => {
+    if (!hash) return;
+    navigator.clipboard?.writeText(hash);
+    setCopiedHash(true);
+    setTimeout(() => setCopiedHash(false), 2000);
+  };
+
+  const handlePrintReceipt = () => {
+    window.print();
+  };
+
+  const formatShortAddr = (addr) => {
+    if (!addr) return "";
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
   return (
     <div className="payment-modal-overlay">
-      <div className="payment-modal-card dragon-card">
+      <div className="payment-modal-card dragon-card web3-checkout-modal">
         {/* Imperial Brackets */}
         <div className="imperial-bracket tl" />
         <div className="imperial-bracket tr" />
         <div className="imperial-bracket bl" />
         <div className="imperial-bracket br" />
 
-        {/* Modal Header */}
+        {/* Header */}
         <div className="payment-modal-header">
           <div className="pay-tag">
             <Lock size={12} />
-            <span>256-BIT SSL ENCRYPTED GATEWAY</span>
+            <span>WEB3 TOKEN SMART CHECKOUT</span>
           </div>
-          <button className="modal-close-btn" onClick={handleClose}>
-            <X size={18} />
-          </button>
+          {!processing && (
+            <button className="modal-close-btn" onClick={handleClose} title="Close checkout">
+              <X size={18} />
+            </button>
+          )}
         </div>
 
-        {successTx? (
-          /* Success Screen */
-          <div className="payment-success-view">
+        {receipt ? (
+          /* ==================== OFFICIAL RECEIPT VIEW ==================== */
+          <div className="payment-success-view printable-receipt">
             <div className="success-icon-wrap">
-              <CheckCircle2 size={56} className="success-icon" />
+              <CheckCircle2 size={52} className="success-icon" />
             </div>
-            <h2 className="success-title">Order Complete!</h2>
+            <h2 className="success-title">Payment Confirmed & Verified!</h2>
             <p className="success-sub">
-              Your transaction has been securely confirmed on the Dragon Ledger.
+              Your Web3 token payment was confirmed on-chain and your in-game coins have been credited.
             </p>
 
-            <div className="receipt-box">
+            {/* Email Dispatch Notification Banner */}
+            {receipt.email && (
+              <div className="receipt-email-banner">
+                <Mail size={16} className="mail-icon" />
+                <span>
+                  Official invoice & receipt delivered to <strong>{receipt.email}</strong>
+                </span>
+              </div>
+            )}
+
+            {/* Imperial Treasury Receipt Card */}
+            <div className="receipt-box imperial-receipt-card">
+              <div className="receipt-header-row">
+                <span className="receipt-title-tag">OFFICIAL SETTLEMENT INVOICE</span>
+                <span className="receipt-id-tag">#{receipt.id}</span>
+              </div>
+
+              <div className="receipt-divider" />
+
               <div className="receipt-row">
-                <span>Transaction ID:</span>
-                <strong className="hash">{successTx.id}</strong>
+                <span>Date & Time:</span>
+                <strong>{receipt.date}</strong>
               </div>
               <div className="receipt-row">
-                <span>Item Purchased:</span>
-                <strong>{successTx.item}</strong>
+                <span>Item Acquired:</span>
+                <strong className="receipt-item-name">{receipt.item}</strong>
+              </div>
+              {receipt.goldAmount && (
+                <div className="receipt-row">
+                  <span>In-Game Coins Credited:</span>
+                  <strong className="receipt-gold-val">
+                    +{Number(receipt.goldAmount).toLocaleString()} Dragon Gold
+                  </strong>
+                </div>
+              )}
+
+              {/* Live Token Deduction Breakdown */}
+              <div className="receipt-divider" />
+              <div className="receipt-balance-ledger-block">
+                {receipt.initialBalance && (
+                  <div className="receipt-row">
+                    <span>Initial Wallet Balance:</span>
+                    <span className="hash-mono">{receipt.initialBalance}</span>
+                  </div>
+                )}
+                <div className="receipt-row">
+                  <span>Tokens Deducted:</span>
+                  <strong className="receipt-token-amount text-amber-400">-{receipt.amount}</strong>
+                </div>
+                {receipt.remainingBalance && (
+                  <div className="receipt-row">
+                    <span>Updated Wallet Balance:</span>
+                    <strong className="text-emerald-400 font-bold">{receipt.remainingBalance}</strong>
+                  </div>
+                )}
+              </div>
+              <div className="receipt-divider" />
+
+              <div className="receipt-row">
+                <span>Paying Wallet:</span>
+                <span className="hash-mono">{formatShortAddr(receipt.walletAddress)}</span>
               </div>
               <div className="receipt-row">
-                <span>Amount Paid:</span>
-                <strong className="gold">{successTx.amount}</strong>
+                <span>Blockchain Network:</span>
+                <strong>{receipt.network || "Ethereum Network"}</strong>
               </div>
-              <div className="receipt-row">
-                <span>Payment Method:</span>
-                <strong>{successTx.method}</strong>
-              </div>
-              <div className="receipt-row">
-                <span>Reference Hash:</span>
-                <span className="hash-mono">{successTx.hash}</span>
+              <div className="receipt-row tx-hash-row">
+                <span>Transaction Hash:</span>
+                <div className="hash-action-wrap">
+                  <span className="hash-mono" title={receipt.txHash}>
+                    {formatShortAddr(receipt.txHash || "0x00000000")}
+                  </span>
+                  <button
+                    className="receipt-copy-btn"
+                    onClick={() => handleCopyHash(receipt.txHash)}
+                    title="Copy Transaction Hash"
+                  >
+                    {copiedHash ? <Check size={13} color="#10b981" /> : <Copy size={13} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <Button variant="flame" size="lg" className="block" onClick={handleClose}>
-              Claim & Return to Arena 
-            </Button>
+            {/* Actions */}
+            <div className="receipt-actions-row">
+              <button className="receipt-print-btn" onClick={handlePrintReceipt}>
+                <Printer size={15} />
+                <span>Print Invoice</span>
+              </button>
+              <Button variant="flame" size="lg" onClick={handleClose}>
+                Claim & Return to Arena
+              </Button>
+            </div>
           </div>
-        ): (
-          /* Checkout View */
+        ) : (
+          /* ==================== WEB3 CHECKOUT BODY ==================== */
           <div className="payment-checkout-body">
-            {/* Left: Item Summary Card */}
+            {/* Left Column: Item Overview */}
             <div className="checkout-summary-col">
               <div className="summary-item-card">
-                <div className="item-badge-pill" style={{ color: activeItem.color }}>
-                  <Sparkles size={13} />
-                  <span>{activeItem.badge}</span>
-                </div>
+                {activeItem.badge && (
+                  <div className="item-badge-pill" style={{ color: activeItem.color || "#ffd700" }}>
+                    <Sparkles size={13} />
+                    <span>{activeItem.badge}</span>
+                  </div>
+                )}
 
                 <div className="item-icon-huge">{activeItem.icon}</div>
                 <h3 className="summary-item-name">{activeItem.name}</h3>
                 <p className="summary-item-desc">{activeItem.description}</p>
 
-                <div className="price-tag-block">
-                  <div className="price-usd">${activeItem.priceUsd} USD</div>
-                  <div className="price-eth">≈ {activeItem.priceEth} ETH</div>
+                {/* Token Pricing */}
+                <div className="token-price-display">
+                  <span className="token-crypto-val">{activeItem.priceEth} ETH</span>
+                  <span className="token-crypto-sub">Pay directly with Web3 Tokens</span>
                 </div>
 
                 {activeItem.goldAmount && (
@@ -157,204 +298,180 @@ export default function PaymentModal() {
               <div className="security-guarantee-box">
                 <ShieldCheck size={18} className="shield-icon" />
                 <div>
-                  <strong>Instant Delivery</strong>
-                  <p>Coins and cosmetics unlock immediately across all chambers.</p>
+                  <strong>Token-Only Settlement</strong>
+                  <p>Direct smart contract transfer with automatic balance validation & instant delivery.</p>
                 </div>
               </div>
             </div>
 
-            {/* Right: Payment Gateway Rails */}
+            {/* Right Column: Web3 Wallet & Transaction Steps */}
             <div className="checkout-rails-col">
-              {/* Payment Method Selector Tabs */}
-              <div className="payment-methods-tabs">
-                <button
-                  type="button"
-                  className={`method-tab ${paymentMethod === "card"? "active": ""}`}
-                  onClick={() => setPaymentMethod("card")}
-                >
-                  <CreditCard size={16} />
-                  <span>Card</span>
-                </button>
+              {/* Connected Wallet Status Card */}
+              <div className="web3-wallet-panel dragon-card">
+                <div className="panel-header-row">
+                  <div className="panel-title-wrap">
+                    <WalletIcon size={18} className="text-amber-400" />
+                    <h4>Connected Web3 Wallet</h4>
+                  </div>
+                  {wallet?.isConnected && (
+                    <span className="network-pill-tag">{wallet.network || "Ethereum"}</span>
+                  )}
+                </div>
 
-                <button
-                  type="button"
-                  className={`method-tab ${paymentMethod === "web3"? "active": ""}`}
-                  onClick={() => setPaymentMethod("web3")}
-                >
-                  <WalletIcon size={16} />
-                  <span>Web3 Crypto</span>
-                </button>
+                {wallet?.isConnected ? (
+                  <div className="wallet-connected-details">
+                    <div className="wallet-data-row">
+                      <span className="data-lbl">Address:</span>
+                      <strong className="hash-mono">{formatShortAddr(wallet.address)}</strong>
+                    </div>
 
-                <button
-                  type="button"
-                  className={`method-tab ${paymentMethod === "upi"? "active": ""}`}
-                  onClick={() => setPaymentMethod("upi")}
-                >
-                  <QrCode size={16} />
-                  <span>UPI / QR</span>
-                </button>
+                    <div className="wallet-data-row balance-highlight">
+                      <span className="data-lbl">Live Token Balance:</span>
+                      <strong className="wallet-eth-balance">{wallet.balance || "0.0000 ETH"}</strong>
+                    </div>
+
+                    {/* Strict Insufficient Funds Warning */}
+                    {!hasSufficientBalance && (
+                      <div className="balance-warning-banner">
+                        <AlertCircle size={15} className="flex-shrink-0" />
+                        <span>
+                          Insufficient balance ({wallet.balance || "0.0000 ETH"}). You need at least{" "}
+                          {activeItem.priceEth} ETH to purchase this item.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="wallet-disconnected-box">
+                    <p className="wallet-disconn-text">
+                      No Web3 wallet connected. Connect your MetaMask wallet to pay with tokens.
+                    </p>
+                    <div className="wallet-connect-actions">
+                      <Button
+                        variant="primary"
+                        size="md"
+                        onClick={handleConnectWallet}
+                        className="connect-metamask-btn"
+                      >
+                        <WalletIcon size={16} />
+                        <span>Connect MetaMask</span>
+                      </Button>
+                      <button
+                        type="button"
+                        className="demo-vault-btn"
+                        onClick={connectDemoWallet}
+                        title="Use Instant Dragon Demo Vault"
+                      >
+                        or Use Demo Vault
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Form 1: Credit / Debit Card */}
-              {paymentMethod === "card" && (
-                <form onSubmit={handlePay} className="gateway-form card-form">
-                  {/* Visual Card Preview */}
-                  <div className="visual-credit-card">
-                    <div className="card-chip" />
-                    <div className="card-preview-number">{cardNumber || "•••• •••• •••• ••••"}</div>
-                    <div className="card-preview-bottom">
-                      <div>
-                        <span className="card-preview-label">CARD HOLDER</span>
-                        <span className="card-preview-val">{cardName || "WARRIOR NAME"}</span>
-                      </div>
-                      <div>
-                        <span className="card-preview-label">EXPIRES</span>
-                        <span className="card-preview-val">{cardExpiry || "MM/YY"}</span>
-                      </div>
-                    </div>
+              {/* Receipt Delivery Email Form */}
+              <div className="email-receipt-section">
+                <label className="input-label-with-icon">
+                  <Mail size={14} />
+                  <span>Send Official Receipt To Email</span>
+                </label>
+                <input
+                  type="email"
+                  className="input dragon-input"
+                  placeholder="warrior@dragon.realm"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={processing}
+                  required
+                />
+                <span className="input-micro-hint">
+                  An official transaction confirmation & invoice will be sent to this email.
+                </span>
+              </div>
+
+              {/* Real-time Stepper (shown while processing) */}
+              {processing && (
+                <div className="realtime-stepper-box">
+                  <div className="stepper-header">
+                    <Loader2 size={16} className="animate-spin text-amber-400" />
+                    <span>Real-Time On-Chain Progression</span>
                   </div>
 
-                  <div className="form-group">
-                    <label>Card Number</label>
-                    <input
-                      className="input dragon-input"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      maxLength={19}
-                      placeholder="4532 •••• •••• ••••"
-                      required
-                    />
+                  <div className="stepper-track">
+                    {stepsList.map((st, idx) => {
+                      const curIdx = getStepIndex(currentStep);
+                      const isDone = curIdx > idx;
+                      const isCurrent = curIdx === idx;
+                      return (
+                        <div
+                          key={st.key}
+                          className={`stepper-step ${isDone ? "completed" : ""} ${
+                            isCurrent ? "active" : ""
+                          }`}
+                        >
+                          <div className="step-circle">
+                            {isDone ? (
+                              <Check size={12} />
+                            ) : isCurrent ? (
+                              <div className="step-spinner" />
+                            ) : (
+                              <span>{idx + 1}</span>
+                            )}
+                          </div>
+                          <span className="step-lbl">{st.label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="form-group">
-                    <label>Cardholder Name</label>
-                    <input
-                      className="input dragon-input uppercase"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
-                      placeholder="FULL NAME"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-row-2">
-                    <div className="form-group">
-                      <label>Expires</label>
-                      <input
-                        className="input dragon-input"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        placeholder="MM/YY"
-                        maxLength={5}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>CVC / CVV</label>
-                      <input
-                        className="input dragon-input"
-                        type="password"
-                        value={cardCvc}
-                        onChange={(e) => setCardCvc(e.target.value)}
-                        placeholder="•••"
-                        maxLength={4}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    variant="flame"
-                    size="lg"
-                    type="submit"
-                    className="block pay-submit-btn"
-                    disabled={processing}
-                  >
-                    {processing? "Authorizing 3D-Secure…": `Pay $${activeItem.priceUsd} USD `}
-                  </Button>
-                </form>
-              )}
-
-              {/* Form 2: Web3 MetaMask Crypto */}
-              {paymentMethod === "web3" && (
-                <div className="gateway-form web3-form">
-                  <div className="web3-status-box">
-                    <span className="web3-status-lbl">Wallet Connected:</span>
-                    <strong>{wallet.isConnected? wallet.address: "MetaMask Not Connected"}</strong>
-                  </div>
-
-                  <div className="web3-quote-box">
-                    <div className="quote-row">
-                      <span>Item Price:</span>
-                      <strong>{activeItem.priceEth} ETH</strong>
-                    </div>
-                    <div className="quote-row">
-                      <span>Estimated Gas:</span>
-                      <span>~0.0003 ETH ($0.95)</span>
-                    </div>
-                    <div className="quote-row total">
-                      <span>Total ETH:</span>
-                      <strong className="gold">{(parseFloat(activeItem.priceEth) + 0.0003).toFixed(4)} ETH</strong>
-                    </div>
-                  </div>
-
-                  {wallet.isConnected? (
-                    <Button
-                      variant="flame"
-                      size="lg"
-                      className="block pay-submit-btn"
-                      onClick={handlePay}
-                      disabled={processing}
-                    >
-                      {processing? "Confirming in MetaMask…": `Sign & Pay ${activeItem.priceEth} ETH `}
-                    </Button>
-                  ): (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="block pay-submit-btn"
-                      onClick={connectMetaMask}
-                    >
-                      Connect MetaMask Wallet 
-                    </Button>
-                  )}
+                  {stepMessage && <p className="step-live-message">{stepMessage}</p>}
                 </div>
               )}
 
-              {/* Form 3: UPI / Instant QR Code */}
-              {paymentMethod === "upi" && (
-                <div className="gateway-form upi-form">
-                  <div className="qr-box-center">
-                    <div className="qr-canvas-mock">
-                      <QrCode size={130} className="qr-svg-icon" />
-                      <div className="qr-center-logo"></div>
-                    </div>
-                    <span className="qr-hint">Scan with Google Pay, PhonePe, Paytm or any UPI App</span>
-                  </div>
+              {error && (
+                <div className="payment-error-banner">
+                  <AlertCircle size={16} className="flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
 
-                  <div className="form-group">
-                    <label>Or Enter UPI ID</label>
-                    <input
-                      className="input dragon-input"
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      placeholder="username@upi"
-                    />
-                  </div>
-
+              {/* Action Button */}
+              <div className="checkout-cta-wrap">
+                {wallet?.isConnected ? (
                   <Button
-                    variant="emerald"
+                    variant={hasSufficientBalance ? "flame" : "secondary"}
                     size="lg"
                     className="block pay-submit-btn"
                     onClick={handlePay}
-                    disabled={processing}
+                    disabled={processing || !hasSufficientBalance}
                   >
-                    {processing? "Verifying UPI Response…": `Verify & Pay ₹${Math.round(activeItem.priceUsd * 83)} `}
+                    {processing ? (
+                      <span className="btn-flex-center">
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Broadcasting to Chain…</span>
+                      </span>
+                    ) : !hasSufficientBalance ? (
+                      <span className="btn-flex-center">
+                        <span>Insufficient Balance ({wallet.balance || "0.0000 ETH"})</span>
+                      </span>
+                    ) : (
+                      <span className="btn-flex-center">
+                        <span>Pay {activeItem.priceEth} ETH with Tokens</span>
+                        <ArrowRight size={18} />
+                      </span>
+                    )}
                   </Button>
-                </div>
-              )}
-
-              {error && <p className="payment-error-msg">{error}</p>}
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="block pay-submit-btn"
+                    onClick={handleConnectWallet}
+                  >
+                    Connect MetaMask to Purchase
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         )}

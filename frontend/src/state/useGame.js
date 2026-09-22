@@ -31,6 +31,7 @@ export function useGame() {
       drawMove: (points) => dispatcher.drawMove(points),
       drawEnd: () => dispatcher.drawEnd(),
       clearCanvas: () => dispatcher.clearCanvas(),
+      requestSpecialHint: (payload) => dispatcher.requestSpecialHint(payload),
     }),
     [dispatcher, dispatch]
   );

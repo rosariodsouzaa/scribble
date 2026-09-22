@@ -304,6 +304,48 @@ router.put("/profile", requireAuth, async (req, res) => {
 });
 
 /**
+ * PATCH /api/auth/change-password
+ * Allows an authenticated warrior to change their passcode by verifying current passcode
+ */
+router.patch("/change-password", requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current passcode and new passcode are required." });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ error: "New passcode must be at least 6 characters long." });
+    }
+
+    const user = await UserRepository.findById(req.user.id || req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: "Warrior not found." });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Current passcode is incorrect. Verification failed." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+    await UserRepository.updateById(user.id || user._id, { passwordHash });
+
+    console.log(`[Auth] 🔐 Passcode updated securely for warrior: ${user.name} (${user.email})`);
+
+    res.json({
+      success: true,
+      message: "Battle passcode successfully changed! Your vault is now guarded by your new key.",
+    });
+  } catch (err) {
+    console.error("[Auth] change password error:", err);
+    res.status(500).json({ error: "Failed to change passcode." });
+  }
+});
+
+/**
  * POST /api/auth/seed-demo
  * Seeds initial demo admin and warrior accounts if absent
  */

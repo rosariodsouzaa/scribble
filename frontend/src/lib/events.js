@@ -10,6 +10,7 @@ export const C2S = {
   CLEAR: "clear-canvas",
   GUESS: "submit-guess",
   PLAY_AGAIN: "play-again",
+  REQUEST_SPECIAL_HINT: "request-special-hint",
 };
 
 export const S2C = {
@@ -26,6 +27,7 @@ export const S2C = {
   SCORE_UPDATE: "score-update",
   TIMER_TICK: "timer-tick",
   HINT_UPDATE: "hint-update",
+  SPECIAL_HINT_RECEIVED: "special-hint-received",
   ROUND_END: "round-end",
   GAME_END: "game-end",
   GAME_ABORTED: "game-aborted",

@@ -29,6 +29,7 @@ export function GameProvider({ children }) {
       [S2C.SCORE_UPDATE]: (d) => dispatch({ type: "SCORE_UPDATE", ...d }),
       [S2C.TIMER_TICK]: (d) => dispatch({ type: "TIMER_TICK", ...d }),
       [S2C.HINT_UPDATE]: (d) => dispatch({ type: "HINT_UPDATE", ...d }),
+      [S2C.SPECIAL_HINT_RECEIVED]: (d) => dispatch({ type: "SPECIAL_HINT_RECEIVED", ...d }),
       [S2C.ROUND_END]: (d) => dispatch({ type: "ROUND_END", ...d }),
       [S2C.GAME_END]: (d) => dispatch({ type: "GAME_END", ...d }),
       [S2C.GAME_ABORTED]: (d) => dispatch({ type: "GAME_ABORTED", ...d }),

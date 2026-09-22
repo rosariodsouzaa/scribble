@@ -16,7 +16,7 @@ export const usePayment = () => {
 };
 
 export function PaymentProvider({ children }) {
-  const { addCoins, user } = useAuthWallet();
+  const { addCoins, user, wallet, refreshWalletBalance, deductWalletBalance } = useAuthWallet();
 
   // Owned item IDs
   const [ownedItems, setOwnedItems] = useState(() => {
@@ -124,19 +124,87 @@ export function PaymentProvider({ children }) {
     return { success: true };
   };
 
-  // Process payment across multiple rails using Strategy pattern
-  const processPayment = async ({ item, method, cardDetails, upiId }) => {
+  // Process Web3 token payment with real-time on-chain progression and official receipt delivery
+  const processPayment = async ({ item, method = "metamask", email, onStepChange }) => {
+    const initialWalletBalance = wallet?.balance || "0.0000 ETH";
+    const costEth = parseFloat(item.priceEth || "0.002");
+
     const strategy = PaymentProcessorFactory.getStrategy(method);
     const result = await strategy.process(item, {
-      cardNumber: cardDetails?.number,
-      upiId,
+      walletAddress: wallet?.address,
+      network: wallet?.network,
+      isMetaMask: wallet?.isMetaMask,
+      onStepChange,
     });
 
     if (!result.success) {
       return result;
     }
 
-    // Award items
+    // Immediately deduct tokens from client wallet state and storage
+    if (typeof deductWalletBalance === "function") {
+      deductWalletBalance(costEth);
+    }
+
+    // Calculate deducted and remaining balance values
+    const curVal = parseFloat(String(initialWalletBalance).replace(/[^0-9.]/g, "")) || 0;
+    const remainingBalance = `${Math.max(0, curVal - costEth).toFixed(4)} ETH`;
+
+    // Call backend to credit gold in DB and dispatch professional email receipt
+    let backendReceipt = null;
+    try {
+      const resp = await fetch("/api/payments/verify-and-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?.id,
+          userName: user?.name || "Warrior",
+          email: email || user?.email,
+          walletAddress: wallet?.address || result.transaction?.walletAddress,
+          txHash: result.transaction?.hash,
+          network: wallet?.network || result.transaction?.network,
+          item,
+          amountPaid: result.transaction?.amount,
+        }),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        backendReceipt = data.receipt;
+        result.receipt = {
+          ...data.receipt,
+          initialBalance: initialWalletBalance,
+          remainingBalance,
+          deductedAmount: `${costEth.toFixed(4)} ETH`,
+        };
+      }
+    } catch (err) {
+      console.warn("[PaymentContext] Backend receipt service failed:", err);
+    }
+
+    // If backend didn't return a receipt object, generate a fallback receipt object for UI
+    if (!result.receipt) {
+      result.receipt = {
+        id: `RCP-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        date: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+        item: item.name,
+        amount: result.transaction?.amount || `${costEth.toFixed(4)} ETH`,
+        goldAmount: item.goldAmount,
+        walletAddress: wallet?.address || result.transaction?.walletAddress,
+        txHash: result.transaction?.hash,
+        network: wallet?.network || result.transaction?.network,
+        email: email || user?.email,
+        initialBalance: initialWalletBalance,
+        remainingBalance,
+        deductedAmount: `${costEth.toFixed(4)} ETH`,
+      };
+    } else {
+      result.receipt.initialBalance = initialWalletBalance;
+      result.receipt.remainingBalance = remainingBalance;
+      result.receipt.deductedAmount = `${costEth.toFixed(4)} ETH`;
+    }
+
+    // Award in-game items
     if (item.category === "gold") {
       addCoins(item.goldAmount);
     } else {
@@ -146,13 +214,27 @@ export function PaymentProvider({ children }) {
       }
     }
 
-    // Create transaction record
+    // Create transaction record with balance changes
     if (result.transaction) {
-      setTransactions((prev) => [result.transaction, ...prev]);
+      const finalTx = {
+        ...result.transaction,
+        receiptId: result.receipt.id,
+        email: email || user?.email,
+        initialBalance: initialWalletBalance,
+        remainingBalance,
+      };
+      setTransactions((prev) => [finalTx, ...prev]);
+    }
+
+    // Refresh on-chain balance after block mining interval
+    if (wallet?.isMetaMask && typeof refreshWalletBalance === "function") {
+      setTimeout(() => {
+        refreshWalletBalance().catch(() => {});
+      }, 2500);
     }
 
     try {
-      confetti({ particleCount: 110, spread: 75, origin: { y: 0.55 } });
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 } });
       sound.playVictoryFanfare();
     } catch {}
 

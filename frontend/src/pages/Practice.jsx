@@ -56,6 +56,13 @@ export default function Practice() {
   const [commentary, setCommentary] = useState("");
   const [voiceEnabled, setVoiceEnabled] = useState(true);
 
+  // Stop speech oracle if user navigates away
+  useEffect(() => {
+    return () => {
+      speechOracle.stop();
+    };
+  }, []);
+
   // Pick random prompt different from current
   const getRandomPrompt = useCallback(() => {
     const pool = SKETCH_CATEGORIES.filter((c) => c.id!== targetPrompt?.id);

@@ -21,7 +21,7 @@ export default function Sidebar() {
     { to: "/dashboard", icon: <LayoutDashboard size={19} />, label: "Dashboard" },
     { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
     { to: "/practice", icon: <Sparkles size={19} color="#fbbf24" />, label: "AI Practice Dojo", badge: "AI NEW" },
-    { to: "/profile", icon: <User size={19} />, label: "Warrior Hub", badge: user.isAuthenticated ? "MY HUB" : null },
+    { to: "/profile", icon: <User size={19} />, label: "Warrior Hub", badge: user?.isAuthenticated ? "MY HUB" : null },
     ...(isAdmin
       ? [{ to: "/admin", icon: <Crown size={19} color="#ffd700" />, label: "Admin Panel", badge: "VIP" }]
       : []),

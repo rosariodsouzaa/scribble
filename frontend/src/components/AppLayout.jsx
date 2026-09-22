@@ -7,7 +7,10 @@ import DragonBackground from "./DragonBackground.jsx";
 export default function AppLayout({ children }) {
   const location = useLocation();
   const isRoom = location.pathname.startsWith("/room/");
-  const isAuth = location.pathname === "/login" || location.pathname === "/signup";
+  const isAuth =
+    location.pathname === "/login" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/forgot-password";
 
   return (
     <div className={`dragon-app-layout ${isRoom ? "in-game-room" : ""} ${isAuth ? "auth-mode" : ""}`}>

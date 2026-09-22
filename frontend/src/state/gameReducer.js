@@ -29,6 +29,10 @@ export const initialState = {
   roundEnd: null, // last round-end payload (drives the summary overlay)
   gameEnd: null, // final standings + winner
 
+  activeSpecialHint: null, // string | null: revealed semantic clue for active round
+  specialHintsUsed: 0, // hints used this match
+  maxSpecialHints: 2, // maximum allowed per match
+
   _seq: 1, // monotonic id source for chat keys
 };
 
@@ -64,10 +68,13 @@ export function gameReducer(state, action) {
         state: r.state,
         settings: r.settings,
         players: r.players,
-        gameEnd: isWaiting? null: state.gameEnd,
-        roundEnd: isWaiting? null: state.roundEnd,
-        myWord: isWaiting? null: (r.round.word?? state.myWord),
-        guessedCorrect: isWaiting? false: state.guessedCorrect,
+        gameEnd: isWaiting ? null : state.gameEnd,
+        roundEnd: isWaiting ? null : state.roundEnd,
+        myWord: isWaiting ? null : (r.round?.word ?? state.myWord),
+        guessedCorrect: isWaiting ? false : state.guessedCorrect,
+        activeSpecialHint: isWaiting ? null : state.activeSpecialHint,
+        specialHintsUsed: isWaiting ? 0 : (r.specialHintsUsed ?? state.specialHintsUsed),
+        maxSpecialHints: r.maxSpecialHints ?? 2,
         round: {
           number: r.round.number,
           maxRounds: r.settings.maxRounds,
@@ -97,23 +104,31 @@ export function gameReducer(state, action) {
 
     case "PLAYER_UPDATED":
       return {
-...state,
+        ...state,
         players: state.players.map((p) =>
           p.id === action.playerId? {...p, isReady: action.isReady }: p
         ),
       };
 
     case "GAME_STARTED":
-      return {...state, state: "playing", settings: action.settings, gameEnd: null };
+      return {
+        ...state,
+        state: "playing",
+        settings: action.settings,
+        gameEnd: null,
+        specialHintsUsed: 0,
+        activeSpecialHint: null,
+      };
 
     case "ROUND_START": {
       const amDrawer = action.drawerId === state.myId;
       return {
-...state,
+        ...state,
         state: "playing",
         roundEnd: null,
         guessedCorrect: false,
-        myWord: amDrawer? state.myWord: null, // guessers cleared; drawer waits for new-word
+        activeSpecialHint: null,
+        myWord: amDrawer ? state.myWord : null, // guessers cleared; drawer waits for new-word
         remaining: secondsLeft(action.endsAt),
         round: {
           number: action.number,
@@ -172,9 +187,32 @@ export function gameReducer(state, action) {
     case "TIMER_TICK":
       return {...state, remaining: action.remaining };
 
+    case "SPECIAL_HINT_RECEIVED": {
+      const updatedUsed = action.hintsUsed ?? (state.specialHintsUsed + 1);
+      return pushChat(
+        {
+          ...state,
+          activeSpecialHint: action.clue,
+          specialHintsUsed: updatedUsed,
+          maxSpecialHints: action.maxHints ?? 2,
+        },
+        {
+          type: "oracle-hint",
+          text: `🔮 Dragon Oracle Clue: "${action.clue}"`,
+        }
+      );
+    }
+
     case "ROUND_END":
       return pushChat(
-        {...state, state: "roundEnd", roundEnd: action, players: action.players, remaining: 0 },
+        {
+          ...state,
+          state: "roundEnd",
+          roundEnd: action,
+          players: action.players,
+          remaining: 0,
+          activeSpecialHint: null,
+        },
         { type: "system", text: `Round over! The secret rune was "${action.word}"` }
       );
 

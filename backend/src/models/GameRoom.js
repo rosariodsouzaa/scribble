@@ -3,6 +3,8 @@ import { Player } from "./Player.js";
 import { Round } from "./Round.js";
 import { StandardScoringStrategy } from "../services/scoring/StandardScoringStrategy.js";
 import { WordDictionary } from "../services/words/WordDictionary.js";
+import { WordClueService } from "../services/words/WordClueService.js";
+import { UserRepository } from "./User.js";
 
 /**
  * GameRoom Domain Aggregate & State Machine
@@ -33,6 +35,7 @@ export class GameRoom {
     this.scoringStrategy = new StandardScoringStrategy();
     this.timers = { tick: null, nextRound: null };
     this.emptySince = Date.now();
+    this.specialHintsUsed = new Map(); // playerKey (clientId || socketId) -> hints used this match (max 2)
   }
 
   /**
@@ -233,6 +236,7 @@ export class GameRoom {
     this.state = "waiting";
     this.round = null;
     this.roundNumber = 0;
+    this.specialHintsUsed.clear();
 
     for (const p of this.players.values()) {
       p.setReady(false);
@@ -278,6 +282,7 @@ export class GameRoom {
       player.resetScore();
     }
     this.usedWords.clear();
+    this.specialHintsUsed.clear();
     this.roundNumber = 0;
     this.state = "playing";
 
@@ -500,6 +505,7 @@ export class GameRoom {
     this.round = null;
     this.roundNumber = 0;
     this.usedWords.clear();
+    this.specialHintsUsed.clear();
     this.state = "waiting";
 
     for (const player of this.players.values()) {
@@ -605,6 +611,8 @@ export class GameRoom {
       state: this.state,
       settings: this.settings,
       players: this.serializePlayers(),
+      specialHintsUsed: forSocketId ? this.getSpecialHintsCount(forSocketId) : 0,
+      maxSpecialHints: WordClueService.MAX_HINTS_PER_MATCH,
       round: this.round
 ? this.round.serialize(amDrawer, drawerName)
 : {
@@ -616,6 +624,100 @@ export class GameRoom {
             wordLength: 0,
           },
     };
+  }
+
+  /**
+   * Helper to get special hint usage count for a socket
+   * @param {string} socketId 
+   * @returns {number}
+   */
+  getSpecialHintsCount(socketId) {
+    const player = this.players.get(socketId);
+    const key = player?.clientId || socketId;
+    return this.specialHintsUsed.get(key) || 0;
+  }
+
+  /**
+   * Request an in-game coin-powered semantic hint (Oracle Clue).
+   * Validates match limit (max 2 per match), active round, guesser status, and coin balance.
+   * @param {string} socketId 
+   * @param {object} param1 
+   */
+  async handleRequestSpecialHint(socketId, { userId, clientCoins } = {}) {
+    if (this.state !== "playing" || !this.round) {
+      this.emitError(socketId, "hint-unavailable", "Oracle Clues can only be sought during an active round.");
+      return;
+    }
+
+    const player = this.players.get(socketId);
+    if (!player) return;
+
+    if (socketId === this.round.drawerId) {
+      this.emitError(socketId, "drawer-cannot-hint", "Drawers already hold the secret rune.");
+      return;
+    }
+
+    if (this.round.hasGuessed(socketId)) {
+      this.emitError(socketId, "already-guessed", "You have already deciphered the secret rune!");
+      return;
+    }
+
+    const playerKey = player.clientId || socketId;
+    const hintsUsed = this.specialHintsUsed.get(playerKey) || 0;
+    const maxHints = WordClueService.MAX_HINTS_PER_MATCH; // 2 per match
+
+    if (hintsUsed >= maxHints) {
+      this.emitError(socketId, "hint-limit-reached", `Dragon Oracle limit reached (${maxHints}/${maxHints} hints used this match).`);
+      return;
+    }
+
+    const cost = WordClueService.HINT_COST; // 100 Dragon Gold
+
+    // Deduct coins if registered in database
+    if (userId) {
+      try {
+        const dbUser = await UserRepository.findById(userId);
+        if (dbUser) {
+          const currentCoins = Number(dbUser.coins) || 0;
+          if (currentCoins < cost) {
+            this.emitError(socketId, "insufficient-coins", `Insufficient Dragon Gold. Requires ${cost} coins.`);
+            return;
+          }
+          await UserRepository.updateById(userId, { coins: Math.max(0, currentCoins - cost) });
+        }
+      } catch (err) {
+        console.warn("[GameRoom] Failed to deduct coins from database user:", err.message);
+      }
+    } else if (typeof clientCoins === "number" && clientCoins < cost) {
+      this.emitError(socketId, "insufficient-coins", `Insufficient Dragon Gold. Requires ${cost} coins.`);
+      return;
+    }
+
+    // Increment hint count for this match
+    const updatedHintsUsed = hintsUsed + 1;
+    this.specialHintsUsed.set(playerKey, updatedHintsUsed);
+
+    // Retrieve semantic clue from dictionary
+    const clue = WordClueService.getClue(this.round.word);
+
+    // Deliver secret clue privately to the purchaser
+    if (this.io) {
+      this.io.to(socketId).emit("special-hint-received", {
+        clue,
+        hintsUsed: updatedHintsUsed,
+        maxHints,
+        remainingHints: maxHints - updatedHintsUsed,
+        cost,
+        roundNumber: this.round.number,
+      });
+    }
+
+    // Announce to the chamber that this warrior consulted the Oracle
+    this.broadcast("guess-result", {
+      correct: false,
+      isSystem: true,
+      text: `🔮 ${player.username} invoked the Dragon Oracle for a Secret Clue! (${updatedHintsUsed}/${maxHints} match hints used)`,
+    });
   }
 
   emitError(socketId, code, message) {

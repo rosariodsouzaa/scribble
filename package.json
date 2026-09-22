@@ -12,7 +12,8 @@
     "dev:api": "npm run dev --workspace backend",
     "dev:web": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
-    "start:api": "npm run start --workspace backend"
+    "start:api": "npm run start --workspace backend",
+    "test": "node test-suite.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

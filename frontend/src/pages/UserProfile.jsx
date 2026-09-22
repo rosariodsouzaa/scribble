@@ -17,8 +17,15 @@ import {
   Award,
   Swords,
   Crown,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
+import { AuthService } from "../services/auth/AuthService.js";
 import Avatar from "../components/Avatar.jsx";
 
 const COLOR_OPTIONS = [
@@ -41,14 +48,6 @@ const AVAILABLE_TITLES = [
   "Dragon Emperor",
 ];
 
-const ACHIEVEMENTS = [
-  { id: 1, title: "First Blood", desc: "Claim victory in your first drawing battle", icon: "", unlocked: true },
-  { id: 2, title: "Speed Demon", desc: "Guess the hidden word in under 5 seconds", icon: "", unlocked: true },
-  { id: 3, title: "Vault Tycoon", desc: "Accumulate over 5,000 Dragon Gold", icon: "", unlocked: true },
-  { id: 4, title: "Dynasty Master", desc: "Win 25 multiplayer tournament rounds", icon: "", unlocked: false },
-  { id: 5, title: "Master Drafter", desc: "Have 100% of warriors guess your drawing", icon: "", unlocked: true },
-  { id: 6, title: "Web3 Patron", desc: "Link MetaMask Dragon Vault to your identity", icon: "", unlocked: false },
-];
 
 export default function UserProfile() {
   const { user, isAdmin, updateUserProfile, logout, wallet } = useAuthWallet();
@@ -63,6 +62,17 @@ export default function UserProfile() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  // Change Password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState("");
+  const [pwError, setPwError] = useState("");
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -86,6 +96,44 @@ export default function UserProfile() {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwSaving(true);
+    setPwSuccess("");
+    setPwError("");
+
+    if (!currentPassword) {
+      setPwError("Please enter your current passcode.");
+      setPwSaving(false);
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setPwError("New passcode must be at least 6 characters long.");
+      setPwSaving(false);
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPwError("New passcodes do not match. Please verify.");
+      setPwSaving(false);
+      return;
+    }
+
+    try {
+      const res = await AuthService.changePassword({ currentPassword, newPassword });
+      setPwSuccess(res.message || "Passcode changed successfully!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setTimeout(() => setPwSuccess(""), 4000);
+    } catch (err) {
+      setPwError(err.message || "Failed to change passcode.");
+    } finally {
+      setPwSaving(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -98,6 +146,89 @@ export default function UserProfile() {
   const currentXp = Number(user.xp) || 0;
   const nextLevelXp = (Number(user.level) || 1) * 500;
   const xpProgress = Math.min(100, Math.round((currentXp / nextLevelXp) * 100));
+
+  const dynamicAchievements = [
+    {
+      id: "first_blood",
+      title: "First Blood",
+      desc: "Claim victory in your first drawing battle",
+      icon: "🗡️",
+      current: wins,
+      target: 1,
+      unlocked: wins >= 1,
+      label: `${Math.min(wins, 1)} / 1 Win`,
+    },
+    {
+      id: "speed_striker",
+      title: "Speed Striker",
+      desc: "Score 5 arena battle victories across chambers",
+      icon: "⚡",
+      current: wins,
+      target: 5,
+      unlocked: wins >= 5,
+      label: `${Math.min(wins, 5)} / 5 Wins`,
+    },
+    {
+      id: "vault_tycoon",
+      title: "Vault Tycoon",
+      desc: "Accumulate over 5,000 Dragon Gold in treasury",
+      icon: "🪙",
+      current: Number(user.coins) || 0,
+      target: 5000,
+      unlocked: (Number(user.coins) || 0) >= 5000,
+      label: `${(Number(user.coins) || 0).toLocaleString()} / 5,000 Gold`,
+    },
+    {
+      id: "dynasty_champion",
+      title: "Dynasty Champion",
+      desc: "Win 25 multiplayer tournament matches",
+      icon: "👑",
+      current: wins,
+      target: 25,
+      unlocked: wins >= 25,
+      label: `${Math.min(wins, 25)} / 25 Wins`,
+    },
+    {
+      id: "battle_veteran",
+      title: "Battle Hardened",
+      desc: "Complete 10 multiplayer arena battles",
+      icon: "🛡️",
+      current: matches,
+      target: 10,
+      unlocked: matches >= 10,
+      label: `${Math.min(matches, 10)} / 10 Battles`,
+    },
+    {
+      id: "web3_patron",
+      title: "Web3 Patron",
+      desc: "Link MetaMask Dragon Vault to your identity",
+      icon: "🦊",
+      current: wallet?.isConnected ? 1 : 0,
+      target: 1,
+      unlocked: Boolean(wallet?.isConnected),
+      label: wallet?.isConnected ? "Vault Linked" : "Not Linked",
+    },
+    {
+      id: "imperial_scholar",
+      title: "Imperial Scholar",
+      desc: "Advance to Level 5 or higher in the dynasty",
+      icon: "📜",
+      current: Number(user.level) || 1,
+      target: 5,
+      unlocked: (Number(user.level) || 1) >= 5,
+      label: `Level ${user.level || 1} / 5`,
+    },
+    {
+      id: "grandmaster_authority",
+      title: "High Grandmaster",
+      desc: "Attain Imperial Admin Authority over the realm",
+      icon: "⭐",
+      current: isAdmin ? 1 : 0,
+      target: 1,
+      unlocked: Boolean(isAdmin),
+      label: isAdmin ? "Imperial Authority" : "Warrior Rank",
+    },
+  ];
 
   return (
     <div className="user-profile-page">
@@ -330,66 +461,212 @@ export default function UserProfile() {
 
       {/* ===================== SUBTAB 3: ACHIEVEMENTS ===================== */}
       {activeSubTab === "achievements" && (
-        <div className="achievements-grid">
-          {ACHIEVEMENTS.map((item) => (
-            <div key={item.id} className={`achievement-card ${item.unlocked? "unlocked": "locked"}`}>
-              <div className="achievement-icon">{item.icon}</div>
-              <div className="achievement-details">
-                <div className="achievement-title-row">
-                  <span className="achievement-title">{item.title}</span>
-                  {item.unlocked? (
-                    <span className="achievement-badge-unlocked">UNLOCKED</span>
-                  ): (
-                    <span className="achievement-badge-locked">LOCKED</span>
-                  )}
-                </div>
-                <p className="achievement-desc">{item.desc}</p>
-              </div>
+        <div className="achievements-section">
+          <div className="achievements-header-summary">
+            <div className="achievements-count-badge">
+              <Award size={18} color="#f59e0b" />
+              <span>
+                <strong>{dynamicAchievements.filter((a) => a.unlocked).length}</strong> / {dynamicAchievements.length} UNLOCKED
+              </span>
             </div>
-          ))}
+            <p className="achievements-sub">Conquer challenges in the multiplayer arena to unlock dynasty badges.</p>
+          </div>
+
+          <div className="achievements-grid">
+            {dynamicAchievements.map((item) => {
+              const progressPct = item.target > 0 ? Math.min(100, Math.round((item.current / item.target) * 100)) : 100;
+
+              return (
+                <div key={item.id} className={`achievement-card ${item.unlocked ? "unlocked" : "locked"}`}>
+                  <div className="achievement-icon">{item.icon}</div>
+                  <div className="achievement-details">
+                    <div className="achievement-title-row">
+                      <span className="achievement-title">{item.title}</span>
+                      {item.unlocked ? (
+                        <span className="achievement-badge-unlocked">✓ UNLOCKED</span>
+                      ) : (
+                        <span className="achievement-badge-locked">LOCKED</span>
+                      )}
+                    </div>
+                    <p className="achievement-desc">{item.desc}</p>
+
+                    {/* Live Progress Meter */}
+                    <div className="achievement-progress-wrap">
+                      <div className="achievement-progress-track">
+                        <div
+                          className={`achievement-progress-fill ${item.unlocked ? "completed" : ""}`}
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                      <span className="achievement-progress-text">{item.label}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* ===================== SUBTAB 4: SECURITY ===================== */}
       {activeSubTab === "security" && (
-        <div className="security-card">
-          <div className="security-row">
-            <div className="security-info">
-              <Mail size={18} className="security-icon" />
-              <div>
-                <strong>Warrior Email Address</strong>
-                <p>{user.email || "No email registered (Guest Mode)"}</p>
+        <div className="security-section-container">
+          <div className="security-card">
+            <h3 className="security-card-title">
+              <Shield size={18} />
+              <span>Warrior Account Credentials</span>
+            </h3>
+
+            <div className="security-row">
+              <div className="security-info">
+                <Mail size={18} className="security-icon" />
+                <div>
+                  <strong>Warrior Email Address</strong>
+                  <p>{user.email || "No email registered (Guest Mode)"}</p>
+                </div>
+              </div>
+              {user.email && <span className="verified-pill">✓ Verified via OTP</span>}
+            </div>
+
+            <div className="security-row">
+              <div className="security-info">
+                <Shield size={18} className="security-icon" />
+                <div>
+                  <strong>Authority Role</strong>
+                  <p>{isAdmin ? "High Imperial Admin" : "Standard Arena Warrior"}</p>
+                </div>
+              </div>
+              <span className="role-pill">{user.role || "user"}</span>
+            </div>
+
+            <div className="security-row">
+              <div className="security-info">
+                <Calendar size={18} className="security-icon" />
+                <div>
+                  <strong>Session State</strong>
+                  <p>{user.isAuthenticated ? "Authenticated via Secure JWT" : "Guest Temporary Session"}</p>
+                </div>
               </div>
             </div>
-            {user.email && <span className="verified-pill"> Verified via OTP</span>}
           </div>
 
-          <div className="security-row">
-            <div className="security-info">
-              <Shield size={18} className="security-icon" />
-              <div>
-                <strong>Authority Role</strong>
-                <p>{isAdmin? "High Imperial Admin": "Standard Arena Warrior"}</p>
+          {/* Change Battle Passcode Card */}
+          {user.isAuthenticated && user.email && (
+            <form className="security-card change-password-card" onSubmit={handleChangePassword}>
+              <h3 className="security-card-title">
+                <KeyRound size={18} />
+                <span>Change Battle Passcode</span>
+              </h3>
+              <p className="change-pw-sub">
+                Re-forge your secret battle key. Requires your existing passcode for verification.
+              </p>
+
+              {pwError && (
+                <div className="auth-alert error">
+                  <AlertCircle size={16} />
+                  <span>{pwError}</span>
+                </div>
+              )}
+              {pwSuccess && (
+                <div className="auth-alert success">
+                  <CheckCircle2 size={16} />
+                  <span>{pwSuccess}</span>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">
+                  <Lock size={14} />
+                  <span>Current Passcode</span>
+                </label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    className="dragon-input"
+                    placeholder="Enter current passcode"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  >
+                    {showCurrentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
-            </div>
-            <span className="role-pill">{user.role || "user"}</span>
-          </div>
 
-          <div className="security-row">
-            <div className="security-info">
-              <Calendar size={18} className="security-icon" />
-              <div>
-                <strong>Session State</strong>
-                <p>{user.isAuthenticated? "Authenticated via Secure JWT": "Guest Temporary Session"}</p>
+              <div className="form-group">
+                <label className="form-label">
+                  <Lock size={14} />
+                  <span>New Battle Passcode</span>
+                </label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    className="dragon-input"
+                    placeholder="Minimum 6 characters"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="security-logout-row">
-            <button className="dragon-btn secondary danger-hover" onClick={handleLogout}>
-              <LogOut size={16} />
-              <span>Log Out Warrior Account</span>
-            </button>
+              <div className="form-group">
+                <label className="form-label">
+                  <Lock size={14} />
+                  <span>Confirm New Passcode</span>
+                </label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showConfirmNewPassword ? "text" : "password"}
+                    className="dragon-input"
+                    placeholder="Re-enter new passcode"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                  >
+                    {showConfirmNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="change-pw-action-row">
+                <button
+                  type="submit"
+                  className="dragon-btn primary"
+                  disabled={pwSaving || (confirmNewPassword && newPassword !== confirmNewPassword)}
+                >
+                  {pwSaving ? "Re-forging Key..." : "Update Battle Passcode"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="security-card logout-card">
+            <div className="security-logout-row">
+              <button className="dragon-btn secondary danger-hover" onClick={handleLogout}>
+                <LogOut size={16} />
+                <span>Log Out Warrior Account</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

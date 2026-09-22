@@ -51,4 +51,8 @@ export class GameActionDispatcher {
   clearCanvas() {
     this.socket.emit(C2S.CLEAR);
   }
+
+  requestSpecialHint(payload = {}) {
+    this.socket.emit(C2S.REQUEST_SPECIAL_HINT, payload);
+  }
 }

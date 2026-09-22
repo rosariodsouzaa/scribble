@@ -1,64 +1,39 @@
-import mongoose from "mongoose";
-import { config } from "../config.js";
+import { initPostgres, query as pgQuery, pgStatus } from "./postgres.js";
 
-let isConnected = false;
-let connectionMode = "memory"; // "mongodb" or "memory"
-let lastError = null;
-
+/**
+ * Unified Database Connection & Status Provider
+ * Directs all database operations to Neon PostgreSQL with resilient in-memory fallback.
+ */
 export const dbStatus = {
   get isConnected() {
-    return isConnected;
+    return pgStatus.isConnected;
   },
   get mode() {
-    return connectionMode;
+    return pgStatus.isConnected ? "postgresql" : "memory";
   },
   get error() {
-    return lastError;
+    return pgStatus.error;
+  },
+  get provider() {
+    return pgStatus.provider;
   },
   get uri() {
-    // Mask password if present in URI
-    return config.mongoUri.replace(/:\/\/[^:]+:[^@]+@/, "://***:***@");
+    return pgStatus.uri;
   },
 };
 
 /**
- * Initializes MongoDB connection or activates graceful in-memory storage fallback
+ * Initializes the primary Neon PostgreSQL connection pool
  */
 export async function initDb() {
-  console.log(`[Database] Connecting to MongoDB at ${dbStatus.uri}...`);
-
-  try {
-    mongoose.set("strictQuery", false);
-
-    // Set a fast server selection timeout so dev startup isn't delayed if MongoDB is not running locally
-    await mongoose.connect(config.mongoUri, {
-      serverSelectionTimeoutMS: 3000,
-      connectTimeoutMS: 3000,
-    });
-
-    isConnected = true;
-    connectionMode = "mongodb";
-    lastError = null;
-    console.log("[Database]  MongoDB connection established successfully!");
-  } catch (err) {
-    isConnected = false;
-    connectionMode = "memory";
-    lastError = err.message;
-    console.warn(`[Database]   MongoDB not available (${err.message}). Activating In-Memory Dragon Vault adapter.`);
-  }
-
-  mongoose.connection.on("disconnected", () => {
-    isConnected = false;
-    connectionMode = "memory";
-    console.warn("[Database] MongoDB disconnected. Falling back to in-memory store.");
-  });
-
-  mongoose.connection.on("reconnected", () => {
-    isConnected = true;
-    connectionMode = "mongodb";
-    lastError = null;
-    console.log("[Database] MongoDB reconnected!");
-  });
+  return initPostgres();
 }
 
-export default { initDb, dbStatus };
+/**
+ * Execute parameterized query against the database
+ */
+export async function query(text, params) {
+  return pgQuery(text, params);
+}
+
+export default { initDb, query, dbStatus };

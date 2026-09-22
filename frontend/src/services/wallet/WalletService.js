@@ -15,7 +15,7 @@ export class WalletService {
   }
 
   getAdapter(type) {
-    return this.adapters[type] || this.adapters.demo;
+    return this.adapters[type] || this.adapters.metamask;
   }
 
   async connect(type = "metamask") {
@@ -23,9 +23,10 @@ export class WalletService {
     const available = await adapter.isAvailable();
 
     if (!available && type === "metamask") {
-      // Fallback to demo adapter if MetaMask is not installed
-      this.activeAdapter = this.adapters.demo;
-      return this.adapters.demo.connect();
+      return {
+        success: false,
+        error: "MetaMask extension not detected in this browser. Please ensure MetaMask is installed and enabled.",
+      };
     }
 
     this.activeAdapter = adapter;
