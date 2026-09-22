@@ -100,15 +100,15 @@ export default function Lobby() {
         <div className="lobby-settings-box">
           <div className="setting-group">
             <label className="setting-label">ROUNDS PER CLASH</label>
-            <div className="pill-selector">
-              {[3, 5, 8].map((r) => (
+            <div className="pill-selector wrap">
+              {[1, 2, 3, 4, 5].map((r) => (
                 <button
                   key={r}
                   type="button"
-                  className={`setting-pill ${rounds === r? "active": ""}`}
+                  className={`setting-pill ${rounds === r ? "active" : ""}`}
                   onClick={() => setRounds(r)}
                 >
-                  {r} Rounds
+                  {r} {r === 1 ? "Round" : "Rounds"}
                 </button>
               ))}
             </div>

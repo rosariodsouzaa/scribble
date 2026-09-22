@@ -19,6 +19,10 @@ export class Player {
     this.isHost = isHost;
   }
 
+  get name() {
+    return this.username;
+  }
+
   /**
    * Sanitizes and bounds username input
    * @param {string} name 

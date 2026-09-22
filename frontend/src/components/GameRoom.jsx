@@ -23,6 +23,9 @@ export default function GameRoom() {
           <DragonEmblem size="xs" animated={false} glow={true} />
           <div className="round-info">
             ROUND <strong>{state.round.number}</strong> <span className="round-max">/ {state.round.maxRounds}</span>
+            {state.round.totalTurnsInRound > 1 && (
+              <span className="turn-indicator"> (Turn {state.round.turnNumber || 1}/{state.round.totalTurnsInRound})</span>
+            )}
           </div>
         </div>
         <WordHint />

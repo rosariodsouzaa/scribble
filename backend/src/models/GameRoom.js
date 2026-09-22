@@ -30,12 +30,33 @@ export class GameRoom {
     };
     this.players = new Map(); // socketId -> Player
     this.round = null;
-    this.roundNumber = 0;
+    this.currentRound = 0;
+    this.drawnThisRound = new Set(); // socketId of players who drew in currentRound
     this.usedWords = new Set();
     this.scoringStrategy = new StandardScoringStrategy();
     this.timers = { tick: null, nextRound: null };
     this.emptySince = Date.now();
     this.specialHintsUsed = new Map(); // playerKey (clientId || socketId) -> hints used this match (max 2)
+  }
+
+  get roundNumber() {
+    return this.currentRound;
+  }
+
+  set roundNumber(val) {
+    this.currentRound = val;
+  }
+
+  get maxRounds() {
+    return this.settings.maxRounds;
+  }
+
+  get currentDrawer() {
+    return this.round?.drawerId ? this.players.get(this.round.drawerId) : null;
+  }
+
+  get currentWord() {
+    return this.round?.word || null;
   }
 
   /**
@@ -110,6 +131,12 @@ export class GameRoom {
       // Transfer drawer status if currently drawing
       if (this.round && this.round.drawerId === oldSocketId) {
         this.round.drawerId = socket.id;
+      }
+
+      // Transfer drawnThisRound state
+      if (this.drawnThisRound.has(oldSocketId)) {
+        this.drawnThisRound.delete(oldSocketId);
+        this.drawnThisRound.add(socket.id);
       }
 
       this.emptySince = null;
@@ -188,6 +215,8 @@ export class GameRoom {
     const wasDrawer = this.round && this.round.drawerId === socketId;
     const wasHost = this.hostId === socketId;
 
+    this.drawnThisRound.delete(socketId);
+
     if (!this.players.delete(socketId)) return;
 
     if (this.players.size === 0) {
@@ -235,7 +264,8 @@ export class GameRoom {
     this.clearTimers();
     this.state = "waiting";
     this.round = null;
-    this.roundNumber = 0;
+    this.currentRound = 0;
+    this.drawnThisRound.clear();
     this.specialHintsUsed.clear();
 
     for (const p of this.players.values()) {
@@ -283,7 +313,8 @@ export class GameRoom {
     }
     this.usedWords.clear();
     this.specialHintsUsed.clear();
-    this.roundNumber = 0;
+    this.currentRound = 1;
+    this.drawnThisRound.clear();
     this.state = "playing";
 
     this.broadcast("game-started", { settings: this.settings });
@@ -297,24 +328,26 @@ export class GameRoom {
   startRound() {
     this.clearTimers();
 
-    this.roundNumber += 1;
-    if (this.roundNumber > this.settings.maxRounds) {
-      this.endGame();
+    const drawerId = this.getNextDrawerId();
+    if (!drawerId) {
+      this.abortGame("no-players", "No active clan warriors found.");
       return;
     }
+    this.drawnThisRound.add(drawerId);
 
-    const drawerId = this.getNextDrawerId();
     const word = WordDictionary.pickWord(this.usedWords, this.settings);
     this.usedWords.add(word.toLowerCase());
 
-    this.round = new Round(this.roundNumber, drawerId, word, this.settings.roundDurationSec);
+    this.round = new Round(this.currentRound, drawerId, word, this.settings.roundDurationSec);
     this.state = "playing";
 
-    const drawerName = this.players.get(drawerId)?.username?? "Unknown Warrior";
+    const drawerName = this.players.get(drawerId)?.username ?? "Unknown Warrior";
+    const turnNumber = this.drawnThisRound.size;
+    const totalTurnsInRound = this.getConnectedPlayersCount();
 
     this.broadcast("clear-canvas", {});
     this.broadcast("round-start", {
-      number: this.round.number,
+      number: this.currentRound,
       maxRounds: this.settings.maxRounds,
       drawerId,
       drawerName,
@@ -322,6 +355,8 @@ export class GameRoom {
       roundDurationSec: this.settings.roundDurationSec,
       maskedWord: this.round.maskedWord,
       wordLength: this.round.wordLength,
+      turnNumber,
+      totalTurnsInRound,
     });
 
     // Reveal secret word exclusively to drawer
@@ -450,15 +485,21 @@ export class GameRoom {
    * @param {string} reason 
    */
   endRound(reason) {
-    if (this.state!== "playing" ||!this.round) return;
+    if (this.state !== "playing" || !this.round) return;
 
     // Atomic state mutation prevents concurrent timer races
     this.state = "roundEnd";
     this.clearTickTimer();
 
-    const isLastRound = this.roundNumber >= this.settings.maxRounds;
+    // Determine if all connected players have completed their drawing turn in currentRound
+    const remainingDrawers = [...this.players.values()].filter(
+      (p) => p.connected && !this.drawnThisRound.has(p.id)
+    );
+    const isRoundComplete = remainingDrawers.length === 0;
+    const isGameComplete = isRoundComplete && this.currentRound >= this.settings.maxRounds;
+
     const playersWithDelta = [...this.players.values()].map((p) => ({
-...p.serialize(),
+      ...p.serialize(),
       roundDelta: this.round.getRoundScore(p.id),
     }));
 
@@ -466,16 +507,26 @@ export class GameRoom {
       word: this.round.word,
       reason,
       players: playersWithDelta,
-      number: this.round.number,
+      number: this.currentRound,
       maxRounds: this.settings.maxRounds,
-      nextIn: isLastRound? 0: config.roundEndDelayMs,
+      turnNumber: this.drawnThisRound.size,
+      totalTurnsInRound: this.getConnectedPlayersCount(),
+      isRoundComplete,
+      nextIn: isGameComplete ? 0 : config.roundEndDelayMs,
     });
 
     clearTimeout(this.timers.nextRound);
     this.timers.nextRound = setTimeout(() => {
       if (this.players.size === 0) return;
-      if (isLastRound) this.endGame();
-      else this.startRound();
+      if (isGameComplete) {
+        this.endGame();
+      } else {
+        if (isRoundComplete) {
+          this.currentRound += 1;
+          this.drawnThisRound.clear();
+        }
+        this.startRound();
+      }
     }, config.roundEndDelayMs);
   }
 
@@ -503,7 +554,8 @@ export class GameRoom {
   resetToWaiting(socketId = null) {
     this.clearTimers();
     this.round = null;
-    this.roundNumber = 0;
+    this.currentRound = 0;
+    this.drawnThisRound.clear();
     this.usedWords.clear();
     this.specialHintsUsed.clear();
     this.state = "waiting";
@@ -553,10 +605,23 @@ export class GameRoom {
     const ids = [...this.players.keys()];
     if (ids.length === 0) return null;
     const prev = this.round?.drawerId;
-    const start = prev && ids.includes(prev)? ids.indexOf(prev) + 1: 0;
+    const start = prev && ids.includes(prev) ? ids.indexOf(prev) + 1 : 0;
+    
+    // Pick next connected player who hasn't drawn yet in this round
     for (let i = 0; i < ids.length; i++) {
-      const p = this.players.get(ids[(start + i) % ids.length]);
-      if (p && p.connected) return p.id;
+      const candidateId = ids[(start + i) % ids.length];
+      const p = this.players.get(candidateId);
+      if (p && p.connected && !this.drawnThisRound.has(candidateId)) {
+        return candidateId;
+      }
+    }
+    // Fallback if all remaining connected players have drawn (e.g. edge race)
+    for (let i = 0; i < ids.length; i++) {
+      const candidateId = ids[(start + i) % ids.length];
+      const p = this.players.get(candidateId);
+      if (p && p.connected) {
+        return candidateId;
+      }
     }
     return ids[0];
   }
@@ -614,14 +679,16 @@ export class GameRoom {
       specialHintsUsed: forSocketId ? this.getSpecialHintsCount(forSocketId) : 0,
       maxSpecialHints: WordClueService.MAX_HINTS_PER_MATCH,
       round: this.round
-? this.round.serialize(amDrawer, drawerName)
-: {
+        ? this.round.serialize(amDrawer, drawerName, this.drawnThisRound.size, this.getConnectedPlayersCount())
+        : {
             number: 0,
             drawerId: null,
             drawerName: null,
             endsAt: 0,
             maskedWord: null,
             wordLength: 0,
+            turnNumber: 0,
+            totalTurnsInRound: 0,
           },
     };
   }

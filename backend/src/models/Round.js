@@ -134,9 +134,11 @@ export class Round {
    * Serializes round data safely. The secret word is omitted unless isDrawer is true.
    * @param {boolean} isDrawer 
    * @param {string|null} drawerName 
+   * @param {number} [turnNumber]
+   * @param {number} [totalTurnsInRound]
    * @returns {object}
    */
-  serialize(isDrawer = false, drawerName = null) {
+  serialize(isDrawer = false, drawerName = null, turnNumber = 1, totalTurnsInRound = 1) {
     return {
       number: this.number,
       drawerId: this.drawerId,
@@ -145,6 +147,9 @@ export class Round {
       maskedWord: this.maskedWord,
       wordLength: this.wordLength,
       word: isDrawer ? this.word : undefined,
+      turnNumber,
+      totalTurnsInRound,
     };
   }
 }
+

@@ -35,7 +35,11 @@ export default function RoundSummary() {
         <div className="summary-footer">
           <span className="pulsing-flame"></span>
           <p className="muted tiny">
-            {re.nextIn > 0? "Next clash commences shortly…": "Final dragon coronation coming up…"}
+            {re.nextIn > 0
+              ? (re.isRoundComplete
+                  ? `Round ${re.number} Complete! Next round commences shortly…`
+                  : "Next warrior's turn commences shortly…")
+              : "Final dragon coronation coming up…"}
           </p>
         </div>
       </div>

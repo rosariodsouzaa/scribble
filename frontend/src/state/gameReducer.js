@@ -21,6 +21,8 @@ export const initialState = {
     endsAt: 0,
     maskedWord: "",
     wordLength: 0,
+    turnNumber: 0,
+    totalTurnsInRound: 0,
   },
   myWord: null, // set only from the drawer-only `new-word` event
   remaining: 0,
@@ -83,6 +85,8 @@ export function gameReducer(state, action) {
           endsAt: r.round.endsAt,
           maskedWord: r.round.maskedWord || "",
           wordLength: r.round.wordLength || 0,
+          turnNumber: r.round.turnNumber || 0,
+          totalTurnsInRound: r.round.totalTurnsInRound || 0,
         },
         remaining: r.round.endsAt? secondsLeft(r.round.endsAt): 0,
       };
@@ -138,6 +142,8 @@ export function gameReducer(state, action) {
           endsAt: action.endsAt,
           maskedWord: action.maskedWord || "",
           wordLength: action.wordLength || 0,
+          turnNumber: action.turnNumber || 1,
+          totalTurnsInRound: action.totalTurnsInRound || 1,
         },
       };
     }

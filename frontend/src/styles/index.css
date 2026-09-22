@@ -1516,6 +1516,19 @@ body {
   color: #fb923c;
   opacity: 0.8;
 }
+.turn-indicator {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: #fde68a;
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
 
 .game-grid.dragon-game-grid {
   display: grid;
