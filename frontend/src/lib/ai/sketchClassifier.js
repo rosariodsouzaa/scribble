@@ -5,42 +5,42 @@ import * as mobilenet from "@tensorflow-models/mobilenet";
  * 36 Core Doodle Categories with Synonyms, Natural Color Affinities & Hints
  */
 export const SKETCH_CATEGORIES = [
-  { id: "bow", name: "Bow & Arrow", icon: "🏹", colorTags: ["yellow", "orange", "brown", "white", "black"], syns: ["bow", "arrow", "archery", "bow and arrow", "crossbow"], hints: "Draw a curved bow arc with a string and a straight arrow!" },
-  { id: "fish", name: "Fish", icon: "🐟", colorTags: ["cyan_blue", "orange", "yellow", "red"], syns: ["fish", "goldfish", "shark", "salmon", "trout", "carp", "tuna", "sea animal"], hints: "Draw an oval body with a triangular tail fin and an eye!" },
-  { id: "sword", name: "Sword", icon: "⚔️", colorTags: ["white", "cyan_blue", "yellow", "black"], syns: ["sword", "dagger", "blade", "rapier", "saber", "cutlass", "weapon"], hints: "Draw a long straight blade with a crossguard hilt." },
-  { id: "apple", name: "Apple", icon: "🍎", colorTags: ["red", "green", "yellow"], syns: ["apple", "granny smith", "fruit"], hints: "Draw a round apple with a top dimple and small stem." },
-  { id: "star", name: "Star", icon: "⭐", colorTags: ["yellow", "white", "orange"], syns: ["star", "pentagram", "asterisk"], hints: "Draw a 5-pointed star with sharp acute vertices." },
-  { id: "car", name: "Car", icon: "🚗", colorTags: ["red", "cyan_blue", "yellow", "black", "white", "orange"], syns: ["car", "automobile", "sports car", "sedan", "vehicle"], hints: "Draw a low rectangular body, roof cabin, and two round wheels." },
-  { id: "tree", name: "Tree", icon: "🌲", colorTags: ["green", "brown"], syns: ["tree", "pine", "palm", "oak", "forest", "spruce"], hints: "Draw a vertical trunk with bushy foliage or triangle pine layers." },
-  { id: "house", name: "House", icon: "🏠", colorTags: ["brown", "red", "yellow", "white"], syns: ["house", "home", "building", "cottage", "barn"], hints: "Draw a square base, triangular roof, door, and windows." },
-  { id: "crown", name: "Crown", icon: "👑", colorTags: ["yellow", "orange", "purple_pink"], syns: ["crown", "coronet", "tiara", "royal"], hints: "Draw 3 to 5 peaks with circles on top and a flat band." },
-  { id: "sun", name: "Sun", icon: "☀️", colorTags: ["yellow", "orange", "red"], syns: ["sun", "sunlight", "solar", "sunburst"], hints: "Draw a round circle with radiating ray lines." },
-  { id: "heart", name: "Heart", icon: "❤️", colorTags: ["red", "purple_pink", "orange"], syns: ["heart", "love", "valentine"], hints: "Draw two rounded top curves meeting at a sharp bottom point." },
-  { id: "castle", name: "Castle", icon: "🏰", colorTags: ["brown", "white", "black", "purple_pink"], syns: ["castle", "palace", "fortress", "tower"], hints: "Draw square walls, notched battlements, and a central gate." },
-  { id: "shield", name: "Shield", icon: "🛡️", colorTags: ["yellow", "cyan_blue", "red", "purple_pink"], syns: ["shield", "buckler", "crest", "armor"], hints: "Draw a curved crest with an emblem or cross in the middle." },
-  { id: "flame", name: "Flame", icon: "🔥", colorTags: ["orange", "red", "yellow"], syns: ["flame", "fire", "campfire", "torch"], hints: "Draw curved teardrop shapes rising to pointed tips." },
-  { id: "moon", name: "Moon", icon: "🌙", colorTags: ["yellow", "white", "cyan_blue"], syns: ["moon", "crescent", "lunar"], hints: "Draw a curved crescent C-shape." },
-  { id: "airplane", name: "Airplane", icon: "✈️", colorTags: ["white", "cyan_blue", "yellow", "black"], syns: ["airplane", "aeroplane", "airliner", "jet", "aircraft", "plane"], hints: "Draw a long fuselage, two wide side wings, and a tail fin." },
-  { id: "cat", name: "Cat", icon: "🐱", colorTags: ["brown", "white", "black", "orange", "yellow"], syns: ["cat", "kitten", "feline", "tabby"], hints: "Draw a round head, two pointy triangle ears, and whiskers." },
-  { id: "dog", name: "Dog", icon: "🐶", colorTags: ["brown", "white", "black", "yellow"], syns: ["dog", "puppy", "canine", "hound"], hints: "Draw floppy ears, a snout nose, eyes, and collar." },
-  { id: "bird", name: "Bird", icon: "🐦", colorTags: ["cyan_blue", "red", "yellow", "green", "purple_pink"], syns: ["bird", "robin", "parrot", "eagle"], hints: "Draw a beak, rounded body, wings, and legs." },
-  { id: "flower", name: "Flower", icon: "🌸", colorTags: ["purple_pink", "red", "yellow", "green", "orange"], syns: ["flower", "daisy", "rose", "tulip", "sunflower"], hints: "Draw a central circle surrounded by petal loops and a stem." },
-  { id: "lightning", name: "Lightning", icon: "⚡", colorTags: ["yellow", "cyan_blue", "white"], syns: ["lightning", "thunderbolt", "flash"], hints: "Draw a sharp zigzag line with a pointed arrow tip." },
-  { id: "diamond", name: "Diamond", icon: "💎", colorTags: ["cyan_blue", "white", "purple_pink"], syns: ["diamond", "gem", "crystal", "jewel"], hints: "Draw a wide flat top, angled sides, and a sharp bottom point." },
-  { id: "eye", name: "Eye", icon: "👁️", colorTags: ["cyan_blue", "brown", "green", "black", "white"], syns: ["eye", "eyeball", "iris", "pupil"], hints: "Draw an almond shape with a round pupil dot in the center." },
-  { id: "smile", name: "Smiley Face", icon: "😊", colorTags: ["yellow", "orange", "purple_pink"], syns: ["smile", "smiley", "face", "happy"], hints: "Draw a circle with two dot eyes and a curved smile line." },
-  { id: "skull", name: "Skull", icon: "💀", colorTags: ["white", "black"], syns: ["skull", "skeleton", "bone"], hints: "Draw a round dome, two dark eye holes, and teeth." },
-  { id: "guitar", name: "Guitar", icon: "🎸", colorTags: ["brown", "yellow", "red", "orange"], syns: ["guitar", "acoustic guitar", "violin"], hints: "Draw an hourglass figure-8 body with a long straight neck." },
-  { id: "cup", name: "Cup", icon: "☕", colorTags: ["brown", "white", "cyan_blue", "red"], syns: ["cup", "mug", "coffee mug", "teacup"], hints: "Draw a cylindrical mug with a curved C handle on one side." },
-  { id: "clock", name: "Clock", icon: "⏰", colorTags: ["yellow", "white", "black"], syns: ["clock", "alarm clock", "watch", "timer"], hints: "Draw a circle with hour and minute hands and bells on top." },
-  { id: "book", name: "Book", icon: "📖", colorTags: ["brown", "red", "cyan_blue", "purple_pink"], syns: ["book", "notebook", "novel"], hints: "Draw two open rectangle pages or a rectangular cover spine." },
-  { id: "hat", name: "Wizard Hat", icon: "🧙", colorTags: ["purple_pink", "black", "brown", "cyan_blue"], syns: ["hat", "cap", "sombrero"], hints: "Draw an oval brim with a tall pointed cone." },
-  { id: "umbrella", name: "Umbrella", icon: "☂️", colorTags: ["cyan_blue", "purple_pink", "yellow", "red", "black"], syns: ["umbrella", "parasol"], hints: "Draw a dome canopy with a curved J handle at the bottom." },
-  { id: "pizza", name: "Pizza", icon: "🍕", colorTags: ["yellow", "orange", "red", "brown"], syns: ["pizza", "pie", "slice"], hints: "Draw a triangular slice with a top crust arch and pepperoni dots." },
-  { id: "mountain", name: "Mountain", icon: "⛰️", colorTags: ["brown", "white", "cyan_blue", "green"], syns: ["mountain", "alp", "volcano", "cliff"], hints: "Draw tall jagged triangular peaks with snow lines." },
-  { id: "boat", name: "Boat", icon: "⛵", colorTags: ["brown", "cyan_blue", "white", "red"], syns: ["boat", "sailboat", "ship", "yacht"], hints: "Draw a curved hull with a vertical mast and triangle sail." },
-  { id: "potion", name: "Potion Flask", icon: "🧪", colorTags: ["purple_pink", "cyan_blue", "green", "red"], syns: ["potion", "flask", "bottle"], hints: "Draw a narrow bottle neck flaring into a round base." },
-  { id: "dragon", name: "Dragon", icon: "🐉", colorTags: ["green", "red", "orange", "purple_pink", "black"], syns: ["dragon", "lizard", "reptile", "dinosaur", "monster"], hints: "Draw wings, horns, a long tail, and flames!" },
+  { id: "bow", name: "Bow & Arrow", icon: "", colorTags: ["yellow", "orange", "brown", "white", "black"], syns: ["bow", "arrow", "archery", "bow and arrow", "crossbow"], hints: "Draw a curved bow arc with a string and a straight arrow!" },
+  { id: "fish", name: "Fish", icon: "", colorTags: ["cyan_blue", "orange", "yellow", "red"], syns: ["fish", "goldfish", "shark", "salmon", "trout", "carp", "tuna", "sea animal"], hints: "Draw an oval body with a triangular tail fin and an eye!" },
+  { id: "sword", name: "Sword", icon: "", colorTags: ["white", "cyan_blue", "yellow", "black"], syns: ["sword", "dagger", "blade", "rapier", "saber", "cutlass", "weapon"], hints: "Draw a long straight blade with a crossguard hilt." },
+  { id: "apple", name: "Apple", icon: "", colorTags: ["red", "green", "yellow"], syns: ["apple", "granny smith", "fruit"], hints: "Draw a round apple with a top dimple and small stem." },
+  { id: "star", name: "Star", icon: "", colorTags: ["yellow", "white", "orange"], syns: ["star", "pentagram", "asterisk"], hints: "Draw a 5-pointed star with sharp acute vertices." },
+  { id: "car", name: "Car", icon: "", colorTags: ["red", "cyan_blue", "yellow", "black", "white", "orange"], syns: ["car", "automobile", "sports car", "sedan", "vehicle"], hints: "Draw a low rectangular body, roof cabin, and two round wheels." },
+  { id: "tree", name: "Tree", icon: "", colorTags: ["green", "brown"], syns: ["tree", "pine", "palm", "oak", "forest", "spruce"], hints: "Draw a vertical trunk with bushy foliage or triangle pine layers." },
+  { id: "house", name: "House", icon: "", colorTags: ["brown", "red", "yellow", "white"], syns: ["house", "home", "building", "cottage", "barn"], hints: "Draw a square base, triangular roof, door, and windows." },
+  { id: "crown", name: "Crown", icon: "", colorTags: ["yellow", "orange", "purple_pink"], syns: ["crown", "coronet", "tiara", "royal"], hints: "Draw 3 to 5 peaks with circles on top and a flat band." },
+  { id: "sun", name: "Sun", icon: "", colorTags: ["yellow", "orange", "red"], syns: ["sun", "sunlight", "solar", "sunburst"], hints: "Draw a round circle with radiating ray lines." },
+  { id: "heart", name: "Heart", icon: "", colorTags: ["red", "purple_pink", "orange"], syns: ["heart", "love", "valentine"], hints: "Draw two rounded top curves meeting at a sharp bottom point." },
+  { id: "castle", name: "Castle", icon: "", colorTags: ["brown", "white", "black", "purple_pink"], syns: ["castle", "palace", "fortress", "tower"], hints: "Draw square walls, notched battlements, and a central gate." },
+  { id: "shield", name: "Shield", icon: "", colorTags: ["yellow", "cyan_blue", "red", "purple_pink"], syns: ["shield", "buckler", "crest", "armor"], hints: "Draw a curved crest with an emblem or cross in the middle." },
+  { id: "flame", name: "Flame", icon: "", colorTags: ["orange", "red", "yellow"], syns: ["flame", "fire", "campfire", "torch"], hints: "Draw curved teardrop shapes rising to pointed tips." },
+  { id: "moon", name: "Moon", icon: "", colorTags: ["yellow", "white", "cyan_blue"], syns: ["moon", "crescent", "lunar"], hints: "Draw a curved crescent C-shape." },
+  { id: "airplane", name: "Airplane", icon: "", colorTags: ["white", "cyan_blue", "yellow", "black"], syns: ["airplane", "aeroplane", "airliner", "jet", "aircraft", "plane"], hints: "Draw a long fuselage, two wide side wings, and a tail fin." },
+  { id: "cat", name: "Cat", icon: "", colorTags: ["brown", "white", "black", "orange", "yellow"], syns: ["cat", "kitten", "feline", "tabby"], hints: "Draw a round head, two pointy triangle ears, and whiskers." },
+  { id: "dog", name: "Dog", icon: "", colorTags: ["brown", "white", "black", "yellow"], syns: ["dog", "puppy", "canine", "hound"], hints: "Draw floppy ears, a snout nose, eyes, and collar." },
+  { id: "bird", name: "Bird", icon: "", colorTags: ["cyan_blue", "red", "yellow", "green", "purple_pink"], syns: ["bird", "robin", "parrot", "eagle"], hints: "Draw a beak, rounded body, wings, and legs." },
+  { id: "flower", name: "Flower", icon: "", colorTags: ["purple_pink", "red", "yellow", "green", "orange"], syns: ["flower", "daisy", "rose", "tulip", "sunflower"], hints: "Draw a central circle surrounded by petal loops and a stem." },
+  { id: "lightning", name: "Lightning", icon: "", colorTags: ["yellow", "cyan_blue", "white"], syns: ["lightning", "thunderbolt", "flash"], hints: "Draw a sharp zigzag line with a pointed arrow tip." },
+  { id: "diamond", name: "Diamond", icon: "", colorTags: ["cyan_blue", "white", "purple_pink"], syns: ["diamond", "gem", "crystal", "jewel"], hints: "Draw a wide flat top, angled sides, and a sharp bottom point." },
+  { id: "eye", name: "Eye", icon: "", colorTags: ["cyan_blue", "brown", "green", "black", "white"], syns: ["eye", "eyeball", "iris", "pupil"], hints: "Draw an almond shape with a round pupil dot in the center." },
+  { id: "smile", name: "Smiley Face", icon: "", colorTags: ["yellow", "orange", "purple_pink"], syns: ["smile", "smiley", "face", "happy"], hints: "Draw a circle with two dot eyes and a curved smile line." },
+  { id: "skull", name: "Skull", icon: "", colorTags: ["white", "black"], syns: ["skull", "skeleton", "bone"], hints: "Draw a round dome, two dark eye holes, and teeth." },
+  { id: "guitar", name: "Guitar", icon: "", colorTags: ["brown", "yellow", "red", "orange"], syns: ["guitar", "acoustic guitar", "violin"], hints: "Draw an hourglass figure-8 body with a long straight neck." },
+  { id: "cup", name: "Cup", icon: "", colorTags: ["brown", "white", "cyan_blue", "red"], syns: ["cup", "mug", "coffee mug", "teacup"], hints: "Draw a cylindrical mug with a curved C handle on one side." },
+  { id: "clock", name: "Clock", icon: "", colorTags: ["yellow", "white", "black"], syns: ["clock", "alarm clock", "watch", "timer"], hints: "Draw a circle with hour and minute hands and bells on top." },
+  { id: "book", name: "Book", icon: "", colorTags: ["brown", "red", "cyan_blue", "purple_pink"], syns: ["book", "notebook", "novel"], hints: "Draw two open rectangle pages or a rectangular cover spine." },
+  { id: "hat", name: "Wizard Hat", icon: "", colorTags: ["purple_pink", "black", "brown", "cyan_blue"], syns: ["hat", "cap", "sombrero"], hints: "Draw an oval brim with a tall pointed cone." },
+  { id: "umbrella", name: "Umbrella", icon: "", colorTags: ["cyan_blue", "purple_pink", "yellow", "red", "black"], syns: ["umbrella", "parasol"], hints: "Draw a dome canopy with a curved J handle at the bottom." },
+  { id: "pizza", name: "Pizza", icon: "", colorTags: ["yellow", "orange", "red", "brown"], syns: ["pizza", "pie", "slice"], hints: "Draw a triangular slice with a top crust arch and pepperoni dots." },
+  { id: "mountain", name: "Mountain", icon: "", colorTags: ["brown", "white", "cyan_blue", "green"], syns: ["mountain", "alp", "volcano", "cliff"], hints: "Draw tall jagged triangular peaks with snow lines." },
+  { id: "boat", name: "Boat", icon: "", colorTags: ["brown", "cyan_blue", "white", "red"], syns: ["boat", "sailboat", "ship", "yacht"], hints: "Draw a curved hull with a vertical mast and triangle sail." },
+  { id: "potion", name: "Potion Flask", icon: "", colorTags: ["purple_pink", "cyan_blue", "green", "red"], syns: ["potion", "flask", "bottle"], hints: "Draw a narrow bottle neck flaring into a round base." },
+  { id: "dragon", name: "Dragon", icon: "", colorTags: ["green", "red", "orange", "purple_pink", "black"], syns: ["dragon", "lizard", "reptile", "dinosaur", "monster"], hints: "Draw wings, horns, a long tail, and flames!" },
 ];
 
 let mobileNetModel = null;
@@ -105,8 +105,8 @@ export function rgbToColorTag(r, g, b) {
 function drawLine28(grid, x0, y0, x1, y1) {
   const dx = Math.abs(x1 - x0);
   const dy = Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1;
-  const sy = y0 < y1 ? 1 : -1;
+  const sx = x0 < x1? 1: -1;
+  const sy = y0 < y1? 1: -1;
   let err = dx - dy;
 
   let cx = x0, cy = y0;
@@ -630,7 +630,7 @@ export function extractCanvas28x28(canvas) {
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   const w = canvas.width;
   const h = canvas.height;
-  if (!w || !h) return null;
+  if (!w ||!h) return null;
 
   const data = ctx.getImageData(0, 0, w, h).data;
   let minX = w, maxX = 0, minY = h, maxY = 0;
@@ -835,7 +835,7 @@ export function classifySketch(canvas, strokesHistory = []) {
 
       if (hasLeftLobe && hasRightLobe && hasBottomLobe && hasStem && drawnPixels >= 60) {
         sim += 0.38;
-      } else if (!hasLeftLobe || !hasRightLobe) {
+      } else if (!hasLeftLobe ||!hasRightLobe) {
         // Without an apple body, a partial stroke is NOT an apple
         sim = Math.min(sim, 0.18);
       }
@@ -874,7 +874,7 @@ export function classifySketch(canvas, strokesHistory = []) {
     const adjustedScore = Math.max(0.05, Math.min(0.99, sim * completenessFactor));
 
     return {
-      ...cat,
+...cat,
       score: adjustedScore,
     };
   });
@@ -963,7 +963,7 @@ export async function classifyWithDeepLearning(canvas, strokesData = []) {
             topPrediction: topGuess,
             predictions: [
               topGuess,
-              ...localResult.predictions.filter((p) => p.id !== matched.id),
+...localResult.predictions.filter((p) => p.id!== matched.id),
             ].slice(0, 5),
             timestamp: Date.now(),
             drawnPixels: localResult.drawnPixels || 0,

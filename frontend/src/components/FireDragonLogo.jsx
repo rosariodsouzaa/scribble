@@ -426,12 +426,79 @@ export default function FireDragonLogo({
 
       {/* The Central Dragon Emblem with Luminous Radiant Lighting */}
       <div className="dragon-logo-img-box">
-        <img
-          src="/dragon-logo.png"
-          alt="Scribble Royale Fire Dragon"
-          className="dragon-logo-img"
-          loading="eager"
-        />
+        <svg
+          viewBox="0 0 120 120"
+          className="dragon-logo-svg"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="dragonGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fffbeb" />
+              <stop offset="30%" stopColor="#fef08a" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+            <linearGradient id="dragonFireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+            <linearGradient id="dragonDarkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#290d05" />
+              <stop offset="100%" stopColor="#0f0402" />
+            </linearGradient>
+            <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Shield / Medallion Background */}
+          <circle cx="60" cy="60" r="54" fill="url(#dragonDarkGrad)" stroke="url(#dragonGoldGrad)" strokeWidth="2.5" />
+          <circle cx="60" cy="60" r="48" stroke="rgba(245, 158, 11, 0.35)" strokeWidth="1" strokeDasharray="3 3" />
+
+          {/* Dragon Silhouette / Horns / Crest */}
+          <path
+            d="M32 78 C30 65, 36 50, 48 42 C44 32, 38 24, 28 18 C40 20, 50 28, 54 36 C62 30, 74 28, 86 34 C82 38, 76 40, 72 40 C84 42, 92 48, 96 58 C98 64, 94 70, 88 74 C78 82, 64 86, 52 84 C40 82, 34 84, 32 78 Z"
+            fill="url(#dragonFireGrad)"
+            filter="url(#goldGlow)"
+          />
+
+          {/* Sharp Horn Highlights */}
+          <path
+            d="M54 36 C50 28, 40 20, 28 18 C38 24, 44 32, 48 42"
+            stroke="url(#dragonGoldGrad)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M62 30 C72 24, 82 22, 94 16 C86 24, 82 32, 78 38"
+            stroke="url(#dragonGoldGrad)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+
+          {/* Dragon Eye & Snout Details */}
+          <circle cx="70" cy="48" r="3" fill="#ffffff" />
+          <circle cx="70" cy="48" r="1.5" fill="#450a0a" />
+          <path d="M78 56 L88 58 L76 62" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+
+          {/* Dragon Scales / Underbelly Ribs */}
+          <path d="M46 54 Q54 58 60 52" stroke="url(#dragonGoldGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+          <path d="M42 63 Q50 67 58 61" stroke="url(#dragonGoldGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+          <path d="M40 72 Q48 76 56 70" stroke="url(#dragonGoldGrad)" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+
+          {/* Crossing Paintbrush of the Royale */}
+          <path
+            d="M24 92 L96 28 M96 28 L98 34 M96 28 L90 26"
+            stroke="url(#dragonGoldGrad)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
+          <polygon points="24,92 20,98 28,94" fill="#fbbf24" />
+        </svg>
         {/* Dragon Internal Heat Core */}
         <div className="dragon-eye-burn" />
         <div className="dragon-crest-flare" />

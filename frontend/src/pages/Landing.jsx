@@ -28,15 +28,15 @@ export default function Landing() {
         {/* Central Blazing Dragon Emblem */}
         <FireDragonLogo size="lg" showFireRing={true} />
 
-        <div className="imperial-tag">✨ DRAGON DYNASTY EDITION ✨</div>
+        <div className="imperial-tag"> DRAGON DYNASTY EDITION </div>
         <h1 className="title">Scribble&nbsp;Royale</h1>
         <p className="subtitle">
           Unleash your brush. Decipher the mythical riddles. Rule the dynasty.
         </p>
 
         <form onSubmit={submit} className="stack">
-          <div className={`input-group ${isFocused ? "is-focused" : ""}`}>
-            <span className="input-icon">👑</span>
+          <div className={`input-group ${isFocused? "is-focused": ""}`}>
+            <span className="input-icon"></span>
             <input
               className="input dragon-input"
               placeholder="Enter your Dragon Nickname"
@@ -49,15 +49,15 @@ export default function Landing() {
             />
           </div>
           <button className="btn primary lg flame-btn" type="submit" disabled={!name.trim()}>
-            <span>Enter the Arena ⚡</span>
+            <span>Enter the Arena </span>
             <span className="btn-glow" />
           </button>
         </form>
 
         <div className="hero-features">
-          <span className="feat-chip">🔥 Real-time Ink Sync</span>
-          <span className="feat-chip">🐉 Multi-round Battles</span>
-          <span className="feat-chip">🏆 Imperial Glory</span>
+          <span className="feat-chip"> Real-time Ink Sync</span>
+          <span className="feat-chip"> Multi-round Battles</span>
+          <span className="feat-chip"> Imperial Glory</span>
         </div>
       </div>
     </div>

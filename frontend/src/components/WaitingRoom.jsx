@@ -26,7 +26,7 @@ export default function WaitingRoom() {
         <div className="imperial-bracket bl" />
         <div className="imperial-bracket br" />
 
-        <div className="imperial-tag-sm text-center">🐉 DRAGON CHAMBER 🐉</div>
+        <div className="imperial-tag-sm text-center"> DRAGON CHAMBER </div>
         <div className="waiting-head">
           <div>
             <p className="muted tiny uppercase">CHAMBER CODE</p>
@@ -34,8 +34,8 @@ export default function WaitingRoom() {
               {state.code}
             </div>
           </div>
-          <button className={`btn dragon-copy-btn ${copied ? "copied" : ""}`} onClick={copyCode}>
-            {copied ? "✓ Copied Seal" : "📋 Copy Seal"}
+          <button className={`btn dragon-copy-btn ${copied? "copied": ""}`} onClick={copyCode}>
+            {copied? " Copied Seal": " Copy Seal"}
           </button>
         </div>
 
@@ -47,26 +47,26 @@ export default function WaitingRoom() {
 
         <div className="row gap end waiting-actions">
           <button
-            className={`btn ${me?.isReady ? "dragon-ready-btn-active" : "dragon-ready-btn"}`}
+            className={`btn ${me?.isReady? "dragon-ready-btn-active": "dragon-ready-btn"}`}
             onClick={() => actions.ready(!me?.isReady)}
           >
-            {me?.isReady ? "⚔️ Stance: Ready" : "⚡ Ready Up"}
+            {me?.isReady? " Stance: Ready": " Ready Up"}
           </button>
           {amHost && (
             <button
               className="btn primary flame-btn"
               disabled={!allReady}
               onClick={actions.start}
-              title={allReady ? "" : "All warriors must be ready (minimum 2 warriors)"}
+              title={allReady? "": "All warriors must be ready (minimum 2 warriors)"}
             >
-              <span>🔥 Ignite Game</span>
+              <span> Ignite Game</span>
               <span className="btn-glow" />
             </button>
           )}
         </div>
-        {amHost && !allReady && (
+        {amHost &&!allReady && (
           <p className="muted tiny center-text waiting-subnote">
-            ⏳ Waiting for all clan members to take their stance…
+             Waiting for all clan members to take their stance…
           </p>
         )}
       </div>

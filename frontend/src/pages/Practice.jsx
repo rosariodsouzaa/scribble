@@ -58,7 +58,7 @@ export default function Practice() {
 
   // Pick random prompt different from current
   const getRandomPrompt = useCallback(() => {
-    const pool = SKETCH_CATEGORIES.filter((c) => c.id !== targetPrompt?.id);
+    const pool = SKETCH_CATEGORIES.filter((c) => c.id!== targetPrompt?.id);
     return pool[Math.floor(Math.random() * pool.length)] || SKETCH_CATEGORIES[0];
   }, [targetPrompt]);
 
@@ -86,7 +86,7 @@ export default function Practice() {
 
   // Timer countdown hook for challenge mode
   useEffect(() => {
-    if (mode !== "challenge" || !isTimerRunning || isSuccess || isGameOver) return;
+    if (mode!== "challenge" ||!isTimerRunning || isSuccess || isGameOver) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -95,7 +95,7 @@ export default function Practice() {
           setIsGameOver(true);
           setIsTimerRunning(false);
           setStreak(0);
-          setCommentary(`⏳ Time is up! The Oracle could not verify ${targetPrompt.name} in time.`);
+          setCommentary(` Time is up! The Oracle could not verify ${targetPrompt.name} in time.`);
           if (voiceEnabled) {
             speechOracle.speak("Time's up! Let's try another one.");
           }
@@ -120,7 +120,7 @@ export default function Practice() {
 
     // Update persistent user state (Dragon Gold & Wins)
     setUser?.((prev) => ({
-      ...prev,
+...prev,
       coins: (prev.coins || 0) + bonusReward,
       wins: (prev.wins || 0) + 1,
       matches: (prev.matches || 0) + 1,
@@ -134,7 +134,7 @@ export default function Practice() {
       colors: ["#fbbf24", "#f97316", "#ef4444", "#10b981", "#38bdf8"],
     });
 
-    const winComment = `🎉 Masterful! The Oracle is certain this is ${targetPrompt.name}! (+${bonusReward} Dragon Gold)`;
+    const winComment = ` Masterful! The Oracle is certain this is ${targetPrompt.name}! (+${bonusReward} Dragon Gold)`;
     setCommentary(winComment);
 
     if (voiceEnabled) {
@@ -159,7 +159,7 @@ export default function Practice() {
       setTopPrediction(fastResult.topPrediction);
 
       // Check victory condition (requires drawing to be substantially completed, not just 10% start)
-      if (mode === "challenge" && !isSuccess && !isGameOver && targetPrompt) {
+      if (mode === "challenge" &&!isSuccess &&!isGameOver && targetPrompt) {
         const hasSubstance = (fastResult.drawnPixels || 0) >= 55 || (strokesData && strokesData.length >= 2);
         const match = fastResult.predictions.find(
           (p) =>
@@ -176,7 +176,7 @@ export default function Practice() {
       // Generate dynamic Oracle commentary
       const dynamicComment = speechOracle.getCommentary(
         fastResult.topPrediction,
-        mode === "challenge" ? targetPrompt : null,
+        mode === "challenge"? targetPrompt: null,
         isSuccess
       );
       setCommentary(dynamicComment);
@@ -186,11 +186,11 @@ export default function Practice() {
       window._deepAiTimer = setTimeout(async () => {
         try {
           const deepResult = await classifyWithDeepLearning(canvas, strokesData);
-          if (deepResult && !deepResult.empty && deepResult.predictions.length > 0) {
+          if (deepResult &&!deepResult.empty && deepResult.predictions.length > 0) {
             setPredictions(deepResult.predictions);
             setTopPrediction(deepResult.topPrediction);
 
-            if (mode === "challenge" && !isSuccess && !isGameOver && targetPrompt) {
+            if (mode === "challenge" &&!isSuccess &&!isGameOver && targetPrompt) {
               const hasDeepSubstance = (deepResult.drawnPixels || 0) >= 55 || (strokesData && strokesData.length >= 2);
               const deepMatch = deepResult.predictions.find(
                 (p) =>
@@ -228,7 +228,7 @@ export default function Practice() {
         {/* Mode Selector Tabs */}
         <div className="practice-mode-tabs">
           <button
-            className={`mode-tab-btn ${mode === "challenge" ? "active" : ""}`}
+            className={`mode-tab-btn ${mode === "challenge"? "active": ""}`}
             onClick={() => {
               setMode("challenge");
               startNewChallenge();
@@ -238,7 +238,7 @@ export default function Practice() {
             <span>Speed Challenge</span>
           </button>
           <button
-            className={`mode-tab-btn ${mode === "sandbox" ? "active" : ""}`}
+            className={`mode-tab-btn ${mode === "sandbox"? "active": ""}`}
             onClick={() => {
               setMode("sandbox");
               setIsTimerRunning(false);
@@ -272,13 +272,13 @@ export default function Practice() {
           <span>ACCURACY PRO-TIP</span>
         </div>
         <p className="tip-banner-text">
-          Draw using the <strong>natural colors of the object</strong> (e.g. 🍎 <strong>Red</strong> for Apple/Heart, 🌲 <strong>Green</strong> for Tree, 🐟 <strong>Blue</strong> for Fish, ☀️ <strong>Gold</strong> for Sun/Crown/Star) to dramatically increase AI recognition accuracy!
+          Draw using the <strong>natural colors of the object</strong> (e.g.  <strong>Red</strong> for Apple/Heart,  <strong>Green</strong> for Tree,  <strong>Blue</strong> for Fish,  <strong>Gold</strong> for Sun/Crown/Star) to dramatically increase AI recognition accuracy!
         </p>
       </div>
 
       {/* Challenge Status Bar (When in challenge mode) */}
       {mode === "challenge" && (
-        <div className={`practice-challenge-bar ${isSuccess ? "success" : isGameOver ? "failed" : ""}`}>
+        <div className={`practice-challenge-bar ${isSuccess? "success": isGameOver? "failed": ""}`}>
           <div className="challenge-prompt-info">
             <span className="challenge-icon">{targetPrompt.icon}</span>
             <div className="challenge-prompt-text">
@@ -288,7 +288,7 @@ export default function Practice() {
           </div>
 
           <div className="challenge-center-timer">
-            <div className={`timer-ring ${timeLeft <= 5 ? "urgent" : ""}`}>
+            <div className={`timer-ring ${timeLeft <= 5? "urgent": ""}`}>
               <TimerIcon size={18} />
               <span className="timer-seconds">{timeLeft}s</span>
             </div>
@@ -311,7 +311,7 @@ export default function Practice() {
                 onClick={() => startNewChallenge()}
                 icon={<ArrowRight size={16} />}
               >
-                Next Challenge ⚡
+                Next Challenge 
               </Button>
             )}
 
@@ -351,7 +351,7 @@ export default function Practice() {
           <PredictionPanel
             predictions={predictions}
             topPrediction={topPrediction}
-            targetPrompt={mode === "challenge" ? targetPrompt : null}
+            targetPrompt={mode === "challenge"? targetPrompt: null}
             mode={mode}
             isMatch={isSuccess}
             commentary={commentary}
@@ -372,7 +372,7 @@ export default function Practice() {
               onClick={() => navigate("/lobby")}
               icon={<Play size={16} fill="#111" />}
             >
-              Enter Battle Arena ⛩️
+              Enter Battle Arena 
             </Button>
           </div>
         </div>

@@ -21,7 +21,7 @@ export default function Chat() {
     }
   }, [state.chat]);
 
-  const disabled = amDrawer || state.state !== "playing" || state.guessedCorrect;
+  const disabled = amDrawer || state.state!== "playing" || state.guessedCorrect;
 
   function submit(e) {
     e.preventDefault();
@@ -32,24 +32,24 @@ export default function Chat() {
   }
 
   const placeholder = amDrawer
-    ? "You're drawing…"
-    : state.guessedCorrect
-    ? "You guessed it! 🎉"
-    : "Type your guess…";
+? "You're drawing…"
+: state.guessedCorrect
+? "You guessed it! "
+: "Type your guess…";
 
   return (
     <div className="chat dragon-chat">
       <div className="chat-header">
-        <span>💬 IMPERIAL CHAT & GUESSES</span>
+        <span> IMPERIAL CHAT & GUESSES</span>
       </div>
       <div className="chat-list dragon-chat-list" ref={listRef}>
         {state.chat.length === 0 && (
-          <div className="chat-empty-hint">Type your guesses here to score points! 🐉</div>
+          <div className="chat-empty-hint">Type your guesses here to score points! </div>
         )}
         {state.chat.map((m) => (
           <div key={m.id} className={"chat-msg dragon-chat-msg " + m.type}>
             {m.type === "guess" && <span className="cu">{m.username}: </span>}
-            {m.type === "correct" && <span className="dragon-correct-badge">🔥 </span>}
+            {m.type === "correct" && <span className="dragon-correct-badge"> </span>}
             <span className="ct">{m.text}</span>
           </div>
         ))}
@@ -64,7 +64,7 @@ export default function Chat() {
           maxLength={60}
         />
         <button className="btn primary dragon-send-btn" type="submit" disabled={disabled}>
-          Send 🏹
+          Send 
         </button>
       </form>
     </div>

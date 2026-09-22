@@ -59,7 +59,7 @@ export default function Dashboard() {
             <span>DRAGON DYNASTY ARENA</span>
           </div>
           <h1>
-            Welcome back, <span className="gold-gradient-text">{user.name}</span> ⚔️
+            Welcome back, <span className="gold-gradient-text">{user.name}</span> 
           </h1>
           <p>Sharpen your brush. Jump into the live arena, create a clan chamber, or claim your rewards.</p>
         </div>
@@ -105,7 +105,7 @@ export default function Dashboard() {
               disabled={busy}
               icon={<Play size={18} fill="#111" />}
             >
-              {busy ? "Summoning Chamber…" : "⚡ Quick Play"}
+              {busy? "Summoning Chamber…": " Quick Play"}
             </Button>
 
             <Button
@@ -159,7 +159,7 @@ export default function Dashboard() {
               />
             </div>
             <Button type="submit" variant="primary" disabled={joinCode.trim().length < 4}>
-              Join ⛩️
+              Join 
             </Button>
           </form>
 
@@ -180,18 +180,18 @@ export default function Dashboard() {
 
           <p className="wallet-gate-text">
             {wallet.isConnected
-              ? `Connected to ${wallet.network}. Win matches to claim tournament coins.`
-              : "Connect your MetaMask wallet or access instant test mode for tournament rewards."}
+? `Connected to ${wallet.network}. Win matches to claim tournament coins.`
+: "Connect your MetaMask wallet or access instant test mode for tournament rewards."}
           </p>
 
           <div className="dash-card-footer">
-            {wallet.isConnected ? (
+            {wallet.isConnected? (
               <Button variant="emerald" size="md" onClick={() => navigate("/wallet")}>
                 View Vault ( {wallet.balance} )
               </Button>
-            ) : (
+            ): (
               <Button variant="primary" size="md" onClick={connectMetaMask}>
-                Connect MetaMask 🦊
+                Connect MetaMask 
               </Button>
             )}
           </div>
@@ -212,7 +212,7 @@ export default function Dashboard() {
           <div className="warrior-stats-list">
             <div className="stat-item">
               <span className="stat-label">Total Gold</span>
-              <span className="stat-value gold">🪙 {user.coins.toLocaleString()}</span>
+              <span className="stat-value gold"> {user.coins.toLocaleString()}</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Victories</span>
@@ -221,7 +221,7 @@ export default function Dashboard() {
             <div className="stat-item">
               <span className="stat-label">Win Rate</span>
               <span className="stat-value">
-                {user.matches > 0 ? Math.round((user.wins / user.matches) * 100) : 75}%
+                {user.matches > 0? Math.round((user.wins / user.matches) * 100): 75}%
               </span>
             </div>
           </div>

@@ -81,7 +81,7 @@ export default function Wallet() {
         </div>
 
         {/* MetaMask Provider Option */}
-        <div className={`wallet-provider-box ${wallet.isConnected ? "is-connected" : ""}`}>
+        <div className={`wallet-provider-box ${wallet.isConnected? "is-connected": ""}`}>
           <div className="provider-left">
             <div className="metamask-icon-wrap">
               <MetaMaskFoxSvg />
@@ -93,21 +93,21 @@ export default function Wallet() {
           </div>
 
           <div>
-            {wallet.isConnected ? (
+            {wallet.isConnected? (
               <div className="connected-badge">
                 <CheckCircle2 size={16} color="#10b981" />
                 <span>Connected</span>
               </div>
-            ) : (
+            ): (
               <Button variant="primary" size="md" onClick={handleConnect} disabled={busy}>
-                {busy ? "Connecting…" : "Connect"}
+                {busy? "Connecting…": "Connect"}
               </Button>
             )}
           </div>
         </div>
 
         {/* Connected Wallet Details */}
-        {wallet.isConnected ? (
+        {wallet.isConnected? (
           <div className="wallet-details-box">
             <div className="details-row">
               <span className="details-label">Wallet Address:</span>
@@ -131,14 +131,14 @@ export default function Wallet() {
               </Button>
             </div>
           </div>
-        ) : (
+        ): (
           <div className="demo-wallet-box">
             <div className="demo-wallet-desc">
               <strong>Don't have MetaMask installed?</strong>
               <p>Use the Instant Dragon Vault test mode to experience Web3 rewards right away.</p>
             </div>
             <Button variant="secondary" size="md" onClick={handleDemo}>
-              ⚡ Instant Demo Wallet
+               Instant Demo Wallet
             </Button>
           </div>
         )}

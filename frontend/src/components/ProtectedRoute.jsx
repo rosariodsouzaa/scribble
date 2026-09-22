@@ -16,7 +16,7 @@ export default function ProtectedRoute({ children }) {
       <div className="auth-guard-loading-screen">
         <div className="dragon-spinner-ring" />
         <div className="guard-loading-text">
-          <span className="gold-shimmer-text">🐉 Verifying Dynasty Access...</span>
+          <span className="gold-shimmer-text"> Verifying Dynasty Access...</span>
         </div>
       </div>
     );

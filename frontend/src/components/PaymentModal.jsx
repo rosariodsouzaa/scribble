@@ -35,7 +35,7 @@ export default function PaymentModal() {
   // UPI State
   const [upiId, setUpiId] = useState("vedansh@oksbi");
 
-  if (!checkoutModalOpen || !activeItem) return null;
+  if (!checkoutModalOpen ||!activeItem) return null;
 
   const handlePay = async (e) => {
     e?.preventDefault();
@@ -88,7 +88,7 @@ export default function PaymentModal() {
           </button>
         </div>
 
-        {successTx ? (
+        {successTx? (
           /* Success Screen */
           <div className="payment-success-view">
             <div className="success-icon-wrap">
@@ -123,10 +123,10 @@ export default function PaymentModal() {
             </div>
 
             <Button variant="flame" size="lg" className="block" onClick={handleClose}>
-              Claim & Return to Arena ⛩️
+              Claim & Return to Arena 
             </Button>
           </div>
-        ) : (
+        ): (
           /* Checkout View */
           <div className="payment-checkout-body">
             {/* Left: Item Summary Card */}
@@ -169,7 +169,7 @@ export default function PaymentModal() {
               <div className="payment-methods-tabs">
                 <button
                   type="button"
-                  className={`method-tab ${paymentMethod === "card" ? "active" : ""}`}
+                  className={`method-tab ${paymentMethod === "card"? "active": ""}`}
                   onClick={() => setPaymentMethod("card")}
                 >
                   <CreditCard size={16} />
@@ -178,7 +178,7 @@ export default function PaymentModal() {
 
                 <button
                   type="button"
-                  className={`method-tab ${paymentMethod === "web3" ? "active" : ""}`}
+                  className={`method-tab ${paymentMethod === "web3"? "active": ""}`}
                   onClick={() => setPaymentMethod("web3")}
                 >
                   <WalletIcon size={16} />
@@ -187,7 +187,7 @@ export default function PaymentModal() {
 
                 <button
                   type="button"
-                  className={`method-tab ${paymentMethod === "upi" ? "active" : ""}`}
+                  className={`method-tab ${paymentMethod === "upi"? "active": ""}`}
                   onClick={() => setPaymentMethod("upi")}
                 >
                   <QrCode size={16} />
@@ -270,7 +270,7 @@ export default function PaymentModal() {
                     className="block pay-submit-btn"
                     disabled={processing}
                   >
-                    {processing ? "Authorizing 3D-Secure…" : `Pay $${activeItem.priceUsd} USD 💳`}
+                    {processing? "Authorizing 3D-Secure…": `Pay $${activeItem.priceUsd} USD `}
                   </Button>
                 </form>
               )}
@@ -280,7 +280,7 @@ export default function PaymentModal() {
                 <div className="gateway-form web3-form">
                   <div className="web3-status-box">
                     <span className="web3-status-lbl">Wallet Connected:</span>
-                    <strong>{wallet.isConnected ? wallet.address : "MetaMask Not Connected"}</strong>
+                    <strong>{wallet.isConnected? wallet.address: "MetaMask Not Connected"}</strong>
                   </div>
 
                   <div className="web3-quote-box">
@@ -298,7 +298,7 @@ export default function PaymentModal() {
                     </div>
                   </div>
 
-                  {wallet.isConnected ? (
+                  {wallet.isConnected? (
                     <Button
                       variant="flame"
                       size="lg"
@@ -306,16 +306,16 @@ export default function PaymentModal() {
                       onClick={handlePay}
                       disabled={processing}
                     >
-                      {processing ? "Confirming in MetaMask…" : `Sign & Pay ${activeItem.priceEth} ETH 🦊`}
+                      {processing? "Confirming in MetaMask…": `Sign & Pay ${activeItem.priceEth} ETH `}
                     </Button>
-                  ) : (
+                  ): (
                     <Button
                       variant="primary"
                       size="lg"
                       className="block pay-submit-btn"
                       onClick={connectMetaMask}
                     >
-                      Connect MetaMask Wallet 🦊
+                      Connect MetaMask Wallet 
                     </Button>
                   )}
                 </div>
@@ -327,7 +327,7 @@ export default function PaymentModal() {
                   <div className="qr-box-center">
                     <div className="qr-canvas-mock">
                       <QrCode size={130} className="qr-svg-icon" />
-                      <div className="qr-center-logo">🪙</div>
+                      <div className="qr-center-logo"></div>
                     </div>
                     <span className="qr-hint">Scan with Google Pay, PhonePe, Paytm or any UPI App</span>
                   </div>
@@ -349,7 +349,7 @@ export default function PaymentModal() {
                     onClick={handlePay}
                     disabled={processing}
                   >
-                    {processing ? "Verifying UPI Response…" : `Verify & Pay ₹${Math.round(activeItem.priceUsd * 83)} 📱`}
+                    {processing? "Verifying UPI Response…": `Verify & Pay ₹${Math.round(activeItem.priceUsd * 83)} `}
                   </Button>
                 </div>
               )}

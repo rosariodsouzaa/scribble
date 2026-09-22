@@ -39,12 +39,12 @@ export async function initDb() {
     isConnected = true;
     connectionMode = "mongodb";
     lastError = null;
-    console.log("[Database] 🐉 MongoDB connection established successfully!");
+    console.log("[Database]  MongoDB connection established successfully!");
   } catch (err) {
     isConnected = false;
     connectionMode = "memory";
     lastError = err.message;
-    console.warn(`[Database] ⚠️  MongoDB not available (${err.message}). Activating In-Memory Dragon Vault adapter.`);
+    console.warn(`[Database]   MongoDB not available (${err.message}). Activating In-Memory Dragon Vault adapter.`);
   }
 
   mongoose.connection.on("disconnected", () => {

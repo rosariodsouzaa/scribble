@@ -49,6 +49,6 @@ io.on("connection", (socket) => registerHandlers(io, socket));
 
 server.listen(config.port, () => {
   console.log(`[skribl] API + Socket.io listening on http://localhost:${config.port}`);
-  console.log(`[Email] ✉️  Active Sender: ${config.resendFrom}`);
+  console.log(`[Email]   Active Sender: ${config.resendFrom}`);
 });
 

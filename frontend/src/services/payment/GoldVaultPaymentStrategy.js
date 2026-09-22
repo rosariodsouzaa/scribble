@@ -25,7 +25,7 @@ export class GoldVaultPaymentStrategy extends PaymentStrategy {
         id: this.generateTxHash("TX"),
         date: this.formatTimestamp(),
         item: item.name,
-        amount: `🪙 ${item.goldCost.toLocaleString()} Gold`,
+        amount: ` ${item.goldCost.toLocaleString()} Gold`,
         method: "Dragon Gold Vault",
         status: "COMPLETED",
         hash: "INTERNAL-ROYALE",

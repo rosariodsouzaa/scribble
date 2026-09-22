@@ -56,7 +56,7 @@ export default function GameEnd() {
     nav("/dashboard");
   };
 
-  const RANK_TITLES = ["🐉 DRAGON EMPEROR", "🐯 TIGER CHAMPION", "🦅 PHOENIX MASTER", "⚔️ DRAGON WARRIOR"];
+  const RANK_TITLES = [" DRAGON EMPEROR", " TIGER CHAMPION", " PHOENIX MASTER", " DRAGON WARRIOR"];
 
   return (
     <div className="screen center">
@@ -73,24 +73,24 @@ export default function GameEnd() {
 
         <div className="imperial-tag-sm">DYNASTY CORONATION</div>
         <h2 className="title sm">
-          {winner ? `${winner.username} Claims the Dragon Throne!` : "Dynasty Clash Concluded"}
+          {winner? `${winner.username} Claims the Dragon Throne!`: "Dynasty Clash Concluded"}
         </h2>
         <p className="subtitle sm">
           {isWinner
-            ? "Victory is yours, Dragon Champion! +500 Gold added to your vault."
-            : "The sacred scrolls have been drawn. Great battle, warrior!"}
+? "Victory is yours, Dragon Champion! +500 Gold added to your vault."
+: "The sacred scrolls have been drawn. Great battle, warrior!"}
         </p>
 
         <ol className="standings dragon-standings">
           {standings.map((p, i) => (
-            <li key={p.id} className={`standing-row ${i === 0 ? "first dragon-champion" : ""}`}>
-              <span className="rank dragon-rank">{i === 0 ? "👑" : i + 1}</span>
+            <li key={p.id} className={`standing-row ${i === 0? "first dragon-champion": ""}`}>
+              <span className="rank dragon-rank">{i === 0? "": i + 1}</span>
               <div className="standing-pinfo">
                 <span className="pname">
                   {p.username}
                   {p.id === state.myId && <span className="you-pill">You</span>}
                 </span>
-                <span className="standing-title">{RANK_TITLES[i] || "⚔️ WARRIOR"}</span>
+                <span className="standing-title">{RANK_TITLES[i] || " WARRIOR"}</span>
               </div>
               <span className="pscore dragon-score-val">
                 {p.score} <span className="pts">pts</span>
@@ -107,9 +107,9 @@ export default function GameEnd() {
           </Button>
 
           <p className="muted tiny center-text" style={{ margin: "2px 0 6px" }}>
-            {countdown > 0 ? (
+            {countdown > 0? (
               <span>
-                ⏳ Automatically returning all teammates to chamber lobby in <strong>{countdown}s</strong>{" "}
+                 Automatically returning all teammates to chamber lobby in <strong>{countdown}s</strong>{" "}
                 <button
                   type="button"
                   onClick={() => setAutoReturnPaused(true)}
@@ -118,7 +118,7 @@ export default function GameEnd() {
                   (Pause)
                 </button>
               </span>
-            ) : (
+            ): (
               <span>Preparing chamber for the next clash…</span>
             )}
           </p>

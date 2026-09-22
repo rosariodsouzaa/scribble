@@ -16,7 +16,7 @@ export class StoreItem {
     goldAmount = 0,
     goldCost = 0,
     badge = "",
-    icon = "🪙",
+    icon = "",
     color = "#f59e0b",
     effect = null,
   }) {

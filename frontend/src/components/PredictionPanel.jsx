@@ -25,7 +25,7 @@ export default function PredictionPanel({
   const [showHints, setShowHints] = useState(false);
 
   const toggleVoice = () => {
-    const next = !voiceEnabled;
+    const next =!voiceEnabled;
     setVoiceEnabled(next);
     speechOracle.enabled = next;
     if (!next) speechOracle.stop();
@@ -33,10 +33,10 @@ export default function PredictionPanel({
 
   // Find match score if target prompt is active
   const targetConfidence = targetPrompt
-    ? predictions.find(
+? predictions.find(
         (p) => p.name.toLowerCase() === targetPrompt.name.toLowerCase() || p.id === targetPrompt.id
       )?.confidence || 0
-    : 0;
+: 0;
 
   return (
     <div className="prediction-panel-container">
@@ -59,17 +59,17 @@ export default function PredictionPanel({
 
         {/* Voice Speech Toggle */}
         <button
-          className={`oracle-voice-btn ${voiceEnabled ? "active" : ""}`}
+          className={`oracle-voice-btn ${voiceEnabled? "active": ""}`}
           onClick={toggleVoice}
-          title={voiceEnabled ? "Mute Dragon AI Voice" : "Enable Dragon AI Voice Narrator"}
+          title={voiceEnabled? "Mute Dragon AI Voice": "Enable Dragon AI Voice Narrator"}
         >
-          {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          {voiceEnabled? <Volume2 size={16} />: <VolumeX size={16} />}
         </button>
       </div>
 
       {/* Target Word Mission (In Challenge Mode) */}
       {mode === "challenge" && targetPrompt && (
-        <div className={`challenge-target-box ${isMatch ? "matched" : ""}`}>
+        <div className={`challenge-target-box ${isMatch? "matched": ""}`}>
           <div className="target-top-row">
             <span className="target-lbl">TARGET MISSION:</span>
             {targetPrompt.hints && (
@@ -78,7 +78,7 @@ export default function PredictionPanel({
                 onClick={() => setShowHints(!showHints)}
                 title="View stroke tips"
               >
-                <Lightbulb size={13} /> {showHints ? "Hide Tips" : "Tips"}
+                <Lightbulb size={13} /> {showHints? "Hide Tips": "Tips"}
               </button>
             )}
           </div>
@@ -109,7 +109,7 @@ export default function PredictionPanel({
           <span>CURRENT DRAWING LOOKS LIKE</span>
         </div>
 
-        {topPrediction ? (
+        {topPrediction? (
           <div className="spotlight-content">
             <div className="spotlight-icon-ring">
               <span className="spotlight-large-icon">{topPrediction.icon}</span>
@@ -124,7 +124,7 @@ export default function PredictionPanel({
                 {targetPrompt &&
                   (topPrediction.name.toLowerCase() === targetPrompt.name.toLowerCase() ||
                     topPrediction.id === targetPrompt.id) && (
-                    <span className="spotlight-match-pill">🎯 Target Match!</span>
+                    <span className="spotlight-match-pill"> Target Match!</span>
                   )}
               </div>
             </div>
@@ -139,15 +139,15 @@ export default function PredictionPanel({
                     targetPrompt &&
                     (topPrediction.name.toLowerCase() === targetPrompt.name.toLowerCase() ||
                       topPrediction.id === targetPrompt.id)
-                      ? "#10b981"
-                      : topPrediction.confidence > 70
-                      ? "#fbbf24"
-                      : "#f97316",
+? "#10b981"
+: topPrediction.confidence > 70
+? "#fbbf24"
+: "#f97316",
                 }}
               />
             </div>
           </div>
-        ) : (
+        ): (
           <div className="empty-prediction-state">
             <HelpCircle size={32} className="empty-icon" />
             <p>Ready to identify your art</p>

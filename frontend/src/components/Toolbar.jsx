@@ -24,8 +24,8 @@ export default function Toolbar({ brush, setBrush }) {
   return (
     <div className="toolbar dragon-toolbar">
       <div className="toolbar-label">
-        <span>🐉 BRUSH:</span>
-        {activeSkin && activeSkin.id !== "brush_default" && (
+        <span> BRUSH:</span>
+        {activeSkin && activeSkin.id!== "brush_default" && (
           <span className="equipped-brush-tag" style={{ color: activeSkin.color }}>
             <Sparkles size={12} /> {activeSkin.name}
           </span>
@@ -36,9 +36,9 @@ export default function Toolbar({ brush, setBrush }) {
         {COLORS.map((c) => (
           <button
             key={c}
-            className={"swatch" + (brush.color === c ? " sel" : "")}
+            className={"swatch" + (brush.color === c? " sel": "")}
             style={{ backgroundColor: c }}
-            onClick={() => setBrush((b) => ({ ...b, color: c }))}
+            onClick={() => setBrush((b) => ({...b, color: c }))}
             aria-label={`Color ${c}`}
           />
         ))}
@@ -48,8 +48,8 @@ export default function Toolbar({ brush, setBrush }) {
         {SIZES.map((s) => (
           <button
             key={s}
-            className={"size-btn" + (brush.size === s ? " sel" : "")}
-            onClick={() => setBrush((b) => ({ ...b, size: s }))}
+            className={"size-btn" + (brush.size === s? " sel": "")}
+            onClick={() => setBrush((b) => ({...b, size: s }))}
             aria-label={`Brush size ${s}`}
           >
             <span
@@ -61,7 +61,7 @@ export default function Toolbar({ brush, setBrush }) {
       </div>
 
       <button className="btn dragon-clear-btn" onClick={actions.clearCanvas}>
-        🧹 Purge Canvas
+         Purge Canvas
       </button>
     </div>
   );

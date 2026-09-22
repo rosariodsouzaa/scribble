@@ -42,12 +42,12 @@ const AVAILABLE_TITLES = [
 ];
 
 const ACHIEVEMENTS = [
-  { id: 1, title: "First Blood", desc: "Claim victory in your first drawing battle", icon: "🗡️", unlocked: true },
-  { id: 2, title: "Speed Demon", desc: "Guess the hidden word in under 5 seconds", icon: "⚡", unlocked: true },
-  { id: 3, title: "Vault Tycoon", desc: "Accumulate over 5,000 Dragon Gold", icon: "🪙", unlocked: true },
-  { id: 4, title: "Dynasty Master", desc: "Win 25 multiplayer tournament rounds", icon: "👑", unlocked: false },
-  { id: 5, title: "Master Drafter", desc: "Have 100% of warriors guess your drawing", icon: "🎨", unlocked: true },
-  { id: 6, title: "Web3 Patron", desc: "Link MetaMask Dragon Vault to your identity", icon: "🛡️", unlocked: false },
+  { id: 1, title: "First Blood", desc: "Claim victory in your first drawing battle", icon: "", unlocked: true },
+  { id: 2, title: "Speed Demon", desc: "Guess the hidden word in under 5 seconds", icon: "", unlocked: true },
+  { id: 3, title: "Vault Tycoon", desc: "Accumulate over 5,000 Dragon Gold", icon: "", unlocked: true },
+  { id: 4, title: "Dynasty Master", desc: "Win 25 multiplayer tournament rounds", icon: "", unlocked: false },
+  { id: 5, title: "Master Drafter", desc: "Have 100% of warriors guess your drawing", icon: "", unlocked: true },
+  { id: 6, title: "Web3 Patron", desc: "Link MetaMask Dragon Vault to your identity", icon: "", unlocked: false },
 ];
 
 export default function UserProfile() {
@@ -94,7 +94,7 @@ export default function UserProfile() {
   // Calculate Win Rate
   const matches = Number(user.matches) || 0;
   const wins = Number(user.wins) || 0;
-  const winRate = matches > 0 ? Math.round((wins / matches) * 100) : 0;
+  const winRate = matches > 0? Math.round((wins / matches) * 100): 0;
   const currentXp = Number(user.xp) || 0;
   const nextLevelXp = (Number(user.level) || 1) * 500;
   const xpProgress = Math.min(100, Math.round((currentXp / nextLevelXp) * 100));
@@ -116,8 +116,8 @@ export default function UserProfile() {
           <div className="profile-hero-details">
             <div className="profile-hero-name-row">
               <h1 className="profile-hero-name">{user.name}</h1>
-              <span className={`profile-role-badge ${isAdmin ? "admin" : "warrior"}`}>
-                {isAdmin ? "IMPERIAL ADMIN" : "WARRIOR"}
+              <span className={`profile-role-badge ${isAdmin? "admin": "warrior"}`}>
+                {isAdmin? "IMPERIAL ADMIN": "WARRIOR"}
               </span>
               <span className="profile-title-badge">{user.title || "Dragon Novice"}</span>
             </div>
@@ -156,28 +156,28 @@ export default function UserProfile() {
       {/* Sub Tabs Navigation */}
       <div className="profile-sub-tabs">
         <button
-          className={`sub-tab-btn ${activeSubTab === "overview" ? "active" : ""}`}
+          className={`sub-tab-btn ${activeSubTab === "overview"? "active": ""}`}
           onClick={() => setActiveSubTab("overview")}
         >
           <Trophy size={16} />
           <span>Combat Overview</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeSubTab === "customize" ? "active" : ""}`}
+          className={`sub-tab-btn ${activeSubTab === "customize"? "active": ""}`}
           onClick={() => setActiveSubTab("customize")}
         >
           <Edit3 size={16} />
           <span>Customize Persona</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeSubTab === "achievements" ? "active" : ""}`}
+          className={`sub-tab-btn ${activeSubTab === "achievements"? "active": ""}`}
           onClick={() => setActiveSubTab("achievements")}
         >
           <Award size={16} />
           <span>Achievements</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeSubTab === "security" ? "active" : ""}`}
+          className={`sub-tab-btn ${activeSubTab === "security"? "active": ""}`}
           onClick={() => setActiveSubTab("security")}
         >
           <Shield size={16} />
@@ -193,7 +193,7 @@ export default function UserProfile() {
               <Coins size={22} className="stat-card-icon gold" />
               <span>Dragon Gold</span>
             </div>
-            <div className="stat-card-value">🪙 {(user.coins || 0).toLocaleString()}</div>
+            <div className="stat-card-value"> {(user.coins || 0).toLocaleString()}</div>
             <span className="stat-card-sub">Usable in Dragon Emporium</span>
           </div>
 
@@ -299,7 +299,7 @@ export default function UserProfile() {
                     <button
                       key={c.hex}
                       type="button"
-                      className={`color-swatch-item ${avatarColor === c.hex ? "active" : ""}`}
+                      className={`color-swatch-item ${avatarColor === c.hex? "active": ""}`}
                       style={{ backgroundColor: c.hex }}
                       onClick={() => setAvatarColor(c.hex)}
                       title={c.name}
@@ -315,9 +315,9 @@ export default function UserProfile() {
 
           <div className="customizer-submit-row">
             <button type="submit" className="dragon-btn primary" disabled={saving}>
-              {saving ? (
+              {saving? (
                 "Engraving Scroll..."
-              ) : (
+              ): (
                 <>
                   <Save size={16} />
                   <span>Save Persona</span>
@@ -332,14 +332,14 @@ export default function UserProfile() {
       {activeSubTab === "achievements" && (
         <div className="achievements-grid">
           {ACHIEVEMENTS.map((item) => (
-            <div key={item.id} className={`achievement-card ${item.unlocked ? "unlocked" : "locked"}`}>
+            <div key={item.id} className={`achievement-card ${item.unlocked? "unlocked": "locked"}`}>
               <div className="achievement-icon">{item.icon}</div>
               <div className="achievement-details">
                 <div className="achievement-title-row">
                   <span className="achievement-title">{item.title}</span>
-                  {item.unlocked ? (
+                  {item.unlocked? (
                     <span className="achievement-badge-unlocked">UNLOCKED</span>
-                  ) : (
+                  ): (
                     <span className="achievement-badge-locked">LOCKED</span>
                   )}
                 </div>
@@ -361,7 +361,7 @@ export default function UserProfile() {
                 <p>{user.email || "No email registered (Guest Mode)"}</p>
               </div>
             </div>
-            {user.email && <span className="verified-pill">✓ Verified via OTP</span>}
+            {user.email && <span className="verified-pill"> Verified via OTP</span>}
           </div>
 
           <div className="security-row">
@@ -369,7 +369,7 @@ export default function UserProfile() {
               <Shield size={18} className="security-icon" />
               <div>
                 <strong>Authority Role</strong>
-                <p>{isAdmin ? "High Imperial Admin" : "Standard Arena Warrior"}</p>
+                <p>{isAdmin? "High Imperial Admin": "Standard Arena Warrior"}</p>
               </div>
             </div>
             <span className="role-pill">{user.role || "user"}</span>
@@ -380,7 +380,7 @@ export default function UserProfile() {
               <Calendar size={18} className="security-icon" />
               <div>
                 <strong>Session State</strong>
-                <p>{user.isAuthenticated ? "Authenticated via Secure JWT" : "Guest Temporary Session"}</p>
+                <p>{user.isAuthenticated? "Authenticated via Secure JWT": "Guest Temporary Session"}</p>
               </div>
             </div>
           </div>

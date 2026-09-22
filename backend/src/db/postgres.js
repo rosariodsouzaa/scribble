@@ -43,7 +43,7 @@ export async function initPostgres() {
 
     // Test connection with ping
     const client = await pool.connect();
-    console.log("[PostgreSQL] 🐉 Neon PostgreSQL connection established successfully!");
+    console.log("[PostgreSQL]  Neon PostgreSQL connection established successfully!");
     isConnected = true;
     lastError = null;
 
@@ -85,12 +85,12 @@ export async function initPostgres() {
     `);
 
     client.release();
-    console.log("[PostgreSQL] 📜 Database schema verified (users & otps tables ready).");
+    console.log("[PostgreSQL]  Database schema verified (users & otps tables ready).");
     return true;
   } catch (err) {
     isConnected = false;
     lastError = err.message;
-    console.warn(`[PostgreSQL] ⚠️ Connection failed (${err.message}). Using resilient memory adapter.`);
+    console.warn(`[PostgreSQL]  Connection failed (${err.message}). Using resilient memory adapter.`);
     return false;
   }
 }
@@ -99,7 +99,7 @@ export async function initPostgres() {
  * Execute a parameterized query against PostgreSQL
  */
 export async function query(text, params) {
-  if (!pool || !isConnected) {
+  if (!pool ||!isConnected) {
     throw new Error("PostgreSQL pool not connected");
   }
   return pool.query(text, params);

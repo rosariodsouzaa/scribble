@@ -78,8 +78,8 @@ export default function AdminPanel() {
       setLoadingUsers(true);
       const filters = {};
       if (userSearch) filters.search = userSearch;
-      if (roleFilter !== "all") filters.role = roleFilter;
-      if (banFilter !== "all") filters.isBanned = banFilter;
+      if (roleFilter!== "all") filters.role = roleFilter;
+      if (banFilter!== "all") filters.isBanned = banFilter;
 
       const list = await AuthService.getAdminUsers(filters);
       setUsers(list || []);
@@ -129,7 +129,7 @@ export default function AdminPanel() {
 
   // Handle role change
   const handleRoleToggle = async (user) => {
-    const newRole = user.role === "admin" ? "user" : "admin";
+    const newRole = user.role === "admin"? "user": "admin";
     try {
       await AuthService.updateUserRole(user.id || user._id, newRole);
       showNotification(`Updated ${user.name}'s role to ${newRole.toUpperCase()}`, "success");
@@ -142,15 +142,15 @@ export default function AdminPanel() {
 
   // Handle ban toggle
   const handleBanToggle = async (user) => {
-    const nextBanState = !user.isBanned;
+    const nextBanState =!user.isBanned;
     try {
       await AuthService.toggleUserBan(
         user.id || user._id,
         nextBanState,
-        nextBanState ? "Banished by Imperial Grandmaster." : ""
+        nextBanState? "Banished by Imperial Grandmaster.": ""
       );
       showNotification(
-        nextBanState ? `Banished ${user.name} from dynasty.` : `Banishment lifted for ${user.name}.`,
+        nextBanState? `Banished ${user.name} from dynasty.`: `Banishment lifted for ${user.name}.`,
         "success"
       );
       fetchUsers();
@@ -192,15 +192,15 @@ export default function AdminPanel() {
   // Handle add custom word pack
   const handleAddWordPack = async (e) => {
     e.preventDefault();
-    if (!newCategory.trim() || !newWordsInput.trim()) {
+    if (!newCategory.trim() ||!newWordsInput.trim()) {
       showNotification("Please provide a category name and words list", "error");
       return;
     }
 
     const words = newWordsInput
-      .split(/[\n,]+/)
-      .map((w) => w.trim())
-      .filter((w) => w.length > 1);
+.split(/[\n,]+/)
+.map((w) => w.trim())
+.filter((w) => w.length > 1);
 
     if (words.length === 0) {
       showNotification("Please provide at least one valid word", "error");
@@ -236,7 +236,7 @@ export default function AdminPanel() {
 
         <div className="admin-header-actions">
           <button className="dragon-btn secondary" onClick={fetchStats} title="Refresh Telemetry">
-            <RefreshCw size={15} className={loadingStats ? "spin" : ""} />
+            <RefreshCw size={15} className={loadingStats? "spin": ""} />
             <span>Sync Telemetry</span>
           </button>
         </div>
@@ -244,8 +244,8 @@ export default function AdminPanel() {
 
       {/* Notification Toast */}
       {statusMessage.text && (
-        <div className={`auth-alert ${statusMessage.type === "error" ? "error" : "success"}`}>
-          {statusMessage.type === "error" ? <AlertTriangle size={18} /> : <CheckCircle size={18} />}
+        <div className={`auth-alert ${statusMessage.type === "error"? "error": "success"}`}>
+          {statusMessage.type === "error"? <AlertTriangle size={18} />: <CheckCircle size={18} />}
           <span>{statusMessage.text}</span>
         </div>
       )}
@@ -281,7 +281,7 @@ export default function AdminPanel() {
             </div>
             <div className="hud-info">
               <span className="hud-label">Circulating Gold</span>
-              <span className="hud-value">🪙 {stats.totalCirculatingGold.toLocaleString()}</span>
+              <span className="hud-value"> {stats.totalCirculatingGold.toLocaleString()}</span>
               <small className="hud-sub">Across all players</small>
             </div>
           </div>
@@ -293,10 +293,10 @@ export default function AdminPanel() {
             <div className="hud-info">
               <span className="hud-label">Database Provider</span>
               <span className="hud-value" style={{ fontSize: "17px" }}>
-                {stats.database.isConnected ? "Neon PostgreSQL ⚡" : "In-Memory Vault ⚡"}
+                {stats.database.isConnected? "Neon PostgreSQL ": "In-Memory Vault "}
               </span>
               <small className="hud-sub">
-                {stats.database.isConnected ? "AWS us-east-2 (Live)" : "Local Fast-Cache"}
+                {stats.database.isConnected? "AWS us-east-2 (Live)": "Local Fast-Cache"}
               </small>
             </div>
           </div>
@@ -306,28 +306,28 @@ export default function AdminPanel() {
       {/* Admin Sub Navigation */}
       <div className="admin-nav-tabs">
         <button
-          className={`admin-nav-btn ${activeTab === "overview" ? "active" : ""}`}
+          className={`admin-nav-btn ${activeTab === "overview"? "active": ""}`}
           onClick={() => setActiveTab("overview")}
         >
           <Activity size={16} />
           <span>Overview & Health</span>
         </button>
         <button
-          className={`admin-nav-btn ${activeTab === "users" ? "active" : ""}`}
+          className={`admin-nav-btn ${activeTab === "users"? "active": ""}`}
           onClick={() => setActiveTab("users")}
         >
           <Users size={16} />
           <span>Warrior Directory</span>
         </button>
         <button
-          className={`admin-nav-btn ${activeTab === "rooms" ? "active" : ""}`}
+          className={`admin-nav-btn ${activeTab === "rooms"? "active": ""}`}
           onClick={() => setActiveTab("rooms")}
         >
           <Swords size={16} />
           <span>Live Chambers</span>
         </button>
         <button
-          className={`admin-nav-btn ${activeTab === "wordpacks" ? "active" : ""}`}
+          className={`admin-nav-btn ${activeTab === "wordpacks"? "active": ""}`}
           onClick={() => setActiveTab("wordpacks")}
         >
           <BookOpen size={16} />
@@ -358,7 +358,7 @@ export default function AdminPanel() {
               </div>
               <div className="diag-item">
                 <span>Banned Accounts</span>
-                <strong style={{ color: stats.bannedCount > 0 ? "#ef4444" : "#10b981" }}>
+                <strong style={{ color: stats.bannedCount > 0? "#ef4444": "#10b981" }}>
                   {stats.bannedCount} warriors
                 </strong>
               </div>
@@ -381,8 +381,8 @@ export default function AdminPanel() {
               </div>
               <div className="diag-item">
                 <span>PostgreSQL Connection State</span>
-                <span className={`status-tag ${stats.database.isConnected ? "online" : "offline"}`}>
-                  {stats.database.isConnected ? "Connected (Neon DB Live)" : "Fallback Mode"}
+                <span className={`status-tag ${stats.database.isConnected? "online": "offline"}`}>
+                  {stats.database.isConnected? "Connected (Neon DB Live)": "Fallback Mode"}
                 </span>
               </div>
             </div>
@@ -427,11 +427,11 @@ export default function AdminPanel() {
 
           {/* Users Table */}
           <div className="admin-table-container">
-            {loadingUsers ? (
+            {loadingUsers? (
               <div className="admin-table-loading">Scanning Dynasty archives...</div>
-            ) : users.length === 0 ? (
+            ): users.length === 0? (
               <div className="admin-table-empty">No warriors match your search filter.</div>
-            ) : (
+            ): (
               <table className="admin-table">
                 <thead>
                   <tr>
@@ -446,7 +446,7 @@ export default function AdminPanel() {
                 </thead>
                 <tbody>
                   {users.map((u) => (
-                    <tr key={u.id || u._id} className={u.isBanned ? "banned-row" : ""}>
+                    <tr key={u.id || u._id} className={u.isBanned? "banned-row": ""}>
                       <td>
                         <div className="user-cell">
                           <Avatar name={u.name} size={32} color={u.avatarColor} />
@@ -461,7 +461,7 @@ export default function AdminPanel() {
                       </td>
                       <td>
                         <span className="email-text">{u.email}</span>
-                        {u.isVerified && <span className="verified-badge">✓</span>}
+                        {u.isVerified && <span className="verified-badge"></span>}
                       </td>
                       <td>
                         <span className={`role-badge ${u.role}`}>
@@ -469,15 +469,15 @@ export default function AdminPanel() {
                         </span>
                       </td>
                       <td>
-                        <strong>🪙 {(u.coins || 0).toLocaleString()}</strong>
+                        <strong> {(u.coins || 0).toLocaleString()}</strong>
                       </td>
                       <td>
                         <span>LVL {u.level || 1} • {u.wins || 0} Wins</span>
                       </td>
                       <td>
-                        {u.isBanned ? (
+                        {u.isBanned? (
                           <span className="status-badge banned">BANISHED</span>
-                        ) : (
+                        ): (
                           <span className="status-badge active">ACTIVE</span>
                         )}
                       </td>
@@ -492,19 +492,19 @@ export default function AdminPanel() {
                           </button>
 
                           <button
-                            className={`action-btn role ${u.role === "admin" ? "demote" : "promote"}`}
-                            title={u.role === "admin" ? "Demote to Warrior" : "Promote to Admin"}
+                            className={`action-btn role ${u.role === "admin"? "demote": "promote"}`}
+                            title={u.role === "admin"? "Demote to Warrior": "Promote to Admin"}
                             onClick={() => handleRoleToggle(u)}
                           >
                             <Crown size={14} />
                           </button>
 
                           <button
-                            className={`action-btn ban ${u.isBanned ? "unban" : "ban"}`}
-                            title={u.isBanned ? "Lift Banishment" : "Banish Warrior"}
+                            className={`action-btn ban ${u.isBanned? "unban": "ban"}`}
+                            title={u.isBanned? "Lift Banishment": "Banish Warrior"}
                             onClick={() => handleBanToggle(u)}
                           >
-                            {u.isBanned ? <UserCheck size={14} /> : <Ban size={14} />}
+                            {u.isBanned? <UserCheck size={14} />: <Ban size={14} />}
                           </button>
                         </div>
                       </td>
@@ -575,14 +575,14 @@ export default function AdminPanel() {
           <div className="rooms-header-row">
             <h3>Active Multiplayer Battle Chambers ({rooms.length})</h3>
             <button className="dragon-btn secondary sm" onClick={fetchRooms}>
-              <RefreshCw size={14} className={loadingRooms ? "spin" : ""} />
+              <RefreshCw size={14} className={loadingRooms? "spin": ""} />
               <span>Refresh Chambers</span>
             </button>
           </div>
 
-          {rooms.length === 0 ? (
+          {rooms.length === 0? (
             <div className="admin-table-empty">No active battle chambers at the moment.</div>
-          ) : (
+          ): (
             <div className="chambers-grid">
               {rooms.map((rm) => (
                 <div key={rm.code} className="chamber-card">
@@ -606,7 +606,7 @@ export default function AdminPanel() {
                   <div className="chamber-players-list">
                     {rm.players?.map((p, idx) => (
                       <span key={idx} className="player-tag">
-                        {p.name} ({p.score} pts) {p.isHost ? "👑" : ""}
+                        {p.name} ({p.score} pts) {p.isHost? "": ""}
                       </span>
                     ))}
                   </div>

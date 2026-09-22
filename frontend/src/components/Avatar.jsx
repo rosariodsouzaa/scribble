@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function Avatar({ name = "Warrior", initial, size = 36, color = "#f59e0b" }) {
-  const displayInitial = initial || name[0]?.toUpperCase() || "🐉";
+  const displayInitial = initial || name[0]?.toUpperCase() || "W";
 
   return (
     <div

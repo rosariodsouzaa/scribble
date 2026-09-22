@@ -24,7 +24,7 @@ export class GameRoom {
       maxRounds: Number(options.maxRounds) || config.maxRoundsDefault,
       roundDurationSec: Number(options.roundDurationSec) || config.roundDurationSec,
       theme: options.theme || "all",
-      customWords: Array.isArray(options.customWords) ? options.customWords : null,
+      customWords: Array.isArray(options.customWords)? options.customWords: null,
     };
     this.players = new Map(); // socketId -> Player
     this.round = null;
@@ -129,7 +129,7 @@ export class GameRoom {
     }
 
     // 3. New player joining during active match -> reject
-    if (this.state !== "waiting") {
+    if (this.state!== "waiting") {
       socket.emit("game-error", {
         code: "game-in-progress",
         message: "This dragon battle has already started.",
@@ -167,7 +167,7 @@ export class GameRoom {
    */
   setPlayerReady(socketId, ready) {
     const player = this.players.get(socketId);
-    if (!player || this.state !== "waiting") return;
+    if (!player || this.state!== "waiting") return;
 
     player.setReady(ready);
     this.broadcast("player-updated", {
@@ -253,11 +253,11 @@ export class GameRoom {
    * @returns {boolean}
    */
   startGame(socketId) {
-    if (this.state !== "waiting") {
+    if (this.state!== "waiting") {
       this.emitError(socketId, "not-waiting", "Game cannot start now.");
       return false;
     }
-    if (socketId !== this.hostId) {
+    if (socketId!== this.hostId) {
       this.emitError(socketId, "not-host", "Only the host can start.");
       return false;
     }
@@ -305,7 +305,7 @@ export class GameRoom {
     this.round = new Round(this.roundNumber, drawerId, word, this.settings.roundDurationSec);
     this.state = "playing";
 
-    const drawerName = this.players.get(drawerId)?.username ?? "Unknown Warrior";
+    const drawerName = this.players.get(drawerId)?.username?? "Unknown Warrior";
 
     this.broadcast("clear-canvas", {});
     this.broadcast("round-start", {
@@ -360,7 +360,7 @@ export class GameRoom {
       this.broadcast("guess-result", {
         correct: false,
         isSystem: true,
-        text: `💡 Hint: Letter "${hint.letter}" revealed!`,
+        text: ` Hint: Letter "${hint.letter}" revealed!`,
       });
     }
   }
@@ -371,7 +371,7 @@ export class GameRoom {
    * @param {string} rawText 
    */
   handleGuess(socketId, rawText) {
-    if (this.state !== "playing" || !this.round) return;
+    if (this.state!== "playing" ||!this.round) return;
 
     const guesser = this.players.get(socketId);
     if (!guesser) return;
@@ -445,7 +445,7 @@ export class GameRoom {
    * @param {string} reason 
    */
   endRound(reason) {
-    if (this.state !== "playing" || !this.round) return;
+    if (this.state!== "playing" ||!this.round) return;
 
     // Atomic state mutation prevents concurrent timer races
     this.state = "roundEnd";
@@ -453,7 +453,7 @@ export class GameRoom {
 
     const isLastRound = this.roundNumber >= this.settings.maxRounds;
     const playersWithDelta = [...this.players.values()].map((p) => ({
-      ...p.serialize(),
+...p.serialize(),
       roundDelta: this.round.getRoundScore(p.id),
     }));
 
@@ -463,7 +463,7 @@ export class GameRoom {
       players: playersWithDelta,
       number: this.round.number,
       maxRounds: this.settings.maxRounds,
-      nextIn: isLastRound ? 0 : config.roundEndDelayMs,
+      nextIn: isLastRound? 0: config.roundEndDelayMs,
     });
 
     clearTimeout(this.timers.nextRound);
@@ -482,12 +482,12 @@ export class GameRoom {
     this.state = "gameEnd";
 
     const standings = [...this.players.values()]
-      .map((p) => p.serialize())
-      .sort((a, b) => b.score - a.score);
+.map((p) => p.serialize())
+.sort((a, b) => b.score - a.score);
 
     this.broadcast("game-end", {
       standings,
-      winnerId: standings.length > 0 ? standings[0].id : null,
+      winnerId: standings.length > 0? standings[0].id: null,
     });
   }
 
@@ -507,7 +507,7 @@ export class GameRoom {
       player.setReady(false);
     }
 
-    console.log(`[GameRoom] 🔄 Chamber ${this.code} returned to waiting room. Teammates retained: ${this.players.size}`);
+    console.log(`[GameRoom]  Chamber ${this.code} returned to waiting room. Teammates retained: ${this.players.size}`);
 
     this.broadcast("room-state", this.serialize());
     this.broadcast("player-updated", {
@@ -547,7 +547,7 @@ export class GameRoom {
     const ids = [...this.players.keys()];
     if (ids.length === 0) return null;
     const prev = this.round?.drawerId;
-    const start = prev && ids.includes(prev) ? ids.indexOf(prev) + 1 : 0;
+    const start = prev && ids.includes(prev)? ids.indexOf(prev) + 1: 0;
     for (let i = 0; i < ids.length; i++) {
       const p = this.players.get(ids[(start + i) % ids.length]);
       if (p && p.connected) return p.id;
@@ -575,7 +575,7 @@ export class GameRoom {
     let count = 0;
     const currentDrawerId = this.round?.drawerId;
     for (const p of this.players.values()) {
-      if (p.connected && p.id !== currentDrawerId) {
+      if (p.connected && p.id!== currentDrawerId) {
         count++;
       }
     }
@@ -596,8 +596,8 @@ export class GameRoom {
   serialize(forSocketId = null) {
     const amDrawer = Boolean(forSocketId && this.round && forSocketId === this.round.drawerId);
     const drawerName = this.round?.drawerId
-      ? this.players.get(this.round.drawerId)?.username ?? null
-      : null;
+? this.players.get(this.round.drawerId)?.username?? null
+: null;
 
     return {
       code: this.code,
@@ -606,8 +606,8 @@ export class GameRoom {
       settings: this.settings,
       players: this.serializePlayers(),
       round: this.round
-        ? this.round.serialize(amDrawer, drawerName)
-        : {
+? this.round.serialize(amDrawer, drawerName)
+: {
             number: 0,
             drawerId: null,
             drawerName: null,
@@ -626,8 +626,8 @@ export class GameRoom {
 
   static normalizeText(str) {
     return String(str || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
+.trim()
+.toLowerCase()
+.replace(/[^a-z0-9]/g, "");
   }
 }

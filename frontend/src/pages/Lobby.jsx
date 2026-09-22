@@ -7,11 +7,11 @@ import FireDragonLogo from "../components/FireDragonLogo.jsx";
 import Button from "../components/Button.jsx";
 
 const THEME_OPTIONS = [
-  { id: "all", label: "🌍 Universal Pack" },
-  { id: "dynasty", label: "🐉 Dragon Dynasty" },
-  { id: "tech", label: "💻 Tech & Cyber" },
-  { id: "anime", label: "⚡ Anime & Gaming" },
-  { id: "custom", label: "✍️ Custom List" },
+  { id: "all", label: " Universal Pack" },
+  { id: "dynasty", label: " Dragon Dynasty" },
+  { id: "tech", label: " Tech & Cyber" },
+  { id: "anime", label: " Anime & Gaming" },
+  { id: "custom", label: " Custom List" },
 ];
 
 export default function Lobby() {
@@ -33,11 +33,11 @@ export default function Lobby() {
       setWarriorName(nameInput);
       const parsedCustomWords =
         theme === "custom"
-          ? customWordsInput
-              .split(",")
-              .map((w) => w.trim())
-              .filter(Boolean)
-          : null;
+? customWordsInput
+.split(",")
+.map((w) => w.trim())
+.filter(Boolean)
+: null;
 
       const { code: newCode } = await createRoom({
         maxRounds: rounds,
@@ -82,7 +82,7 @@ export default function Lobby() {
           </div>
 
           <div className="user-pill">
-            <span className="user-avatar-mini">🔥</span>
+            <span className="user-avatar-mini"></span>
             <input
               className="lobby-name-edit"
               value={nameInput}
@@ -104,7 +104,7 @@ export default function Lobby() {
                 <button
                   key={r}
                   type="button"
-                  className={`setting-pill ${rounds === r ? "active" : ""}`}
+                  className={`setting-pill ${rounds === r? "active": ""}`}
                   onClick={() => setRounds(r)}
                 >
                   {r} Rounds
@@ -120,7 +120,7 @@ export default function Lobby() {
                 <button
                   key={d}
                   type="button"
-                  className={`setting-pill ${duration === d ? "active" : ""}`}
+                  className={`setting-pill ${duration === d? "active": ""}`}
                   onClick={() => setDuration(d)}
                 >
                   {d}s
@@ -136,7 +136,7 @@ export default function Lobby() {
                 <button
                   key={t.id}
                   type="button"
-                  className={`setting-pill ${theme === t.id ? "active" : ""}`}
+                  className={`setting-pill ${theme === t.id? "active": ""}`}
                   onClick={() => setTheme(t.id)}
                 >
                   {t.label}
@@ -165,7 +165,7 @@ export default function Lobby() {
           disabled={busy}
           icon={<Flame size={18} />}
         >
-          {busy ? "Summoning Chamber…" : "⚡ Summon Dragon Chamber"}
+          {busy? "Summoning Chamber…": " Summon Dragon Chamber"}
         </Button>
 
         <div className="divider">
@@ -181,7 +181,7 @@ export default function Lobby() {
             maxLength={6}
           />
           <Button variant="secondary" size="md" type="submit" disabled={code.trim().length < 4}>
-            Enter ⛩️
+            Enter 
           </Button>
         </form>
 

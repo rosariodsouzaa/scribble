@@ -65,7 +65,7 @@ export default function Store() {
           <div className="store-balance-strip">
             <div className="store-bal-item">
               <span className="bal-lbl">Your Vault Balance:</span>
-              <span className="bal-val gold">🪙 {user.coins.toLocaleString()} GOLD</span>
+              <span className="bal-val gold"> {user.coins.toLocaleString()} GOLD</span>
             </div>
             <div className="store-bal-item">
               <span className="bal-lbl">Active Brush:</span>
@@ -83,14 +83,14 @@ export default function Store() {
       <div className="store-filter-bar">
         <div className="store-tabs-group">
           {[
-            { id: "all", label: "✨ All Items" },
-            { id: "gold", label: "🪙 Gold Bundles" },
-            { id: "pass", label: "📜 Season VIP Pass" },
-            { id: "brush", label: "🎨 Brush Cosmetics" },
+            { id: "all", label: " All Items" },
+            { id: "gold", label: " Gold Bundles" },
+            { id: "pass", label: " Season VIP Pass" },
+            { id: "brush", label: " Brush Cosmetics" },
           ].map((tab) => (
             <button
               key={tab.id}
-              className={`store-tab-btn ${activeTab === tab.id ? "active" : ""}`}
+              className={`store-tab-btn ${activeTab === tab.id? "active": ""}`}
               onClick={() => setActiveTab(tab.id)}
             >
               {tab.label}
@@ -106,7 +106,7 @@ export default function Store() {
           const isEquipped = equippedBrush === item.id;
 
           return (
-            <div key={item.id} className={`store-card ${isEquipped ? "is-equipped" : ""}`}>
+            <div key={item.id} className={`store-card ${isEquipped? "is-equipped": ""}`}>
               {item.badge && (
                 <div className="store-card-badge" style={{ backgroundColor: item.color }}>
                   {item.badge}
@@ -127,18 +127,18 @@ export default function Store() {
                 </div>
 
                 <div className="store-card-actions">
-                  {item.category === "brush" && isOwned ? (
-                    isEquipped ? (
+                  {item.category === "brush" && isOwned? (
+                    isEquipped? (
                       <div className="equipped-badge">
                         <Check size={16} />
                         <span>Equipped</span>
                       </div>
-                    ) : (
+                    ): (
                       <Button variant="emerald" size="sm" onClick={() => equipBrush(item.id)}>
                         Equip Brush
                       </Button>
                     )
-                  ) : (
+                  ): (
                     <div className="buy-buttons-cluster">
                       {item.goldCost && (
                         <button
@@ -146,12 +146,12 @@ export default function Store() {
                           onClick={() => handleGoldPurchase(item)}
                           title={`Buy with ${item.goldCost} in-game Dragon Gold`}
                         >
-                          🪙 {item.goldCost.toLocaleString()}
+                           {item.goldCost.toLocaleString()}
                         </button>
                       )}
 
                       <Button
-                        variant={item.category === "gold" ? "flame" : "primary"}
+                        variant={item.category === "gold"? "flame": "primary"}
                         size="sm"
                         onClick={() => openCheckout(item)}
                       >
@@ -178,9 +178,9 @@ export default function Store() {
           </div>
         </div>
 
-        {transactions.length === 0 ? (
+        {transactions.length === 0? (
           <p className="ledger-empty">No transactions recorded yet.</p>
-        ) : (
+        ): (
           <div className="ledger-table-wrap">
             <div className="ledger-table-head">
               <span>INVOICE ID</span>

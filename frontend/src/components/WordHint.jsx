@@ -19,7 +19,7 @@ export default function WordHint() {
     let count = 0;
     for (const group of wordGroups) {
       for (const token of group) {
-        if (token !== "_" && /[A-Z0-9]/i.test(token)) count++;
+        if (token!== "_" && /[A-Z0-9]/i.test(token)) count++;
       }
     }
     return count;
@@ -29,7 +29,7 @@ export default function WordHint() {
   if (amDrawer && state.myWord) {
     return (
       <div className="wordhint dragon-wordhint drawer">
-        <span className="scroll-tag">📜 Secret Scroll:</span>
+        <span className="scroll-tag"> Secret Scroll:</span>
         <strong className="secret-word">{state.myWord}</strong>
         <span className="wl dragon-wl">({state.round?.wordLength || state.myWord.length} letters)</span>
       </div>
@@ -40,23 +40,23 @@ export default function WordHint() {
     <div className="wordhint dragon-wordhint">
       <span className="masked-label">Riddle:</span>
       <div className="rune-tiles-wrapper">
-        {wordGroups.length > 0 ? (
+        {wordGroups.length > 0? (
           wordGroups.map((wordTokens, gIdx) => (
             <div key={gIdx} className="rune-word-group">
               {wordTokens.map((token, tIdx) => {
-                const isRevealed = token !== "_" && /[A-Z0-9]/i.test(token);
+                const isRevealed = token!== "_" && /[A-Z0-9]/i.test(token);
                 return (
                   <span
                     key={tIdx}
-                    className={`rune-tile ${isRevealed ? "is-revealed" : "is-blank"}`}
+                    className={`rune-tile ${isRevealed? "is-revealed": "is-blank"}`}
                   >
-                    {isRevealed ? token : "_"}
+                    {isRevealed? token: "_"}
                   </span>
                 );
               })}
             </div>
           ))
-        ) : (
+        ): (
           <span className="dragon-masked">_ _ _</span>
         )}
       </div>
@@ -67,7 +67,7 @@ export default function WordHint() {
         )}
         {revealedCount > 0 && (
           <span className="hint-pill" title={`${revealedCount} letters revealed`}>
-            💡 {revealedCount} hint{revealedCount > 1 ? "s" : ""}
+             {revealedCount} hint{revealedCount > 1? "s": ""}
           </span>
         )}
       </div>

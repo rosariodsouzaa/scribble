@@ -17,15 +17,15 @@ export class OtpService {
    */
   static getEmailHtml(otp, purpose = "signup") {
     const isReset = purpose === "reset_password";
-    const title = isReset ? "Passcode Recovery Sanctuary" : "Dragon Dynasty Authentication";
+    const title = isReset? "Passcode Recovery Sanctuary": "Dragon Dynasty Authentication";
     const message = isReset
-      ? "We received a scroll requesting to reset your battle passcode. Use the one-time recovery code below to forge a new password:"
-      : "Use the one-time verification scroll code below to complete your registration and claim your battle chamber:";
+? "We received a scroll requesting to reset your battle passcode. Use the one-time recovery code below to forge a new password:"
+: "Use the one-time verification scroll code below to complete your registration and claim your battle chamber:";
 
     return `
       <div style="background-color: #090706; color: #fef3c7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 36px 24px; border-radius: 14px; border: 1px solid #f59e0b; max-width: 520px; margin: 0 auto;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <h1 style="color: #fbbf24; font-size: 26px; text-transform: uppercase; margin: 0; letter-spacing: 2px;">🐉 Scribble Royale</h1>
+          <h1 style="color: #fbbf24; font-size: 26px; text-transform: uppercase; margin: 0; letter-spacing: 2px;"> Scribble Royale</h1>
           <p style="color: #fcd34d; font-size: 14px; margin: 6px 0 0; opacity: 0.85;">${title}</p>
         </div>
         <hr style="border: 0; border-top: 1px solid rgba(245, 158, 11, 0.3); margin: 20px 0;" />
@@ -57,16 +57,16 @@ export class OtpService {
     await OtpRepository.save(cleanEmail, otp, purpose, config.otpExpiryMinutes);
 
     // Visual console notification for rapid dev testing
-    console.log("╔════════════════════════════════════════════════════════════════════════╗");
-    console.log(`║ 🐉 SCRIBBLE ROYALE OTP CODE FOR: ${cleanEmail.padEnd(37)} ║`);
-    console.log(`║ 🔑 CODE: [ ${otp} ] (Valid for ${config.otpExpiryMinutes} minutes)                        ║`);
-    console.log(`║ 🎯 PURPOSE: ${purpose.toUpperCase().padEnd(58)} ║`);
-    console.log("╚════════════════════════════════════════════════════════════════════════╝");
+    console.log("");
+    console.log(`  SCRIBBLE ROYALE OTP CODE FOR: ${cleanEmail.padEnd(37)} `);
+    console.log(`  CODE: [ ${otp} ] (Valid for ${config.otpExpiryMinutes} minutes)                        `);
+    console.log(`  PURPOSE: ${purpose.toUpperCase().padEnd(58)} `);
+    console.log("");
 
     const subject =
       purpose === "signup"
-        ? "🐉 Scribble Royale — Your Warrior Verification Code"
-        : "🐉 Scribble Royale — Password Reset Code";
+? " Scribble Royale — Your Warrior Verification Code"
+: " Scribble Royale — Password Reset Code";
     const html = OtpService.getEmailHtml(otp, purpose);
 
     // 1. Dispatch via Resend if API Key is configured
@@ -90,7 +90,7 @@ export class OtpService {
             };
           }
         } else {
-          console.log(`[OtpService] ✉️ Email sent successfully via Resend to ${cleanEmail} (ID: ${data.id})`);
+          console.log(`[OtpService]  Email sent successfully via Resend to ${cleanEmail} (ID: ${data.id})`);
           return { success: true, message: `Verification code sent to ${cleanEmail}` };
         }
       } catch (err) {
@@ -157,7 +157,7 @@ export class OtpService {
       return { valid: false, error: "Too many failed attempts. Please request a new code." };
     }
 
-    if (record.otp !== cleanOtp) {
+    if (record.otp!== cleanOtp) {
       await OtpRepository.incrementAttempts(cleanEmail, purpose);
       return { valid: false, error: "Incorrect verification code. Please check and try again." };
     }

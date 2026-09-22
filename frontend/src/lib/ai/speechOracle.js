@@ -4,7 +4,7 @@
 
 class SpeechOracle {
   constructor() {
-    this.speechSynthesis = typeof window !== "undefined" ? window.speechSynthesis : null;
+    this.speechSynthesis = typeof window!== "undefined"? window.speechSynthesis: null;
     this.lastSpokenText = "";
     this.lastSpokeTime = 0;
     this.voice = null;
@@ -12,7 +12,7 @@ class SpeechOracle {
 
     if (this.speechSynthesis) {
       this.initVoices();
-      if (typeof window !== "undefined" && window.speechSynthesis.onvoiceschanged !== undefined) {
+      if (typeof window!== "undefined" && window.speechSynthesis.onvoiceschanged!== undefined) {
         window.speechSynthesis.onvoiceschanged = () => this.initVoices();
       }
     }
@@ -30,7 +30,7 @@ class SpeechOracle {
   }
 
   speak(text, priority = false) {
-    if (!this.enabled || !this.speechSynthesis || !text) return;
+    if (!this.enabled ||!this.speechSynthesis ||!text) return;
 
     const now = Date.now();
     // Throttle repeated speech by 3.5 seconds unless priority
@@ -65,7 +65,7 @@ class SpeechOracle {
    */
   getCommentary(topPrediction, targetPrompt = null, isCorrect = false) {
     if (isCorrect && targetPrompt) {
-      return `🎉 Brilliant stroke! By the ancient dragon fires, that is unmistakable: ${targetPrompt.name}!`;
+      return ` Brilliant stroke! By the ancient dragon fires, that is unmistakable: ${targetPrompt.name}!`;
     }
 
     if (!topPrediction) {
@@ -76,19 +76,19 @@ class SpeechOracle {
 
     if (targetPrompt && name.toLowerCase() === targetPrompt.name.toLowerCase()) {
       if (confidence >= 65) {
-        return `🔥 ${icon} YES! That looks exactly like ${name}! Hold steady!`;
+        return ` ${icon} YES! That looks exactly like ${name}! Hold steady!`;
       }
-      return `👀 Getting closer to ${targetPrompt.name} (${confidence}%)... add more defining details!`;
+      return ` Getting closer to ${targetPrompt.name} (${confidence}%)... add more defining details!`;
     }
 
     if (confidence > 80) {
-      return `🔮 I am ${confidence}% confident this is ${icon} ${name}!`;
+      return ` I am ${confidence}% confident this is ${icon} ${name}!`;
     } else if (confidence > 55) {
-      return `🧐 Hmm... I see the silhouette of ${icon} ${name}... or maybe something similar?`;
+      return ` Hmm... I see the silhouette of ${icon} ${name}... or maybe something similar?`;
     } else if (confidence > 35) {
-      return `✨ Early contours look like ${icon} ${name}... keep developing the shape!`;
+      return ` Early contours look like ${icon} ${name}... keep developing the shape!`;
     } else {
-      return `🐉 The spirits see lines forming... perhaps ${icon} ${name}?`;
+      return ` The spirits see lines forming... perhaps ${icon} ${name}?`;
     }
   }
 }

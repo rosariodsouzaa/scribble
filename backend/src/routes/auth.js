@@ -9,7 +9,17 @@ const router = Router();
 
 // Helper to validate email string
 function isValidEmail(email) {
-  return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  if (typeof email!== "string") return false;
+  const clean = email.trim();
+  if (clean.includes("..")) return false; // Reject consecutive dots
+  if (clean.length > 254) return false;
+  return /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(clean);
+}
+
+// Helper to sanitize & validate warrior name
+function sanitizeName(name) {
+  if (typeof name!== "string") return "";
+  return name.replace(/<[^>]*>?/gm, "").trim();
 }
 
 /**
@@ -31,7 +41,7 @@ router.post("/send-otp", async (req, res) => {
       return res.status(409).json({ error: "A warrior account already exists with this email address." });
     }
 
-    if (purpose === "reset_password" && !existing) {
+    if (purpose === "reset_password" &&!existing) {
       return res.status(404).json({ error: "No warrior account found with this email." });
     }
 
@@ -51,7 +61,7 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp, purpose = "signup" } = req.body;
 
-    if (!isValidEmail(email) || !otp) {
+    if (!isValidEmail(email) ||!otp) {
       return res.status(400).json({ error: "Email and verification code are required." });
     }
 
@@ -107,7 +117,7 @@ router.post("/reset-password", async (req, res) => {
     // Update user password in database
     await UserRepository.updateById(user.id || user._id, { passwordHash });
 
-    console.log(`[Auth] 🔑 Passcode reset successfully for warrior: ${user.name} (${cleanEmail})`);
+    console.log(`[Auth]  Passcode reset successfully for warrior: ${user.name} (${cleanEmail})`);
 
     res.json({
       success: true,
@@ -127,16 +137,17 @@ router.post("/signup", async (req, res) => {
   try {
     const { name, email, password, otp, avatarColor = "#f59e0b", title = "Dragon Novice" } = req.body;
 
-    if (!name || String(name).trim().length < 2) {
-      return res.status(400).json({ error: "Warrior nickname must be at least 2 characters." });
+    const cleanName = sanitizeName(name);
+    if (!cleanName || cleanName.length < 2) {
+      return res.status(400).json({ error: "Warrior nickname must be at least 2 valid characters." });
     }
 
     if (!isValidEmail(email)) {
       return res.status(400).json({ error: "Please provide a valid email address." });
     }
 
-    if (!password || String(password).length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters long." });
+    if (!password || String(password).trim().length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 non-space characters long." });
     }
 
     if (!otp) {
@@ -161,7 +172,7 @@ router.post("/signup", async (req, res) => {
 
     // Create user
     const newUser = await UserRepository.create({
-      name: String(name).trim().slice(0, 30),
+      name: cleanName.slice(0, 30),
       email: cleanEmail,
       passwordHash,
       role: "user",
@@ -177,9 +188,9 @@ router.post("/signup", async (req, res) => {
     });
 
     const token = TokenService.generateToken(newUser);
-    const userJson = newUser.toPublicJSON ? newUser.toPublicJSON() : newUser;
+    const userJson = newUser.toPublicJSON? newUser.toPublicJSON(): newUser;
 
-    console.log(`[Auth] 🐉 New warrior registered: ${newUser.name} (${cleanEmail})`);
+    console.log(`[Auth]  New warrior registered: ${newUser.name} (${cleanEmail})`);
 
     res.status(201).json({
       success: true,
@@ -201,7 +212,7 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!isValidEmail(email) || !password) {
+    if (!isValidEmail(email) ||!password) {
       return res.status(400).json({ error: "Please enter your email and password." });
     }
 
@@ -228,9 +239,9 @@ router.post("/login", async (req, res) => {
     await UserRepository.updateById(user.id || user._id, { lastLoginAt: new Date() });
 
     const token = TokenService.generateToken(user);
-    const userJson = user.toPublicJSON ? user.toPublicJSON() : user;
+    const userJson = user.toPublicJSON? user.toPublicJSON(): user;
 
-    console.log(`[Auth] ⚔️ Warrior logged in: ${user.name} [Role: ${user.role}]`);
+    console.log(`[Auth]  Warrior logged in: ${user.name} [Role: ${user.role}]`);
 
     res.json({
       success: true,
@@ -249,7 +260,7 @@ router.post("/login", async (req, res) => {
  */
 router.get("/me", requireAuth, async (req, res) => {
   try {
-    const userJson = req.user.toPublicJSON ? req.user.toPublicJSON() : req.user;
+    const userJson = req.user.toPublicJSON? req.user.toPublicJSON(): req.user;
     res.json({ user: userJson });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch user session." });
@@ -268,10 +279,10 @@ router.put("/profile", requireAuth, async (req, res) => {
     if (name && String(name).trim().length >= 2) {
       updates.name = String(name).trim().slice(0, 30);
     }
-    if (bio !== undefined) {
+    if (bio!== undefined) {
       updates.bio = String(bio).trim().slice(0, 160);
     }
-    if (title !== undefined) {
+    if (title!== undefined) {
       updates.title = String(title).trim().slice(0, 40);
     }
     if (avatarColor) {
@@ -279,7 +290,7 @@ router.put("/profile", requireAuth, async (req, res) => {
     }
 
     const updatedUser = await UserRepository.updateById(req.user.id || req.user._id, updates);
-    const userJson = updatedUser.toPublicJSON ? updatedUser.toPublicJSON() : updatedUser;
+    const userJson = updatedUser.toPublicJSON? updatedUser.toPublicJSON(): updatedUser;
 
     res.json({
       success: true,

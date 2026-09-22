@@ -188,8 +188,8 @@ export default function Auth() {
       const seed = await AuthService.seedDemoAccounts();
       const creds =
         role === "admin"
-          ? seed.demoAccounts?.admin || { email: "admin@scribbleroyale.io", password: "admin123" }
-          : seed.demoAccounts?.user || { email: "warrior@scribbleroyale.io", password: "warrior123" };
+? seed.demoAccounts?.admin || { email: "admin@scribbleroyale.io", password: "admin123" }
+: seed.demoAccounts?.user || { email: "warrior@scribbleroyale.io", password: "warrior123" };
 
       setLoginEmail(creds.email);
       setLoginPassword(creds.password);
@@ -220,7 +220,7 @@ export default function Auth() {
       setErrorMsg("Please enter a warrior nickname");
       return;
     }
-    if (!signupEmail.trim() || !signupEmail.includes("@")) {
+    if (!signupEmail.trim() ||!signupEmail.includes("@")) {
       setErrorMsg("Please enter a valid email address");
       return;
     }
@@ -259,7 +259,7 @@ export default function Auth() {
   };
 
   const handleSignupOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !signupOtpDigits[index] && index > 0) {
+    if (e.key === "Backspace" &&!signupOtpDigits[index] && index > 0) {
       signupOtpInputRefs.current[index - 1]?.focus();
     }
   };
@@ -343,7 +343,7 @@ export default function Auth() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!forgotEmail.trim() || !forgotEmail.includes("@")) {
+    if (!forgotEmail.trim() ||!forgotEmail.includes("@")) {
       setErrorMsg("Please enter a valid warrior email address.");
       return;
     }
@@ -378,7 +378,7 @@ export default function Auth() {
   };
 
   const handleForgotOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !forgotOtpDigits[index] && index > 0) {
+    if (e.key === "Backspace" &&!forgotOtpDigits[index] && index > 0) {
       forgotOtpInputRefs.current[index - 1]?.focus();
     }
   };
@@ -438,7 +438,7 @@ export default function Auth() {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (newPassword!== confirmPassword) {
       setErrorMsg("Passcodes do not match. Please verify.");
       return;
     }
@@ -502,17 +502,17 @@ export default function Auth() {
           <h1 className="auth-brand-title">SCRIBBLE ROYALE</h1>
           <p className="auth-brand-subtitle">
             {activeTab === "forgot"
-              ? "Battle Passcode Recovery Chamber"
-              : "Dragon Dynasty Authentication Sanctuary"}
+? "Battle Passcode Recovery Chamber"
+: "Dragon Dynasty Authentication Sanctuary"}
           </p>
         </div>
 
         {/* Tab Selector (Shown for Login & Sign Up) */}
-        {activeTab !== "forgot" ? (
+        {activeTab!== "forgot"? (
           <div className="auth-tabs">
             <button
               type="button"
-              className={`auth-tab-btn ${activeTab === "login" ? "active" : ""}`}
+              className={`auth-tab-btn ${activeTab === "login"? "active": ""}`}
               onClick={() => {
                 setActiveTab("login");
                 navigate("/login");
@@ -523,7 +523,7 @@ export default function Auth() {
             </button>
             <button
               type="button"
-              className={`auth-tab-btn ${activeTab === "signup" ? "active" : ""}`}
+              className={`auth-tab-btn ${activeTab === "signup"? "active": ""}`}
               onClick={() => {
                 setActiveTab("signup");
                 navigate("/signup");
@@ -533,7 +533,7 @@ export default function Auth() {
               <span>Join Dynasty (Sign Up)</span>
             </button>
           </div>
-        ) : (
+        ): (
           <div className="forgot-header-bar">
             <button type="button" className="forgot-back-btn" onClick={handleBackToLogin}>
               <ArrowLeft size={16} />
@@ -593,7 +593,7 @@ export default function Auth() {
               </div>
               <div className="password-input-wrapper">
                 <input
-                  type={showLoginPassword ? "text" : "password"}
+                  type={showLoginPassword? "text": "password"}
                   className="dragon-input"
                   placeholder="Enter your battle passcode"
                   value={loginPassword}
@@ -606,15 +606,15 @@ export default function Auth() {
                   className="password-toggle-btn"
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
                 >
-                  {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showLoginPassword? <EyeOff size={16} />: <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             <button type="submit" className="dragon-btn primary auth-submit-btn" disabled={loading}>
-              {loading ? (
+              {loading? (
                 <span>Channeling Dragon Qi...</span>
-              ) : (
+              ): (
                 <>
                   <span>Enter Battle Arena</span>
                   <ArrowRight size={17} />
@@ -665,17 +665,17 @@ export default function Auth() {
             {/* Step Progress Indicators */}
             {forgotStep <= 3 && (
               <div className="signup-steps-bar">
-                <div className={`step-item ${forgotStep >= 1 ? "active" : ""} ${forgotStep > 1 ? "done" : ""}`}>
+                <div className={`step-item ${forgotStep >= 1? "active": ""} ${forgotStep > 1? "done": ""}`}>
                   <span className="step-num">1</span>
                   <span className="step-label">Email</span>
                 </div>
                 <div className="step-connector" />
-                <div className={`step-item ${forgotStep >= 2 ? "active" : ""} ${forgotStep > 2 ? "done" : ""}`}>
+                <div className={`step-item ${forgotStep >= 2? "active": ""} ${forgotStep > 2? "done": ""}`}>
                   <span className="step-num">2</span>
                   <span className="step-label">Email OTP</span>
                 </div>
                 <div className="step-connector" />
-                <div className={`step-item ${forgotStep >= 3 ? "active" : ""}`}>
+                <div className={`step-item ${forgotStep >= 3? "active": ""}`}>
                   <span className="step-num">3</span>
                   <span className="step-label">New Passcode</span>
                 </div>
@@ -710,9 +710,9 @@ export default function Auth() {
                 </div>
 
                 <button type="submit" className="dragon-btn primary auth-submit-btn" disabled={loading}>
-                  {loading ? (
+                  {loading? (
                     <span>Dispatching Recovery Scroll...</span>
-                  ) : (
+                  ): (
                     <>
                       <span>Send Recovery Code</span>
                       <ArrowRight size={17} />
@@ -767,14 +767,14 @@ export default function Auth() {
                         <span>Code: <strong>{forgotLastDispatchedOtp}</strong></span>
                       </div>
                       <button type="button" className="autofill-btn" onClick={handleAutoFillForgotOtp}>
-                        ⚡ Auto-Fill Code
+                         Auto-Fill Code
                       </button>
                     </div>
                   )}
 
                   {/* Resend Countdown */}
                   <div className="otp-timer-row">
-                    {canResendForgotOtp ? (
+                    {canResendForgotOtp? (
                       <button
                         type="button"
                         className="resend-otp-btn"
@@ -784,7 +784,7 @@ export default function Auth() {
                         <RefreshCw size={13} />
                         <span>Resend Recovery Code</span>
                       </button>
-                    ) : (
+                    ): (
                       <span className="resend-countdown">Resend code in {forgotOtpTimer}s</span>
                     )}
                   </div>
@@ -800,7 +800,7 @@ export default function Auth() {
                     Edit Email
                   </button>
                   <button type="submit" className="dragon-btn primary" disabled={loading}>
-                    {loading ? "Verifying..." : "Verify Code"}
+                    {loading? "Verifying...": "Verify Code"}
                   </button>
                 </div>
               </form>
@@ -821,7 +821,7 @@ export default function Auth() {
                   </label>
                   <div className="password-input-wrapper">
                     <input
-                      type={showNewPassword ? "text" : "password"}
+                      type={showNewPassword? "text": "password"}
                       className="dragon-input"
                       placeholder="Minimum 6 characters"
                       value={newPassword}
@@ -836,7 +836,7 @@ export default function Auth() {
                       className="password-toggle-btn"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                     >
-                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showNewPassword? <EyeOff size={16} />: <Eye size={16} />}
                     </button>
                   </div>
                 </div>
@@ -848,9 +848,9 @@ export default function Auth() {
                   </label>
                   <div className="password-input-wrapper">
                     <input
-                      type={showConfirmPassword ? "text" : "password"}
+                      type={showConfirmPassword? "text": "password"}
                       className={`dragon-input ${
-                        confirmPassword && newPassword !== confirmPassword ? "input-mismatch" : ""
+                        confirmPassword && newPassword!== confirmPassword? "input-mismatch": ""
                       }`}
                       placeholder="Re-enter new passcode"
                       value={confirmPassword}
@@ -864,25 +864,25 @@ export default function Auth() {
                       className="password-toggle-btn"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showConfirmPassword? <EyeOff size={16} />: <Eye size={16} />}
                     </button>
                   </div>
-                  {confirmPassword && newPassword !== confirmPassword && (
+                  {confirmPassword && newPassword!== confirmPassword && (
                     <span className="field-validation-error">Passcodes do not match</span>
                   )}
                   {confirmPassword && newPassword === confirmPassword && (
-                    <span className="field-validation-success">✓ Passcodes match</span>
+                    <span className="field-validation-success"> Passcodes match</span>
                   )}
                 </div>
 
                 <button
                   type="submit"
                   className="dragon-btn primary auth-submit-btn"
-                  disabled={loading || (confirmPassword && newPassword !== confirmPassword)}
+                  disabled={loading || (confirmPassword && newPassword!== confirmPassword)}
                 >
-                  {loading ? (
+                  {loading? (
                     <span>Forging New Passcode...</span>
-                  ) : (
+                  ): (
                     <>
                       <span>Reset Battle Passcode</span>
                       <Sparkles size={17} />
@@ -909,7 +909,7 @@ export default function Auth() {
                   onClick={handleLoginSubmit}
                   disabled={loading}
                 >
-                  {loading ? "Entering Arena..." : "Log In with New Passcode"}
+                  {loading? "Entering Arena...": "Log In with New Passcode"}
                 </button>
 
                 <button
@@ -930,17 +930,17 @@ export default function Auth() {
           <div className="auth-signup-workflow">
             {/* Step Progress Indicators */}
             <div className="signup-steps-bar">
-              <div className={`step-item ${signupStep >= 1 ? "active" : ""} ${signupStep > 1 ? "done" : ""}`}>
+              <div className={`step-item ${signupStep >= 1? "active": ""} ${signupStep > 1? "done": ""}`}>
                 <span className="step-num">1</span>
                 <span className="step-label">Credentials</span>
               </div>
               <div className="step-connector" />
-              <div className={`step-item ${signupStep >= 2 ? "active" : ""} ${signupStep > 2 ? "done" : ""}`}>
+              <div className={`step-item ${signupStep >= 2? "active": ""} ${signupStep > 2? "done": ""}`}>
                 <span className="step-num">2</span>
                 <span className="step-label">Email OTP</span>
               </div>
               <div className="step-connector" />
-              <div className={`step-item ${signupStep >= 3 ? "active" : ""}`}>
+              <div className={`step-item ${signupStep >= 3? "active": ""}`}>
                 <span className="step-num">3</span>
                 <span className="step-label">Avatar</span>
               </div>
@@ -994,7 +994,7 @@ export default function Auth() {
                   </label>
                   <div className="password-input-wrapper">
                     <input
-                      type={showSignupPassword ? "text" : "password"}
+                      type={showSignupPassword? "text": "password"}
                       className="dragon-input"
                       placeholder="Minimum 6 characters"
                       value={signupPassword}
@@ -1008,15 +1008,15 @@ export default function Auth() {
                       className="password-toggle-btn"
                       onClick={() => setShowSignupPassword(!showSignupPassword)}
                     >
-                      {showSignupPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showSignupPassword? <EyeOff size={16} />: <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
                 <button type="submit" className="dragon-btn primary auth-submit-btn" disabled={loading}>
-                  {loading ? (
+                  {loading? (
                     <span>Dispatching Royal Scroll...</span>
-                  ) : (
+                  ): (
                     <>
                       <span>Send Verification Code</span>
                       <ArrowRight size={17} />
@@ -1060,14 +1060,14 @@ export default function Auth() {
                         <span>Code: <strong>{signupLastDispatchedOtp}</strong></span>
                       </div>
                       <button type="button" className="autofill-btn" onClick={handleAutoFillSignupOtp}>
-                        ⚡ Auto-Fill Code
+                         Auto-Fill Code
                       </button>
                     </div>
                   )}
 
                   {/* Resend Countdown */}
                   <div className="otp-timer-row">
-                    {canResendSignupOtp ? (
+                    {canResendSignupOtp? (
                       <button
                         type="button"
                         className="resend-otp-btn"
@@ -1077,7 +1077,7 @@ export default function Auth() {
                         <RefreshCw size={13} />
                         <span>Resend Verification Code</span>
                       </button>
-                    ) : (
+                    ): (
                       <span className="resend-countdown">Resend code in {signupOtpTimer}s</span>
                     )}
                   </div>
@@ -1093,7 +1093,7 @@ export default function Auth() {
                     Edit Email
                   </button>
                   <button type="submit" className="dragon-btn primary" disabled={loading}>
-                    {loading ? "Verifying..." : "Verify Code"}
+                    {loading? "Verifying...": "Verify Code"}
                   </button>
                 </div>
               </form>
@@ -1107,7 +1107,7 @@ export default function Auth() {
                   <div className="persona-preview-info">
                     <span className="persona-name">{signupName}</span>
                     <span className="persona-title">{selectedTitle}</span>
-                    <span className="persona-gold-bonus">🪙 +2,500 Gold Welcome Bonus</span>
+                    <span className="persona-gold-bonus"> +2,500 Gold Welcome Bonus</span>
                   </div>
                 </div>
 
@@ -1122,7 +1122,7 @@ export default function Auth() {
                       <button
                         key={c.hex}
                         type="button"
-                        className={`color-swatch-item ${selectedColor === c.hex ? "active" : ""}`}
+                        className={`color-swatch-item ${selectedColor === c.hex? "active": ""}`}
                         style={{ backgroundColor: c.hex }}
                         onClick={() => setSelectedColor(c.hex)}
                         title={c.name}
@@ -1156,9 +1156,9 @@ export default function Auth() {
                   onClick={handleFinalizeSignup}
                   disabled={loading}
                 >
-                  {loading ? (
+                  {loading? (
                     <span>Entering Dynasty...</span>
-                  ) : (
+                  ): (
                     <>
                       <span>Complete Dynasty Enrollment</span>
                       <Sparkles size={17} />

@@ -34,7 +34,7 @@ export default function Room() {
 
   const joined = state.code === upperCode;
   const fatal =
-    state.error && !joined && ["room-not-found", "game-in-progress"].includes(state.error.code);
+    state.error &&!joined && ["room-not-found", "game-in-progress"].includes(state.error.code);
 
   const handleReturnToSanctuary = () => {
     actions.reset();
@@ -45,7 +45,7 @@ export default function Room() {
     return (
       <div className="screen center">
         <div className="card dragon-card text-center">
-          <div className="dragon-seal-icon">⚠️</div>
+          <div className="dragon-seal-icon"></div>
           <h2 className="title sm">Chamber {upperCode} Sealed</h2>
           <p className="muted">{state.error.message || "Room not found on this server."}</p>
           <div className="row gap" style={{ marginTop: "16px", justifyContent: "center" }}>

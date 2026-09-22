@@ -73,7 +73,7 @@ export class StripeCardPaymentStrategy extends PaymentStrategy {
   async process(item, details = {}) {
     await new Promise((r) => setTimeout(r, 1100));
 
-    const last4 = details.cardNumber ? details.cardNumber.slice(-4) : "4242";
+    const last4 = details.cardNumber? details.cardNumber.slice(-4): "4242";
     return {
       success: true,
       transaction: {
@@ -166,7 +166,7 @@ export class GoldVaultPaymentStrategy extends PaymentStrategy {
         id: this.generateTxHash("TX"),
         date: this.formatTimestamp(),
         item: item.name,
-        amount: `🪙 ${item.goldCost.toLocaleString()} Gold`,
+        amount: ` ${item.goldCost.toLocaleString()} Gold`,
         method: "Dragon Gold Vault",
         status: "COMPLETED",
         hash: "INTERNAL-ROYALE",

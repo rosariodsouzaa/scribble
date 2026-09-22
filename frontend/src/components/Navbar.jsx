@@ -38,7 +38,7 @@ export default function Navbar() {
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current &&!dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     }
@@ -80,7 +80,7 @@ export default function Navbar() {
         )}
 
         {/* Authenticated Controls */}
-        {user.isAuthenticated && user.email ? (
+        {user.isAuthenticated && user.email? (
           <>
             {/* Dragon Gold Coins Pill */}
             <div
@@ -97,7 +97,7 @@ export default function Navbar() {
             </div>
 
             {/* Web3 Wallet Pill */}
-            {wallet.isConnected ? (
+            {wallet.isConnected? (
               <WalletStatus
                 isConnected={true}
                 address={wallet.address}
@@ -105,7 +105,7 @@ export default function Navbar() {
                 network={wallet.network}
                 onDisconnect={disconnectWallet}
               />
-            ) : (
+            ): (
               <button
                 className="nav-connect-wallet-btn"
                 onClick={() => navigate("/wallet")}
@@ -120,15 +120,15 @@ export default function Navbar() {
             <button
               className="nav-icon-btn"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              title={soundEnabled ? "Mute Game SFX" : "Unmute Game SFX"}
+              title={soundEnabled? "Mute Game SFX": "Unmute Game SFX"}
             >
-              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              {soundEnabled? <Volume2 size={18} />: <VolumeX size={18} />}
             </button>
 
             {/* Warrior Profile with Dropdown */}
             <div className="nav-profile-wrapper" ref={dropdownRef}>
               <div
-                className={`nav-profile-pill ${dropdownOpen ? "open" : ""}`}
+                className={`nav-profile-pill ${dropdownOpen? "open": ""}`}
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 title="Warrior Menu"
               >
@@ -136,10 +136,10 @@ export default function Navbar() {
                 <div className="profile-info-mini">
                   <span className="profile-name">{user.name}</span>
                   <span className="profile-level">
-                    {isAdmin ? "ADMIN" : `LVL ${user.level || 1}`}
+                    {isAdmin? "ADMIN": `LVL ${user.level || 1}`}
                   </span>
                 </div>
-                <ChevronDown size={14} className={`dropdown-arrow ${dropdownOpen ? "rotated" : ""}`} />
+                <ChevronDown size={14} className={`dropdown-arrow ${dropdownOpen? "rotated": ""}`} />
               </div>
 
               {/* Profile Dropdown Menu */}
@@ -150,7 +150,7 @@ export default function Navbar() {
                     <div className="dropdown-user-details">
                       <span className="dropdown-user-name">{user.name}</span>
                       <span className="dropdown-user-role">
-                        {user.title || (isAdmin ? "Imperial Grandmaster" : "Dragon Warrior")}
+                        {user.title || (isAdmin? "Imperial Grandmaster": "Dragon Warrior")}
                       </span>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export default function Navbar() {
                       <span className="stat-lbl">Victories</span>
                     </div>
                     <div className="dropdown-stat">
-                      <span className="stat-num">🪙 {user.coins || 0}</span>
+                      <span className="stat-num"> {user.coins || 0}</span>
                       <span className="stat-lbl">Gold</span>
                     </div>
                     <div className="dropdown-stat">
@@ -254,7 +254,7 @@ export default function Navbar() {
               )}
             </div>
           </>
-        ) : (
+        ): (
           /* Unauthenticated Quick Auth CTA */
           <div className="nav-auth-cta-group">
             <button className="nav-login-btn" onClick={() => navigate("/login")}>

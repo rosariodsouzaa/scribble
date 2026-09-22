@@ -34,9 +34,9 @@ export const initialState = {
 
 function pushChat(state, entry) {
   return {
-    ...state,
+...state,
     _seq: state._seq + 1,
-    chat: [...state.chat, { id: state._seq, ...entry }].slice(-120),
+    chat: [...state.chat, { id: state._seq,...entry }].slice(-120),
   };
 }
 
@@ -45,29 +45,29 @@ const secondsLeft = (endsAt) => Math.max(0, Math.ceil((endsAt - Date.now()) / 10
 export function gameReducer(state, action) {
   switch (action.type) {
     case "CONNECTED":
-      return { ...state, connected: true, myId: action.id };
+      return {...state, connected: true, myId: action.id };
     case "DISCONNECTED":
-      return { ...state, connected: false };
+      return {...state, connected: false };
     case "ERROR":
-      return { ...state, error: action.payload };
+      return {...state, error: action.payload };
     case "CLEAR_ERROR":
-      return { ...state, error: null };
+      return {...state, error: null };
 
     case "ROOM_STATE": {
       const r = action.room;
       const isWaiting = r.state === "waiting";
       return {
-        ...state,
+...state,
         error: null,
         code: r.code,
         hostId: r.hostId,
         state: r.state,
         settings: r.settings,
         players: r.players,
-        gameEnd: isWaiting ? null : state.gameEnd,
-        roundEnd: isWaiting ? null : state.roundEnd,
-        myWord: isWaiting ? null : (r.round.word ?? state.myWord),
-        guessedCorrect: isWaiting ? false : state.guessedCorrect,
+        gameEnd: isWaiting? null: state.gameEnd,
+        roundEnd: isWaiting? null: state.roundEnd,
+        myWord: isWaiting? null: (r.round.word?? state.myWord),
+        guessedCorrect: isWaiting? false: state.guessedCorrect,
         round: {
           number: r.round.number,
           maxRounds: r.settings.maxRounds,
@@ -77,43 +77,43 @@ export function gameReducer(state, action) {
           maskedWord: r.round.maskedWord || "",
           wordLength: r.round.wordLength || 0,
         },
-        remaining: r.round.endsAt ? secondsLeft(r.round.endsAt) : 0,
+        remaining: r.round.endsAt? secondsLeft(r.round.endsAt): 0,
       };
     }
 
     case "PLAYER_JOINED":
       return pushChat(
-        { ...state, players: action.players, hostId: action.hostId ?? state.hostId },
+        {...state, players: action.players, hostId: action.hostId?? state.hostId },
         { type: "system", text: `${action.player.username} joined` }
       );
 
     case "PLAYER_LEFT": {
       const left = state.players.find((p) => p.id === action.playerId);
       return pushChat(
-        { ...state, players: action.players, hostId: action.hostId ?? state.hostId },
-        { type: "system", text: `${left ? left.username : "A player"} left` }
+        {...state, players: action.players, hostId: action.hostId?? state.hostId },
+        { type: "system", text: `${left? left.username: "A player"} left` }
       );
     }
 
     case "PLAYER_UPDATED":
       return {
-        ...state,
+...state,
         players: state.players.map((p) =>
-          p.id === action.playerId ? { ...p, isReady: action.isReady } : p
+          p.id === action.playerId? {...p, isReady: action.isReady }: p
         ),
       };
 
     case "GAME_STARTED":
-      return { ...state, state: "playing", settings: action.settings, gameEnd: null };
+      return {...state, state: "playing", settings: action.settings, gameEnd: null };
 
     case "ROUND_START": {
       const amDrawer = action.drawerId === state.myId;
       return {
-        ...state,
+...state,
         state: "playing",
         roundEnd: null,
         guessedCorrect: false,
-        myWord: amDrawer ? state.myWord : null, // guessers cleared; drawer waits for new-word
+        myWord: amDrawer? state.myWord: null, // guessers cleared; drawer waits for new-word
         remaining: secondsLeft(action.endsAt),
         round: {
           number: action.number,
@@ -128,7 +128,7 @@ export function gameReducer(state, action) {
     }
 
     case "NEW_WORD":
-      return { ...state, myWord: action.word };
+      return {...state, myWord: action.word };
 
     case "GUESS_RESULT": {
       if (action.isSystem) {
@@ -139,10 +139,10 @@ export function gameReducer(state, action) {
       }
       if (action.correct) {
         const mine = action.playerId === state.myId;
-        const pts = action.points ? ` (+${action.points} pts)` : "";
-        const rankLabel = action.rank === 1 ? "🥇 1st" : action.rank === 2 ? "🥈 2nd" : action.rank === 3 ? "🥉 3rd" : "";
-        const rankPrefix = rankLabel ? `[${rankLabel}] ` : "";
-        return pushChat(mine ? { ...state, guessedCorrect: true } : state, {
+        const pts = action.points? ` (+${action.points} pts)`: "";
+        const rankLabel = action.rank === 1? " 1st": action.rank === 2? " 2nd": action.rank === 3? " 3rd": "";
+        const rankPrefix = rankLabel? `[${rankLabel}] `: "";
+        return pushChat(mine? {...state, guessedCorrect: true }: state, {
           type: "correct",
           username: action.username,
           points: action.points,
@@ -159,47 +159,47 @@ export function gameReducer(state, action) {
 
     case "HINT_UPDATE":
       return {
-        ...state,
+...state,
         round: {
-          ...state.round,
+...state.round,
           maskedWord: action.maskedWord,
         },
       };
 
     case "SCORE_UPDATE":
-      return { ...state, players: action.players };
+      return {...state, players: action.players };
 
     case "TIMER_TICK":
-      return { ...state, remaining: action.remaining };
+      return {...state, remaining: action.remaining };
 
     case "ROUND_END":
       return pushChat(
-        { ...state, state: "roundEnd", roundEnd: action, players: action.players, remaining: 0 },
+        {...state, state: "roundEnd", roundEnd: action, players: action.players, remaining: 0 },
         { type: "system", text: `Round over! The secret rune was "${action.word}"` }
       );
 
     case "GAME_END":
-      return { ...state, state: "gameEnd", gameEnd: action };
+      return {...state, state: "gameEnd", gameEnd: action };
 
     case "GAME_ABORTED":
       return pushChat(
         {
-          ...state,
+...state,
           state: "waiting",
           roundEnd: null,
           myWord: null,
           guessedCorrect: false,
           remaining: 0,
-          players: action.players || state.players.map((p) => ({ ...p, isReady: false })),
+          players: action.players || state.players.map((p) => ({...p, isReady: false })),
         },
         {
           type: "system",
-          text: `⚠️ ${action.message || "Match aborted: Not enough players to continue."}`,
+          text: ` ${action.message || "Match aborted: Not enough players to continue."}`,
         }
       );
 
     case "RESET":
-      return { ...initialState, connected: state.connected, myId: state.myId };
+      return {...initialState, connected: state.connected, myId: state.myId };
 
     default:
       return state;
