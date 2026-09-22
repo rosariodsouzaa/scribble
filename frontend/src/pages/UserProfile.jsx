@@ -80,10 +80,22 @@ export default function UserProfile() {
     setSaveSuccess(false);
     setSaveError("");
 
+    const cleanName = String(name || "").trim();
+    if (!cleanName || cleanName.length < 2) {
+      setSaveError("Warrior nickname must be at least 2 valid characters.");
+      setSaving(false);
+      return;
+    }
+    if (cleanName.length > 25) {
+      setSaveError("Warrior nickname cannot exceed 25 characters.");
+      setSaving(false);
+      return;
+    }
+
     try {
       await updateUserProfile({
-        name,
-        bio,
+        name: cleanName,
+        bio: String(bio || "").trim(),
         title,
         avatarColor,
       });
@@ -430,10 +442,11 @@ export default function UserProfile() {
                     <button
                       key={c.hex}
                       type="button"
-                      className={`color-swatch-item ${avatarColor === c.hex? "active": ""}`}
+                      className={`color-swatch-item ${avatarColor === c.hex ? "active" : ""}`}
                       style={{ backgroundColor: c.hex }}
                       onClick={() => setAvatarColor(c.hex)}
                       title={c.name}
+                      aria-label={`Select ${c.name} aura color`}
                     />
                   ))}
                 </div>
@@ -441,8 +454,18 @@ export default function UserProfile() {
             </div>
           </div>
 
-          {saveError && <div className="auth-alert error">{saveError}</div>}
-          {saveSuccess && <div className="auth-alert success">Warrior profile updated successfully!</div>}
+          {saveError && (
+            <div className="auth-alert error animate-fade-in" role="alert">
+              <AlertCircle size={16} />
+              <span>{saveError}</span>
+            </div>
+          )}
+          {saveSuccess && (
+            <div className="auth-alert success animate-fade-in" role="alert">
+              <CheckCircle2 size={16} />
+              <span>Warrior profile updated successfully!</span>
+            </div>
+          )}
 
           <div className="customizer-submit-row">
             <button type="submit" className="dragon-btn primary" disabled={saving}>

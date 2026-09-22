@@ -95,16 +95,23 @@ export default function Auth() {
   const [forgotOtpDigits, setForgotOtpDigits] = useState(["", "", "", "", "", ""]);
   const [forgotOtpTimer, setForgotOtpTimer] = useState(60);
   const [canResendForgotOtp, setCanResendForgotOtp] = useState(false);
-  const [forgotLastDispatchedOtp, setForgotLastDispatchedOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [forgotLastDispatchedOtp, setForgotLastDispatchedOtp] = useState("");
 
-  // Status & loading
-  const [loading, setLoading] = useState(false);
+  // Feedback and loading state
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // If already authenticated, redirect to /dashboard to prevent back-button trap (DF010 / TC053)
+  useEffect(() => {
+    if (user?.isAuthenticated && user?.email) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
 
   const signupOtpInputRefs = useRef([]);
   const forgotOtpInputRefs = useRef([]);
@@ -161,10 +168,17 @@ export default function Auth() {
     if (e && e.preventDefault) e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
+
+    const cleanEmail = loginEmail.toLowerCase().trim();
+    if (!cleanEmail || !loginPassword) {
+      setErrorMsg("Please enter your email and password");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await loginWithCredentials(loginEmail, loginPassword);
+      const res = await loginWithCredentials(cleanEmail, loginPassword);
       setSuccessMsg(`Welcome back, ${res.user.name}!`);
       setTimeout(() => {
         if (res.user.role === "admin") {
@@ -217,26 +231,29 @@ export default function Auth() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!signupName.trim()) {
-      setErrorMsg("Please enter a warrior nickname");
+    const cleanName = signupName.trim();
+    const cleanEmail = signupEmail.toLowerCase().trim();
+
+    if (!cleanName || cleanName.length < 2) {
+      setErrorMsg("Warrior nickname must be at least 2 valid characters");
       return;
     }
-    if (!signupEmail.trim() ||!signupEmail.includes("@")) {
+    if (!cleanEmail || !cleanEmail.includes("@")) {
       setErrorMsg("Please enter a valid email address");
       return;
     }
-    if (signupPassword.length < 6) {
-      setErrorMsg("Password must be at least 6 characters");
+    if (!signupPassword || signupPassword.trim().length < 6) {
+      setErrorMsg("Password must be at least 6 non-space characters");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await AuthService.sendOtp(signupEmail, "signup");
+      const res = await AuthService.sendOtp(cleanEmail, "signup");
       if (res.simulatedOtp) {
         setSignupLastDispatchedOtp(res.simulatedOtp);
       }
-      setSuccessMsg(res.message || `Verification code sent to ${signupEmail}`);
+      setSuccessMsg(res.message || `Verification code sent to ${cleanEmail}`);
       setSignupStep(2);
       setSignupOtpTimer(60);
       setCanResendSignupOtp(false);
@@ -312,13 +329,20 @@ export default function Auth() {
   // Signup Step 3: Finalize
   const handleFinalizeSignup = async () => {
     setErrorMsg("");
-    setLoading(true);
     const enteredOtp = signupOtpDigits.join("");
+    const cleanEmail = signupEmail.toLowerCase().trim();
+
+    if (!signupPassword || signupPassword.trim().length < 6) {
+      setErrorMsg("Password must be at least 6 non-space characters");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await signupWithOtp({
-        name: signupName,
-        email: signupEmail,
+        name: signupName.trim(),
+        email: cleanEmail,
         password: signupPassword,
         otp: enteredOtp,
         avatarColor: selectedColor,
@@ -434,21 +458,22 @@ export default function Auth() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!newPassword || newPassword.length < 6) {
-      setErrorMsg("New passcode must be at least 6 characters long.");
+    if (!newPassword || newPassword.trim().length < 6) {
+      setErrorMsg("New passcode must be at least 6 non-space characters long.");
       return;
     }
 
-    if (newPassword!== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setErrorMsg("Passcodes do not match. Please verify.");
       return;
     }
 
     const enteredOtp = forgotOtpDigits.join("");
+    const cleanForgotEmail = forgotEmail.toLowerCase().trim();
     setLoading(true);
     try {
       const res = await AuthService.resetPassword({
-        email: forgotEmail,
+        email: cleanForgotEmail,
         otp: enteredOtp,
         newPassword,
       });
@@ -456,7 +481,7 @@ export default function Auth() {
       setSuccessMsg(res.message || "Battle passcode successfully reset!");
       setForgotStep(4);
       // Pre-fill login credentials for seamless entry
-      setLoginEmail(forgotEmail);
+      setLoginEmail(cleanForgotEmail);
       setLoginPassword(newPassword);
     } catch (err) {
       setErrorMsg(err.message || "Failed to reset passcode. Please try again.");

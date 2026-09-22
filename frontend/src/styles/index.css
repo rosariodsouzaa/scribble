@@ -2832,6 +2832,58 @@ body {
   color: #ffffff;
 }
 
+/* Responsive Navbar Adjustments (DF054 / TC307) */
+@media (max-width: 768px) {
+  .dragon-navbar {
+    padding: 0 12px;
+    height: 60px;
+  }
+  .nav-brand {
+    gap: 8px;
+  }
+  .brand-title {
+    font-size: 14px;
+  }
+  .brand-subtitle {
+    font-size: 8px;
+  }
+  .nav-right-cluster {
+    gap: 8px;
+  }
+  .nav-coins-pill {
+    padding: 4px 10px;
+  }
+  .coins-label {
+    display: none;
+  }
+  .nav-admin-badge-btn span {
+    display: none;
+  }
+  .nav-admin-badge-btn {
+    padding: 6px;
+    min-width: 32px;
+  }
+  .wallet-status-pill {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-subtitle {
+    display: none;
+  }
+  .nav-coins-pill {
+    padding: 3px 8px;
+  }
+  .coins-amount {
+    font-size: 12px;
+  }
+  .wallet-status-pill .wallet-addr {
+    display: none;
+  }
+}
+
 .dragon-main-content.full-arena {
   max-width: 100%;
   padding: 18px 24px;
@@ -4856,6 +4908,32 @@ body {
   font-size: 13px;
   margin: 4px 0 0;
   opacity: 0.8;
+}
+
+/* Responsive Auth Page Adjustments (DF011 / TC057) */
+@media (max-height: 700px), (max-width: 640px) {
+  .dragon-auth-page {
+    min-height: auto;
+    padding: 16px 12px;
+  }
+  .dragon-auth-container {
+    padding: 22px 18px;
+    max-width: 100%;
+  }
+  .auth-logo-badge {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 8px;
+  }
+  .auth-brand-header {
+    margin-bottom: 16px;
+  }
+  .auth-brand-title {
+    font-size: 20px;
+  }
+  .auth-brand-subtitle {
+    font-size: 12px;
+  }
 }
 
 .auth-tabs {

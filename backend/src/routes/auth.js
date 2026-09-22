@@ -18,8 +18,13 @@ function isValidEmail(email) {
 
 // Helper to sanitize & validate warrior name
 function sanitizeName(name) {
-  if (typeof name!== "string") return "";
-  return name.replace(/<[^>]*>?/gm, "").trim();
+  if (typeof name !== "string") return "";
+  return name
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<[^>]*>?/gm, "")
+    .replace(/[<>"'&]/g, "")
+    .trim();
 }
 
 /**
@@ -276,21 +281,28 @@ router.put("/profile", requireAuth, async (req, res) => {
     const { name, bio, title, avatarColor } = req.body;
     const updates = {};
 
-    if (name && String(name).trim().length >= 2) {
-      updates.name = String(name).trim().slice(0, 30);
+    if (name !== undefined) {
+      const cleanName = sanitizeName(name);
+      if (!cleanName || cleanName.length < 2) {
+        return res.status(400).json({ error: "Warrior nickname must be at least 2 valid characters." });
+      }
+      if (cleanName.length > 30) {
+        return res.status(400).json({ error: "Warrior nickname cannot exceed 30 characters." });
+      }
+      updates.name = cleanName;
     }
-    if (bio!== undefined) {
-      updates.bio = String(bio).trim().slice(0, 160);
+    if (bio !== undefined) {
+      updates.bio = sanitizeName(bio).slice(0, 160);
     }
-    if (title!== undefined) {
-      updates.title = String(title).trim().slice(0, 40);
+    if (title !== undefined) {
+      updates.title = sanitizeName(title).slice(0, 40);
     }
     if (avatarColor) {
       updates.avatarColor = String(avatarColor).slice(0, 10);
     }
 
     const updatedUser = await UserRepository.updateById(req.user.id || req.user._id, updates);
-    const userJson = updatedUser.toPublicJSON? updatedUser.toPublicJSON(): updatedUser;
+    const userJson = updatedUser.toPublicJSON ? updatedUser.toPublicJSON() : updatedUser;
 
     res.json({
       success: true,
@@ -315,8 +327,8 @@ router.patch("/change-password", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Current passcode and new passcode are required." });
     }
 
-    if (String(newPassword).length < 6) {
-      return res.status(400).json({ error: "New passcode must be at least 6 characters long." });
+    if (!newPassword || String(newPassword).trim().length < 6) {
+      return res.status(400).json({ error: "New passcode must be at least 6 non-space characters long." });
     }
 
     const user = await UserRepository.findById(req.user.id || req.user._id);
