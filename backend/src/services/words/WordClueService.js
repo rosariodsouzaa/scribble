@@ -4,7 +4,7 @@
  * For example: "blockchain" -> "A distributed ledger heavily used in cryptography and Web3"
  */
 export class WordClueService {
-  static HINT_COST = 250;
+  static HINT_COST = 1000;
   static MAX_HINTS_PER_MATCH = 2;
 
   static CURATED_CLUES = {

@@ -32,7 +32,7 @@ export default function WordHint() {
   const maxHints = state.maxSpecialHints || 2;
   const hintsUsed = state.specialHintsUsed || 0;
   const hintsRemaining = Math.max(0, maxHints - hintsUsed);
-  const hintCost = 250;
+  const hintCost = 1000;
   const userCoins = Number(user?.coins) || 0;
   const hasCoins = userCoins >= hintCost;
 
