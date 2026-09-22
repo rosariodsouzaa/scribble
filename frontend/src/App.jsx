@@ -13,7 +13,6 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
 const Wallet = lazy(() => import("./pages/Wallet.jsx"));
 const Lobby = lazy(() => import("./pages/Lobby.jsx"));
-const Leaderboard = lazy(() => import("./pages/Leaderboard.jsx"));
 const Store = lazy(() => import("./pages/Store.jsx"));
 const Room = lazy(() => import("./pages/Room.jsx"));
 const Auth = lazy(() => import("./pages/Auth.jsx"));
@@ -97,14 +96,6 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <Lobby />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/leaderboard"
-                  element={
-                    <ProtectedRoute>
-                      <Leaderboard />
                     </ProtectedRoute>
                   }
                 />

@@ -9,7 +9,6 @@ import {
   LogOut,
   User,
   Shield,
-  Trophy,
   ChevronDown,
   ShoppingBag,
   Plus,
@@ -228,17 +227,6 @@ export default function Navbar() {
                     >
                       <Flame size={16} color="#f59e0b" />
                       <span>Summon Battle Chamber</span>
-                    </button>
-
-                    <button
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        navigate("/leaderboard");
-                      }}
-                    >
-                      <Trophy size={16} color="#ffd700" />
-                      <span>Hall of Fame</span>
                     </button>
                   </div>
 

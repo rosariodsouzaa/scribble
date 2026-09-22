@@ -149,14 +149,14 @@ export default function Wallet() {
             <ShieldCheck size={22} className="feat-icon" />
             <div>
               <h4>Verifiable Identity</h4>
-              <p>Your wins and leaderboard rank are permanently linked to your wallet.</p>
+              <p>Your wins and battle achievements are permanently linked to your wallet.</p>
             </div>
           </div>
           <div className="feature-item">
             <Coins size={22} className="feat-icon" />
             <div>
-              <h4>Season Rewards</h4>
-              <p>Climb the Dynasty Hall of Fame to earn Dragon Gold crypto tokens.</p>
+              <h4>Battle Rewards</h4>
+              <p>Win multiplayer matches and challenges to earn Dragon Gold tokens.</p>
             </div>
           </div>
         </div>

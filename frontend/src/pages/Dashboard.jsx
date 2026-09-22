@@ -205,7 +205,7 @@ export default function Dashboard() {
             </div>
             <div>
               <h3>Warrior Record</h3>
-              <p className="dash-card-sub">Dynasty Hall of Fame Rank</p>
+              <p className="dash-card-sub">Combat History & Stats</p>
             </div>
           </div>
 
@@ -221,14 +221,14 @@ export default function Dashboard() {
             <div className="stat-item">
               <span className="stat-label">Win Rate</span>
               <span className="stat-value">
-                {user.matches > 0? Math.round((user.wins / user.matches) * 100): 75}%
+                {user.matches > 0 ? Math.round((user.wins / user.matches) * 100) : 75}%
               </span>
             </div>
           </div>
 
           <div className="dash-card-footer">
-            <Button variant="secondary" size="sm" onClick={() => navigate("/leaderboard")}>
-              View Global Leaderboard <ArrowRight size={14} />
+            <Button variant="secondary" size="sm" onClick={() => navigate("/profile")}>
+              View Warrior Profile <ArrowRight size={14} />
             </Button>
           </div>
         </div>

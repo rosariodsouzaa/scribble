@@ -5,7 +5,6 @@ import {
   Swords,
   ShoppingBag,
   Wallet as WalletIcon,
-  Trophy,
   Sparkles,
   LogOut,
   User,
@@ -28,7 +27,6 @@ export default function Sidebar() {
       : []),
     { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
     { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
-    { to: "/leaderboard", icon: <Trophy size={19} />, label: "Hall of Fame" },
   ];
 
   const handleLogout = () => {
