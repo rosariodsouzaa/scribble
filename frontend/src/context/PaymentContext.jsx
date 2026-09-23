@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuthWallet } from "./AuthWalletContext.jsx";
 import { sound } from "../lib/sound.js";
 import confetti from "canvas-confetti";
@@ -46,18 +46,26 @@ export function PaymentProvider({ children }) {
         : [
             {
               id: "TX-94821",
-              date: "2026-08-26 14:22",
+              receiptId: "TX-94821",
+              date: "Aug 26, 2026, 2:22 PM",
               item: "Novice Pouch (5,000 Gold)",
-              amount: "$4.99",
+              itemName: "Novice Pouch (5,000 Gold)",
+              category: "gold",
+              amount: "0.0025 ETH",
+              goldAmount: 5000,
               method: "MetaMask (ETH)",
+              paymentMethod: "MetaMask (ETH)",
               status: "COMPLETED",
-              hash: "0x3f8a...9e41",
+              hash: "0x3f8a9e41b72a0c49f81d5926c04f",
+              txHash: "0x3f8a9e41b72a0c49f81d5926c04f",
             },
           ];
     } catch {
       return [];
     }
   });
+
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   // Active checkout modal state
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
@@ -81,6 +89,50 @@ export function PaymentProvider({ children }) {
       localStorage.setItem("sr_transactions", JSON.stringify(transactions));
     } catch {}
   }, [transactions]);
+
+  // Fetch transactions from backend API
+  const fetchTransactions = useCallback(async () => {
+    setLoadingTransactions(true);
+    try {
+      const params = new URLSearchParams();
+      if (user?.id) params.append("userId", user.id);
+      if (user?.email) params.append("email", user.email);
+
+      const res = await fetch(`/api/payments/history?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.transactions) && data.transactions.length > 0) {
+          // Merge server transactions with local transactions by id
+          setTransactions((prev) => {
+            const map = new Map();
+            // Start with server records
+            data.transactions.forEach((tx) => map.set(tx.id || tx.receiptId, tx));
+            // Layer in local records that might not be on server yet
+            prev.forEach((tx) => {
+              const id = tx.id || tx.receiptId;
+              if (id && !map.has(id)) {
+                map.set(id, tx);
+              }
+            });
+            const merged = Array.from(map.values());
+            return merged.sort((a, b) => {
+              const dateA = new Date(a.createdAt || a.date || 0).getTime();
+              const dateB = new Date(b.createdAt || b.date || 0).getTime();
+              return dateB - dateA;
+            });
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("[PaymentContext] Could not fetch server transactions:", err.message);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  }, [user?.id, user?.email]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   // Open checkout for an item
   const openCheckout = (item) => {
@@ -112,8 +164,48 @@ export function PaymentProvider({ children }) {
     setOwnedItems((prev) => [...new Set([...prev, item.id])]);
     setEquippedBrush(item.id);
 
+    // Record on backend ledger
+    try {
+      const resp = await fetch("/api/payments/record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?.id,
+          userName: user?.name || "Warrior",
+          email: user?.email || "",
+          item,
+          amount: `🪙 ${item.goldCost?.toLocaleString()} Gold`,
+          paymentMethod: "Dragon Gold Vault",
+          status: "COMPLETED",
+          txHash: "VAULT-SETTLED",
+          initialBalance: `${user?.coins?.toLocaleString() || 0} Gold`,
+          remainingBalance: `${Math.max(0, (user?.coins || 0) - item.goldCost).toLocaleString()} Gold`,
+        }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.transaction) {
+          result.transaction = data.transaction;
+        }
+      }
+    } catch (err) {
+      console.warn("[PaymentContext] Failed to record gold transaction on server:", err);
+    }
+
     if (result.transaction) {
-      setTransactions((prev) => [result.transaction, ...prev]);
+      const finalTx = {
+        ...result.transaction,
+        receiptId: result.transaction.id,
+        item: item.name,
+        itemName: item.name,
+        category: item.category || "brush",
+        method: "Dragon Gold Vault",
+        paymentMethod: "Dragon Gold Vault",
+        amount: `🪙 ${item.goldCost?.toLocaleString()} Gold`,
+        date: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+        status: "COMPLETED",
+      };
+      setTransactions((prev) => [finalTx, ...prev]);
     }
 
     try {
@@ -152,6 +244,7 @@ export function PaymentProvider({ children }) {
 
     // Call backend to credit gold in DB and dispatch professional email receipt
     let backendReceipt = null;
+    let backendTx = null;
     try {
       const resp = await fetch("/api/payments/verify-and-receipt", {
         method: "POST",
@@ -164,13 +257,16 @@ export function PaymentProvider({ children }) {
           txHash: result.transaction?.hash,
           network: wallet?.network || result.transaction?.network,
           item,
-          amountPaid: result.transaction?.amount,
+          amountPaid: result.transaction?.amount || `${costEth.toFixed(4)} ETH`,
+          initialBalance: initialWalletBalance,
+          remainingBalance,
         }),
       });
 
       if (resp.ok) {
         const data = await resp.json();
         backendReceipt = data.receipt;
+        backendTx = data.transaction;
         result.receipt = {
           ...data.receipt,
           initialBalance: initialWalletBalance,
@@ -215,16 +311,28 @@ export function PaymentProvider({ children }) {
     }
 
     // Create transaction record with balance changes
-    if (result.transaction) {
-      const finalTx = {
-        ...result.transaction,
-        receiptId: result.receipt.id,
-        email: email || user?.email,
-        initialBalance: initialWalletBalance,
-        remainingBalance,
-      };
-      setTransactions((prev) => [finalTx, ...prev]);
-    }
+    const finalTx = backendTx || {
+      id: result.receipt.id,
+      receiptId: result.receipt.id,
+      item: item.name,
+      itemName: item.name,
+      category: item.category || "gold",
+      amount: result.transaction?.amount || `${costEth.toFixed(4)} ETH`,
+      goldAmount: item.goldAmount || 0,
+      method: wallet?.isMetaMask ? "MetaMask (ETH)" : "Web3 Native Tokens",
+      paymentMethod: wallet?.isMetaMask ? "MetaMask (ETH)" : "Web3 Native Tokens",
+      status: "COMPLETED",
+      hash: result.transaction?.hash || result.receipt?.txHash,
+      txHash: result.transaction?.hash || result.receipt?.txHash,
+      walletAddress: wallet?.address || result.transaction?.walletAddress,
+      network: wallet?.network || result.transaction?.network,
+      email: email || user?.email,
+      initialBalance: initialWalletBalance,
+      remainingBalance,
+      date: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+    };
+
+    setTransactions((prev) => [finalTx, ...prev]);
 
     // Refresh on-chain balance after block mining interval
     if (wallet?.isMetaMask && typeof refreshWalletBalance === "function") {
@@ -248,6 +356,8 @@ export function PaymentProvider({ children }) {
         ownedItems,
         equippedBrush,
         transactions,
+        loadingTransactions,
+        fetchTransactions,
         checkoutModalOpen,
         activeItem,
         openCheckout,

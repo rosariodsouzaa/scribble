@@ -9,6 +9,8 @@ import {
   ExternalLink,
   Coins,
   RefreshCw,
+  ShoppingBag,
+  Receipt,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import Button from "../components/Button.jsx";
@@ -81,7 +83,7 @@ export default function Wallet() {
         </div>
 
         {/* MetaMask Provider Option */}
-        <div className={`wallet-provider-box ${wallet.isConnected? "is-connected": ""}`}>
+        <div className={`wallet-provider-box ${wallet.isConnected ? "is-connected" : ""}`}>
           <div className="provider-left">
             <div className="metamask-icon-wrap">
               <MetaMaskFoxSvg />
@@ -93,21 +95,21 @@ export default function Wallet() {
           </div>
 
           <div>
-            {wallet.isConnected? (
+            {wallet.isConnected ? (
               <div className="connected-badge">
                 <CheckCircle2 size={16} color="#10b981" />
                 <span>Connected</span>
               </div>
-            ): (
+            ) : (
               <Button variant="primary" size="md" onClick={handleConnect} disabled={busy}>
-                {busy? "Connecting…": "Connect"}
+                {busy ? "Connecting…" : "Connect"}
               </Button>
             )}
           </div>
         </div>
 
         {/* Connected Wallet Details */}
-        {wallet.isConnected? (
+        {wallet.isConnected ? (
           <div className="wallet-details-box">
             <div className="details-row">
               <span className="details-label">Wallet Address:</span>
@@ -118,7 +120,7 @@ export default function Wallet() {
               <span className="details-value">{wallet.network}</span>
             </div>
             <div className="details-row">
-              <span className="details-label">Balance:</span>
+              <span className="details-label">Live Token Balance:</span>
               <span className="details-value gold">{wallet.balance}</span>
             </div>
 
@@ -129,9 +131,13 @@ export default function Wallet() {
               <Button variant="emerald" size="md" onClick={() => navigate("/lobby")}>
                 Proceed to Arena <ArrowRight size={16} />
               </Button>
+              <Button variant="flame" size="md" onClick={() => navigate("/store")}>
+                <ShoppingBag size={15} />
+                <span>Dragon Emporium</span>
+              </Button>
             </div>
           </div>
-        ): (
+        ) : (
           <div className="demo-wallet-box">
             <div className="demo-wallet-desc">
               <strong>Don't have MetaMask installed?</strong>
@@ -159,6 +165,23 @@ export default function Wallet() {
               <p>Win multiplayer matches and challenges to earn Dragon Gold tokens.</p>
             </div>
           </div>
+        </div>
+
+        {/* Dedicated Transaction Ledger Shortcut Card */}
+        <div className="wallet-ledger-shortcut-box" style={{ marginTop: "20px", paddingTop: "18px", borderTop: "1px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.4)", display: "grid", placeItems: "center", color: "#34d399" }}>
+              <Receipt size={18} />
+            </div>
+            <div>
+              <strong style={{ color: "#ffffff", fontSize: "14px", display: "block" }}>Transaction History & Invoices</strong>
+              <span style={{ color: "#a3a3a3", fontSize: "12px" }}>Inspect all past Web3 token orders & official receipts</span>
+            </div>
+          </div>
+          <Button variant="emerald" size="sm" onClick={() => navigate("/transactions")}>
+            <span>Open Transaction Ledger</span>
+            <ArrowRight size={14} />
+          </Button>
         </div>
       </div>
     </div>

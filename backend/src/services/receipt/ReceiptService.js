@@ -253,9 +253,9 @@ export class ReceiptService {
     });
 
     // 1. Send via Resend if API key is provided
-    if (config.resendApiKey) {
+    if (config.resendApiKey && config.resendApiKey.trim()) {
       try {
-        const resend = new Resend(config.resendApiKey);
+        const resend = new Resend(config.resendApiKey.trim());
         const { data, error } = await resend.emails.send({
           from: config.resendFrom,
           to: cleanEmail,
@@ -265,8 +265,24 @@ export class ReceiptService {
 
         if (error) {
           console.warn("[ReceiptService] Resend dispatch note:", error.message || error);
+          if (error.statusCode === 403 && error.message?.includes("only send testing emails to your own email address")) {
+            const match = error.message.match(/\(([^)]+@.+)\)/);
+            const ownerEmail = match ? match[1] : null;
+            if (ownerEmail && ownerEmail.toLowerCase() !== cleanEmail.toLowerCase()) {
+              console.log(`[ReceiptService] 📧 Resend Sandbox: Forwarding transaction receipt to account owner (${ownerEmail})...`);
+              const forwardRes = await resend.emails.send({
+                from: config.resendFrom,
+                to: ownerEmail,
+                subject: `[Receipt for ${cleanEmail}] ${subject}`,
+                html,
+              });
+              if (!forwardRes.error) {
+                console.log(`[ReceiptService] ✅ Receipt email delivered via Resend to ${ownerEmail}`);
+              }
+            }
+          }
         } else {
-          console.log(`[ReceiptService] Receipt email delivered via Resend to ${cleanEmail} (ID: ${data.id})`);
+          console.log(`[ReceiptService] ✅ Receipt email delivered via Resend to ${cleanEmail} (ID: ${data.id})`);
           return {
             success: true,
             receiptId,
@@ -307,6 +323,39 @@ export class ReceiptService {
       } catch (err) {
         console.warn(`[ReceiptService] SMTP fallback error: ${err.message}`);
       }
+    }
+
+    // 3. Ethereal Email zero-config test dispatcher for local dev
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      const testTransporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+
+      const info = await testTransporter.sendMail({
+        from: config.smtp.from || "Scribble Royale <noreply@scribbleroyale.io>",
+        to: cleanEmail,
+        subject,
+        html,
+      });
+
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log(`[ReceiptService]  Dev Email Preview URL: ${previewUrl}`);
+      console.log(`[ReceiptService] (Open the link above in your browser to view the delivered HTML receipt)`);
+      return {
+        success: true,
+        receiptId,
+        message: `Receipt sent to ${cleanEmail}`,
+        previewUrl,
+      };
+    } catch (testErr) {
+      console.warn(`[ReceiptService]  Notice: No RESEND_API_KEY or SMTP configured in backend/.env.`);
     }
 
     return {

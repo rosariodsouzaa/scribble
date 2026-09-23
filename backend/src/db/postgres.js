@@ -91,10 +91,34 @@ export async function initPostgres() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_otps_email_purpose ON otps(email, purpose);
+
+      CREATE TABLE IF NOT EXISTS transactions (
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64),
+        email VARCHAR(255),
+        user_name VARCHAR(100),
+        item_id VARCHAR(100),
+        item_name VARCHAR(150) NOT NULL,
+        item_category VARCHAR(50) DEFAULT 'general',
+        amount VARCHAR(100) NOT NULL,
+        gold_amount INTEGER DEFAULT 0,
+        payment_method VARCHAR(100) NOT NULL,
+        status VARCHAR(50) DEFAULT 'COMPLETED',
+        wallet_address VARCHAR(255),
+        tx_hash VARCHAR(255),
+        network VARCHAR(100),
+        initial_balance VARCHAR(100),
+        remaining_balance VARCHAR(100),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_transactions_email ON transactions(LOWER(email));
+      CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at DESC);
     `);
 
     client.release();
-    console.log("[PostgreSQL]  Database schema verified (users & otps tables ready).");
+    console.log("[PostgreSQL]  Database schema verified (users, otps & transactions tables ready).");
     return true;
   } catch (err) {
     isConnected = false;

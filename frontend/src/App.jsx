@@ -19,6 +19,7 @@ const Auth = lazy(() => import("./pages/Auth.jsx"));
 const UserProfile = lazy(() => import("./pages/UserProfile.jsx"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel.jsx"));
 const Practice = lazy(() => import("./pages/Practice.jsx"));
+const TransactionsPage = lazy(() => import("./pages/TransactionsPage.jsx"));
 
 export default function App() {
   return (
@@ -80,6 +81,14 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <Wallet />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/transactions"
+                  element={
+                    <ProtectedRoute>
+                      <TransactionsPage />
                     </ProtectedRoute>
                   }
                 />

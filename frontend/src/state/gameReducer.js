@@ -57,19 +57,19 @@ export function gameReducer(state, action) {
     case "ERROR":
       return {...state, error: action.payload };
     case "CLEAR_ERROR":
-      return {...state, error: null };
+      return { ...state, error: null };
 
     case "ROOM_STATE": {
       const r = action.room;
       const isWaiting = r.state === "waiting";
       return {
-...state,
+        ...state,
         error: null,
         code: r.code,
         hostId: r.hostId,
         state: r.state,
-        settings: r.settings,
-        players: r.players,
+        settings: r.settings || state.settings,
+        players: r.players || [],
         gameEnd: isWaiting ? null : state.gameEnd,
         roundEnd: isWaiting ? null : state.roundEnd,
         myWord: isWaiting ? null : (r.round?.word ?? state.myWord),
@@ -78,23 +78,23 @@ export function gameReducer(state, action) {
         specialHintsUsed: isWaiting ? 0 : (r.specialHintsUsed ?? state.specialHintsUsed),
         maxSpecialHints: r.maxSpecialHints ?? 2,
         round: {
-          number: r.round.number,
-          maxRounds: r.settings.maxRounds,
-          drawerId: r.round.drawerId,
-          drawerName: r.round.drawerName,
-          endsAt: r.round.endsAt,
-          maskedWord: r.round.maskedWord || "",
-          wordLength: r.round.wordLength || 0,
-          turnNumber: r.round.turnNumber || 0,
-          totalTurnsInRound: r.round.totalTurnsInRound || 0,
+          number: r.round?.number || 0,
+          maxRounds: r.settings?.maxRounds || state.settings.maxRounds,
+          drawerId: r.round?.drawerId || null,
+          drawerName: r.round?.drawerName || null,
+          endsAt: r.round?.endsAt || 0,
+          maskedWord: r.round?.maskedWord || "",
+          wordLength: r.round?.wordLength || 0,
+          turnNumber: r.round?.turnNumber || 0,
+          totalTurnsInRound: r.round?.totalTurnsInRound || 0,
         },
-        remaining: r.round.endsAt? secondsLeft(r.round.endsAt): 0,
+        remaining: r.round?.endsAt ? secondsLeft(r.round.endsAt) : 0,
       };
     }
 
     case "PLAYER_JOINED":
       return pushChat(
-        {...state, players: action.players, hostId: action.hostId?? state.hostId },
+        { ...state, players: action.players, hostId: action.hostId ?? state.hostId },
         { type: "system", text: `${action.player.username} joined` }
       );
 

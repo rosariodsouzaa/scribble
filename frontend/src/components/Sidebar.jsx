@@ -10,6 +10,7 @@ import {
   User,
   Crown,
   LogIn,
+  Receipt,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 
@@ -27,6 +28,7 @@ export default function Sidebar() {
       : []),
     { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
     { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
+    { to: "/transactions", icon: <Receipt size={19} color="#34d399" />, label: "Transactions", badge: "LEDGER" },
   ];
 
   const handleLogout = () => {

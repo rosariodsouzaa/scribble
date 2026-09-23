@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { UserRepository } from "../models/User.js";
+import { TransactionRepository } from "../models/Transaction.js";
 import { requireAuth, requireAdmin } from "../middleware/authMiddleware.js";
 import { roomRepository } from "../repositories/RoomRepository.js";
 import { pgStatus } from "../db/postgres.js";
@@ -19,6 +20,7 @@ router.get("/stats", async (_req, res) => {
     const totalUsers = await UserRepository.count();
     const adminCount = await UserRepository.count({ role: "admin" });
     const bannedCount = await UserRepository.count({ isBanned: true });
+    const totalTransactions = await TransactionRepository.count();
 
     // Aggregate circulating coins
     const allUsers = await UserRepository.find();
@@ -34,6 +36,7 @@ router.get("/stats", async (_req, res) => {
         adminCount,
         bannedCount,
         totalCirculatingGold: totalCoins,
+        totalTransactions,
         activeBattleRooms: activeRooms,
         serverUptimeSec: Math.floor(process.uptime()),
         database: {
@@ -281,6 +284,31 @@ router.post("/wordpacks", (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to register word pack." });
+  }
+});
+
+/**
+ * GET /api/admin/transactions
+ * Lists all system-wide transactions for administration & auditing
+ */
+router.get("/transactions", async (req, res) => {
+  try {
+    const { search = "", category = "all" } = req.query;
+    const filter = {};
+    if (search) filter.search = search;
+    if (category && category !== "all") filter.category = category;
+
+    const transactions = await TransactionRepository.find(filter);
+    const count = transactions.length;
+
+    res.json({
+      success: true,
+      transactions,
+      count,
+    });
+  } catch (err) {
+    console.error("[Admin] transactions error:", err);
+    res.status(500).json({ error: "Failed to fetch transactions." });
   }
 });
 

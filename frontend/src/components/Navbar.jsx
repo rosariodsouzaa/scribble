@@ -16,6 +16,7 @@ import {
   Crown,
   UserPlus,
   Sparkles,
+  Receipt,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import WalletStatus from "./WalletStatus.jsx";
@@ -183,6 +184,17 @@ export default function Navbar() {
                     >
                       <User size={16} color="#3b82f6" />
                       <span>Warrior Dossier (Profile)</span>
+                    </button>
+
+                    <button
+                      className="dropdown-item-btn"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate("/transactions");
+                      }}
+                    >
+                      <Receipt size={16} color="#10b981" />
+                      <span>Transaction History</span>
                     </button>
 
                     {isAdmin && (

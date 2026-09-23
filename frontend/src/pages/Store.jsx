@@ -16,6 +16,7 @@ import { usePayment } from "../context/PaymentContext.jsx";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import Button from "../components/Button.jsx";
 import PaymentModal from "../components/PaymentModal.jsx";
+import TransactionHistory from "../components/TransactionHistory.jsx";
 
 export default function Store() {
   const { items, ownedItems, equippedBrush, transactions, openCheckout, equipBrush, buyWithGold } =
@@ -263,48 +264,11 @@ export default function Store() {
       </div>
 
       {/* Transaction History & Invoice Ledger */}
-      <div className="store-ledger-section dragon-card">
-        <div className="ledger-header">
-          <div className="ledger-title-wrap">
-            <Receipt size={20} className="receipt-icon" />
-            <div>
-              <h3>Dragon Treasury Transaction Ledger</h3>
-              <p>Verified on-chain transactions and official email receipts for your account.</p>
-            </div>
-          </div>
-        </div>
-
-        {transactions.length === 0 ? (
-          <p className="ledger-empty">No transactions recorded yet.</p>
-        ) : (
-          <div className="ledger-table-wrap">
-            <div className="ledger-table-head">
-              <span>INVOICE / RECEIPT</span>
-              <span>DATE</span>
-              <span>ITEM</span>
-              <span>TOKEN AMOUNT</span>
-              <span>PAYMENT METHOD</span>
-              <span>TX HASH</span>
-              <span>STATUS</span>
-            </div>
-
-            <div className="ledger-table-body">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="ledger-table-row">
-                  <span className="tx-id">{tx.receiptId || tx.id}</span>
-                  <span className="tx-date">{tx.date}</span>
-                  <span className="tx-item">{tx.item}</span>
-                  <span className="tx-amount font-semibold text-amber-400">{tx.amount}</span>
-                  <span className="tx-method">{tx.method}</span>
-                  <span className="tx-hash hash-mono" title={tx.hash}>
-                    {formatShortAddr(tx.hash || "0x00000000")}
-                  </span>
-                  <span className="tx-status-badge">{tx.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="store-ledger-section-wrap" style={{ marginTop: "36px" }}>
+        <TransactionHistory
+          title="Dragon Treasury Transaction Ledger"
+          showHeader={true}
+        />
       </div>
     </div>
   );

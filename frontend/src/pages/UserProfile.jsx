@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   User,
   Shield,
@@ -23,10 +23,12 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
+  Receipt,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import { AuthService } from "../services/auth/AuthService.js";
 import Avatar from "../components/Avatar.jsx";
+import TransactionHistory from "../components/TransactionHistory.jsx";
 
 const COLOR_OPTIONS = [
   { name: "Imperial Gold", hex: "#f59e0b" },
@@ -52,8 +54,26 @@ const AVAILABLE_TITLES = [
 export default function UserProfile() {
   const { user, isAdmin, updateUserProfile, logout, wallet } = useAuthWallet();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeSubTab, setActiveSubTab] = useState("overview"); // overview, customize, achievements, security
+  const tabParam = searchParams.get("tab");
+  const [activeSubTab, setActiveSubTab] = useState(
+    ["overview", "customize", "achievements", "transactions", "security"].includes(tabParam)
+      ? tabParam
+      : "overview"
+  );
+
+  useEffect(() => {
+    if (tabParam && ["overview", "customize", "achievements", "transactions", "security"].includes(tabParam)) {
+      setActiveSubTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tabId) => {
+    setActiveSubTab(tabId);
+    setSearchParams({ tab: tabId });
+  };
+
   const [name, setName] = useState(user.name || "");
   const [bio, setBio] = useState(user.bio || "Fierce dragon warrior of the realm.");
   const [title, setTitle] = useState(user.title || "Dragon Novice");
@@ -299,29 +319,36 @@ export default function UserProfile() {
       {/* Sub Tabs Navigation */}
       <div className="profile-sub-tabs">
         <button
-          className={`sub-tab-btn ${activeSubTab === "overview"? "active": ""}`}
-          onClick={() => setActiveSubTab("overview")}
+          className={`sub-tab-btn ${activeSubTab === "overview" ? "active" : ""}`}
+          onClick={() => handleTabChange("overview")}
         >
           <Trophy size={16} />
           <span>Combat Overview</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeSubTab === "customize"? "active": ""}`}
-          onClick={() => setActiveSubTab("customize")}
+          className={`sub-tab-btn ${activeSubTab === "customize" ? "active" : ""}`}
+          onClick={() => handleTabChange("customize")}
         >
           <Edit3 size={16} />
           <span>Customize Persona</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeSubTab === "achievements"? "active": ""}`}
-          onClick={() => setActiveSubTab("achievements")}
+          className={`sub-tab-btn ${activeSubTab === "achievements" ? "active" : ""}`}
+          onClick={() => handleTabChange("achievements")}
         >
           <Award size={16} />
           <span>Achievements</span>
         </button>
         <button
-          className={`sub-tab-btn ${activeSubTab === "security"? "active": ""}`}
-          onClick={() => setActiveSubTab("security")}
+          className={`sub-tab-btn ${activeSubTab === "transactions" ? "active" : ""}`}
+          onClick={() => handleTabChange("transactions")}
+        >
+          <Receipt size={16} />
+          <span>Transaction History</span>
+        </button>
+        <button
+          className={`sub-tab-btn ${activeSubTab === "security" ? "active" : ""}`}
+          onClick={() => handleTabChange("security")}
         >
           <Shield size={16} />
           <span>Account Security</span>
@@ -691,6 +718,16 @@ export default function UserProfile() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ===================== SUBTAB 5: TRANSACTIONS ===================== */}
+      {activeSubTab === "transactions" && (
+        <div className="profile-tx-tab-wrap animate-fade-in" style={{ marginTop: "8px" }}>
+          <TransactionHistory
+            title="Warrior Treasury & Purchase History"
+            showHeader={true}
+          />
         </div>
       )}
     </div>

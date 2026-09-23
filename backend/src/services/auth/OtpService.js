@@ -70,9 +70,9 @@ export class OtpService {
     const html = OtpService.getEmailHtml(otp, purpose);
 
     // 1. Dispatch via Resend if API Key is configured
-    if (config.resendApiKey) {
+    if (config.resendApiKey && config.resendApiKey.trim()) {
       try {
-        const resend = new Resend(config.resendApiKey);
+        const resend = new Resend(config.resendApiKey.trim());
         const { data, error } = await resend.emails.send({
           from: config.resendFrom,
           to: cleanEmail,

@@ -50,7 +50,13 @@ roomRepository.startSweeper();
 io.on("connection", (socket) => registerHandlers(io, socket));
 
 server.listen(config.port, () => {
+  const emailStatus = config.resendApiKey
+    ? `Resend API (${config.resendFrom})`
+    : config.smtp.host && config.smtp.user
+    ? `SMTP (${config.smtp.from})`
+    : "Local Simulation Mode (Add RESEND_API_KEY or SMTP to .env for live inbox delivery)";
+
   console.log(`[skribl] API + Socket.io listening on http://localhost:${config.port}`);
-  console.log(`[Email]   Active Sender: ${config.resendFrom}`);
+  console.log(`[Email]   Active Gateway: ${emailStatus}`);
 });
 
