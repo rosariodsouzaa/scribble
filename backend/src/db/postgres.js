@@ -45,9 +45,9 @@ export async function initPostgres() {
       ssl: {
         rejectUnauthorized: false,
       },
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      max: 5, // Optimized: keep pool lean for low memory usage
+      idleTimeoutMillis: 10000, // Close idle connections after 10s to free RAM
+      connectionTimeoutMillis: 3000,
     });
 
     // Test connection with ping
@@ -129,13 +129,26 @@ export async function initPostgres() {
 }
 
 /**
+ * Periodically cleans up expired OTPs to prevent table bloat and conserve DB storage
+ */
+export async function cleanupExpiredOtps() {
+  if (!pool || !isConnected) return;
+  try {
+    await pool.query("DELETE FROM otps WHERE expires_at < NOW()");
+  } catch (err) {
+    // Non-critical background cleanup failure
+  }
+}
+
+/**
  * Execute a parameterized query against PostgreSQL
  */
 export async function query(text, params) {
-  if (!pool ||!isConnected) {
+  if (!pool || !isConnected) {
     throw new Error("PostgreSQL pool not connected");
   }
   return pool.query(text, params);
 }
 
-export default { initPostgres, query, pgStatus };
+export default { initPostgres, query, cleanupExpiredOtps, pgStatus };
+

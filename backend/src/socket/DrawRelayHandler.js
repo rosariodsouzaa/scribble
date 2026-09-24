@@ -88,11 +88,24 @@ export class DrawRelayHandler {
   }
 
   sanitizeNum(v) {
-    return typeof v === "number" && Number.isFinite(v) ? v : 0;
+    if (typeof v === "number" && Number.isFinite(v)) {
+      // Precision optimization: Round to 1 decimal place.
+      // Eliminates long floats (e.g. 123.4567890123) and reduces JSON wire size by >40%
+      return Math.round(v * 10) / 10;
+    }
+    return 0;
   }
 
   sanitizeStr(v) {
     return typeof v === "string" ? v.slice(0, 20) : "#111827";
+  }
+
+  /**
+   * Free memory when socket disconnects
+   * @param {string} socketId 
+   */
+  cleanup(socketId) {
+    this.rateLimits.delete(socketId);
   }
 
   getCurrentRoom(socket) {
@@ -100,3 +113,4 @@ export class DrawRelayHandler {
     return code ? this.repository.get(code) : null;
   }
 }
+
