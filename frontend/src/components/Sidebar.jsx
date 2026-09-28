@@ -15,7 +15,7 @@ import {
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 
 export default function Sidebar() {
-  const { user, isAdmin, logout } = useAuthWallet();
+  const { user, logout } = useAuthWallet();
   const navigate = useNavigate();
 
   const navItems = [
@@ -23,9 +23,6 @@ export default function Sidebar() {
     { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
     { to: "/practice", icon: <Sparkles size={19} color="#fbbf24" />, label: "AI Practice Dojo", badge: "AI NEW" },
     { to: "/profile", icon: <User size={19} />, label: "Warrior Hub", badge: user?.isAuthenticated ? "MY HUB" : null },
-    ...(isAdmin
-      ? [{ to: "/admin", icon: <Crown size={19} color="#ffd700" />, label: "Admin Panel", badge: "VIP" }]
-      : []),
     { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
     { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
     { to: "/transactions", icon: <Receipt size={19} color="#34d399" />, label: "Transactions", badge: "LEDGER" },

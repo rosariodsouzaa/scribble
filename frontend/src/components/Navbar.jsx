@@ -26,7 +26,6 @@ import DragonEmblem from "./DragonEmblem.jsx";
 export default function Navbar() {
   const {
     user,
-    isAdmin,
     wallet,
     soundEnabled,
     setSoundEnabled,
@@ -69,17 +68,7 @@ export default function Navbar() {
 
       {/* Right widgets */}
       <div className="nav-right-cluster">
-        {/* Admin Console Shortcut Pill (if Admin) */}
-        {isAdmin && (
-          <button
-            className="nav-admin-badge-btn"
-            onClick={() => navigate("/admin")}
-            title="Imperial Admin Command Center"
-          >
-            <Crown size={15} color="#ffd700" />
-            <span>Admin Console</span>
-          </button>
-        )}
+
 
         {/* Authenticated Controls */}
         {user?.isAuthenticated && user?.email ? (
@@ -138,7 +127,7 @@ export default function Navbar() {
                 <div className="profile-info-mini">
                   <span className="profile-name">{user?.name || "Warrior"}</span>
                   <span className="profile-level">
-                    {isAdmin ? "ADMIN" : `LVL ${user?.level || 1}`}
+                    LVL {user?.level || 1}
                   </span>
                 </div>
                 <ChevronDown size={14} className={`dropdown-arrow ${dropdownOpen ? "rotated" : ""}`} />
@@ -152,7 +141,7 @@ export default function Navbar() {
                     <div className="dropdown-user-details">
                       <span className="dropdown-user-name">{user?.name || "Warrior"}</span>
                       <span className="dropdown-user-role">
-                        {user?.title || (isAdmin ? "Imperial Grandmaster" : "Dragon Warrior")}
+                        {user?.title || "Dragon Warrior"}
                       </span>
                     </div>
                   </div>
@@ -197,18 +186,7 @@ export default function Navbar() {
                       <span>Transaction History</span>
                     </button>
 
-                    {isAdmin && (
-                      <button
-                        className="dropdown-item-btn admin-highlight"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          navigate("/admin");
-                        }}
-                      >
-                        <Crown size={16} color="#ffd700" />
-                        <span>Imperial Admin Panel</span>
-                      </button>
-                    )}
+
 
                     <button
                       className="dropdown-item-btn"

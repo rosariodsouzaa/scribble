@@ -52,7 +52,7 @@ const AVAILABLE_TITLES = [
 
 
 export default function UserProfile() {
-  const { user, isAdmin, updateUserProfile, logout, wallet } = useAuthWallet();
+  const { user, updateUserProfile, logout, wallet } = useAuthWallet();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -250,16 +250,6 @@ export default function UserProfile() {
       unlocked: (Number(user.level) || 1) >= 5,
       label: `Level ${user.level || 1} / 5`,
     },
-    {
-      id: "grandmaster_authority",
-      title: "High Grandmaster",
-      desc: "Attain Imperial Admin Authority over the realm",
-      icon: "⭐",
-      current: isAdmin ? 1 : 0,
-      target: 1,
-      unlocked: Boolean(isAdmin),
-      label: isAdmin ? "Imperial Authority" : "Warrior Rank",
-    },
   ];
 
   return (
@@ -269,18 +259,13 @@ export default function UserProfile() {
         <div className="profile-hero-content">
           <div className="profile-hero-avatar-wrapper">
             <Avatar name={user.name} size={90} color={user.avatarColor} />
-            {isAdmin && (
-              <div className="profile-admin-crown" title="Imperial Admin Authority">
-                <Crown size={16} />
-              </div>
-            )}
           </div>
 
           <div className="profile-hero-details">
             <div className="profile-hero-name-row">
               <h1 className="profile-hero-name">{user.name}</h1>
-              <span className={`profile-role-badge ${isAdmin? "admin": "warrior"}`}>
-                {isAdmin? "IMPERIAL ADMIN": "WARRIOR"}
+              <span className="profile-role-badge warrior">
+                WARRIOR
               </span>
               <span className="profile-title-badge">{user.title || "Dragon Novice"}</span>
             </div>
@@ -303,12 +288,6 @@ export default function UserProfile() {
 
         {/* Quick Action Links */}
         <div className="profile-hero-actions">
-          {isAdmin && (
-            <button className="dragon-btn primary admin-portal-btn" onClick={() => navigate("/admin")}>
-              <Shield size={16} />
-              <span>Imperial Admin Console</span>
-            </button>
-          )}
           <button className="dragon-btn secondary" onClick={() => navigate("/lobby")}>
             <Swords size={16} />
             <span>Join Battle Arena</span>

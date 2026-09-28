@@ -8,7 +8,6 @@ import { config } from "./config.js";
 import { initPostgres, pgStatus } from "./db/postgres.js";
 import roomsRouter from "./routes/rooms.js";
 import authRouter from "./routes/auth.js";
-import adminRouter from "./routes/admin.js";
 import paymentsRouter from "./routes/payments.js";
 import { registerHandlers } from "./socket/registerHandlers.js";
 import { roomRepository } from "./repositories/RoomRepository.js";
@@ -34,7 +33,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
-app.use("/api/admin", adminRouter);
 app.use("/api/rooms", roomsRouter);
 app.use("/api/payments", paymentsRouter);
 

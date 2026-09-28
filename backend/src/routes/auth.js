@@ -359,32 +359,10 @@ router.patch("/change-password", requireAuth, async (req, res) => {
 
 /**
  * POST /api/auth/seed-demo
- * Seeds initial demo admin and warrior accounts if absent
+ * Seeds initial demo warrior account if absent
  */
 router.post("/seed-demo", async (_req, res) => {
   try {
-    // Seed Admin
-    let admin = await UserRepository.findByEmail("admin@scribbleroyale.io");
-    if (!admin) {
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash("admin123", salt);
-      admin = await UserRepository.create({
-        name: "Dragon Grandmaster",
-        email: "admin@scribbleroyale.io",
-        passwordHash: hash,
-        role: "admin",
-        isVerified: true,
-        coins: 99999,
-        level: 50,
-        xp: 15000,
-        wins: 142,
-        matches: 160,
-        avatarColor: "#ef4444",
-        bio: "Supreme Sovereign of the Dragon Dynasty.",
-        title: "Imperial Grandmaster",
-      });
-    }
-
     // Seed Demo User
     let demoUser = await UserRepository.findByEmail("warrior@scribbleroyale.io");
     if (!demoUser) {
@@ -409,15 +387,14 @@ router.post("/seed-demo", async (_req, res) => {
 
     res.json({
       success: true,
-      message: "Demo accounts ready!",
+      message: "Demo account ready!",
       demoAccounts: {
-        admin: { email: "admin@scribbleroyale.io", password: "admin123", role: "admin" },
         user: { email: "warrior@scribbleroyale.io", password: "warrior123", role: "user" },
       },
     });
   } catch (err) {
     console.error("[Auth] seed-demo error:", err);
-    res.status(500).json({ error: "Failed to seed demo accounts." });
+    res.status(500).json({ error: "Failed to seed demo account." });
   }
 });
 

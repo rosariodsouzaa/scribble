@@ -318,7 +318,7 @@ export function AuthWalletProvider({ children }) {
     localStorage.removeItem("skribl:username");
   };
 
-  const isAdmin = Boolean(user && user.role === "admin");
+  const isAdmin = false;
 
   return (
     <AuthWalletContext.Provider

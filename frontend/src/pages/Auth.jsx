@@ -119,12 +119,8 @@ export default function Auth() {
   // Auto redirect if already authenticated
   useEffect(() => {
     if (user && user.isAuthenticated && user.email) {
-      if (user.role === "admin") {
-        navigate("/admin", { replace: true });
-      } else {
-        const from = location.state?.from?.pathname || location.state?.from || "/dashboard";
-        navigate(from, { replace: true });
-      }
+      const from = location.state?.from?.pathname || location.state?.from || "/dashboard";
+      navigate(from, { replace: true });
     }
   }, [user, navigate, location.state]);
 
@@ -181,12 +177,8 @@ export default function Auth() {
       const res = await loginWithCredentials(cleanEmail, loginPassword);
       setSuccessMsg(`Welcome back, ${res.user.name}!`);
       setTimeout(() => {
-        if (res.user.role === "admin") {
-          navigate("/admin");
-        } else {
-          const from = location.state?.from || "/dashboard";
-          navigate(from);
-        }
+        const from = location.state?.from || "/dashboard";
+        navigate(from);
       }, 500);
     } catch (err) {
       setErrorMsg(err.message || "Failed to log in");
@@ -195,35 +187,7 @@ export default function Auth() {
     }
   };
 
-  // Quick 1-click Demo Account Logins
-  const handleQuickDemoLogin = async (role) => {
-    setErrorMsg("");
-    setLoading(true);
-    try {
-      const seed = await AuthService.seedDemoAccounts();
-      const creds =
-        role === "admin"
-? seed.demoAccounts?.admin || { email: "admin@scribbleroyale.io", password: "admin123" }
-: seed.demoAccounts?.user || { email: "warrior@scribbleroyale.io", password: "warrior123" };
 
-      setLoginEmail(creds.email);
-      setLoginPassword(creds.password);
-
-      const res = await loginWithCredentials(creds.email, creds.password);
-      setSuccessMsg(`Logged in as ${res.user.name} (${res.user.role.toUpperCase()})`);
-      setTimeout(() => {
-        if (res.user.role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
-      }, 500);
-    } catch (err) {
-      setErrorMsg(err.message || "Demo login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // --- Signup Step 1: Send OTP ---
   const handleSendSignupOtpStep1 = async (e) => {
@@ -648,40 +612,7 @@ export default function Auth() {
               )}
             </button>
 
-            {/* Quick Demo Credentials */}
-            <div className="auth-demo-section">
-              <div className="demo-section-label">
-                <Sparkles size={14} color="#f59e0b" />
-                <span>Quick 1-Click Demo Login</span>
-              </div>
-              <div className="demo-chips-grid">
-                <button
-                  type="button"
-                  className="demo-chip-btn admin"
-                  onClick={() => handleQuickDemoLogin("admin")}
-                  disabled={loading}
-                >
-                  <Crown size={15} className="chip-icon" />
-                  <div className="chip-text">
-                    <strong>Imperial Admin</strong>
-                    <small>admin@scribbleroyale.io</small>
-                  </div>
-                </button>
 
-                <button
-                  type="button"
-                  className="demo-chip-btn warrior"
-                  onClick={() => handleQuickDemoLogin("user")}
-                  disabled={loading}
-                >
-                  <Swords size={15} className="chip-icon" />
-                  <div className="chip-text">
-                    <strong>Demo Warrior</strong>
-                    <small>warrior@scribbleroyale.io</small>
-                  </div>
-                </button>
-              </div>
-            </div>
           </form>
         )}
 
