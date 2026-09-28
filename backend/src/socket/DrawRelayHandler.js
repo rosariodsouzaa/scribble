@@ -3,7 +3,8 @@
  * Encapsulates drawer authentication, stroke rate limiting, data sanitization, and broadcasting.
  */
 export class DrawRelayHandler {
-  static MAX_PACKETS_PER_SEC = 60;
+  // Support high-refresh (90Hz/120Hz/144Hz) pointer inputs without stutter
+  static MAX_PACKETS_PER_SEC = 140;
 
   /**
    * @param {import("socket.io").Server} io 
