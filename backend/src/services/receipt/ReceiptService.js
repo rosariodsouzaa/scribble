@@ -256,33 +256,53 @@ export class ReceiptService {
     if (config.resendApiKey && config.resendApiKey.trim()) {
       try {
         const resend = new Resend(config.resendApiKey.trim());
-        const { data, error } = await resend.emails.send({
-          from: config.resendFrom,
+        let { data, error } = await resend.emails.send({
+          from: config.resendFrom || "Scribble Royale <onboarding@resend.dev>",
           to: cleanEmail,
           subject,
           html,
         });
+
+        // If custom domain is unverified on Resend API, retry using verified onboarding@resend.dev sender
+        if (error && (error.name === "validation_error" || error.message?.includes("not verified") || error.message?.includes("domain"))) {
+          console.log(`[ReceiptService] 🔄 Retrying Resend dispatch with onboarding@resend.dev...`);
+          const retryRes = await resend.emails.send({
+            from: "Scribble Royale <onboarding@resend.dev>",
+            to: cleanEmail,
+            subject,
+            html,
+          });
+          if (!retryRes.error) {
+            data = retryRes.data;
+            error = null;
+          }
+        }
 
         if (error) {
           console.warn("[ReceiptService] Resend dispatch note:", error.message || error);
           if (error.statusCode === 403 && error.message?.includes("only send testing emails to your own email address")) {
             const match = error.message.match(/\(([^)]+@.+)\)/);
             const ownerEmail = match ? match[1] : null;
-            if (ownerEmail && ownerEmail.toLowerCase() !== cleanEmail.toLowerCase()) {
+            if (ownerEmail) {
               console.log(`[ReceiptService] 📧 Resend Sandbox: Forwarding transaction receipt to account owner (${ownerEmail})...`);
               const forwardRes = await resend.emails.send({
-                from: config.resendFrom,
+                from: "Scribble Royale <onboarding@resend.dev>",
                 to: ownerEmail,
                 subject: `[Receipt for ${cleanEmail}] ${subject}`,
                 html,
               });
               if (!forwardRes.error) {
-                console.log(`[ReceiptService] ✅ Receipt email delivered via Resend to ${ownerEmail}`);
+                console.log(`[ReceiptService] ✅ Receipt email delivered via Resend sandbox to ${ownerEmail}`);
+                return {
+                  success: true,
+                  receiptId,
+                  message: `Receipt sent to ${ownerEmail} (Resend Sandbox)`,
+                };
               }
             }
           }
         } else {
-          console.log(`[ReceiptService] ✅ Receipt email delivered via Resend to ${cleanEmail} (ID: ${data.id})`);
+          console.log(`[ReceiptService] ✅ Receipt email delivered via Resend to ${cleanEmail} (ID: ${data?.id})`);
           return {
             success: true,
             receiptId,

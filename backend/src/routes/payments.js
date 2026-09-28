@@ -145,14 +145,48 @@ router.post("/record", async (req, res) => {
       return res.status(400).json({ error: "Item specification is required." });
     }
 
+    let dbUser = null;
+    if (userId) {
+      try {
+        dbUser = await UserRepository.findById(userId);
+      } catch (err) {
+        console.warn("[Payments] Failed to fetch dbUser:", err.message);
+      }
+    }
+
+    const targetEmail = String(email || dbUser?.email || "").trim();
+    const targetName = userName || dbUser?.name || "Warrior";
+    const finalAmount = amount || (item.goldCost ? `🪙 ${item.goldCost.toLocaleString()} Gold` : "0 Gold");
+
+    // Dispatch branded email receipt for Gold & Item transactions
+    let receiptResult = null;
+    if (targetEmail) {
+      try {
+        receiptResult = await ReceiptService.sendPurchaseReceipt({
+          email: targetEmail,
+          userName: targetName,
+          walletAddress: walletAddress || "In-Game Vault",
+          txHash: txHash || "VAULT-SETTLED",
+          network: network || "Dragon Empire Realm",
+          item: typeof item === "string" ? { name: item } : item,
+          amountPaid: finalAmount,
+          initialBalance,
+          remainingBalance,
+        });
+      } catch (err) {
+        console.warn("[Payments] Failed to send purchase receipt for record:", err.message);
+      }
+    }
+
     const saved = await TransactionRepository.create({
-      userId,
-      email,
-      userName,
+      id: receiptResult?.receiptId,
+      userId: userId || dbUser?.id,
+      email: targetEmail,
+      userName: targetName,
       itemId: item.id || "",
       itemName: item.name || item,
       category: item.category || "cosmetic",
-      amount: amount || (item.goldCost ? `${item.goldCost.toLocaleString()} Gold` : "0 Gold"),
+      amount: finalAmount,
       goldAmount: item.goldAmount || 0,
       paymentMethod,
       status,
@@ -166,6 +200,8 @@ router.post("/record", async (req, res) => {
     return res.json({
       success: true,
       transaction: saved,
+      receiptId: receiptResult?.receiptId,
+      message: receiptResult?.message || "Transaction recorded.",
     });
   } catch (err) {
     console.error("[Payments] Error recording transaction:", err);
