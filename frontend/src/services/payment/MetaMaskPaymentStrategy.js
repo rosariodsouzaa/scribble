@@ -8,7 +8,7 @@ import { DemoVaultAdapter } from "../wallet/DemoVaultAdapter.js";
  * lifecycle progression states, strict balance verification, and on-chain confirmation.
  */
 export class MetaMaskPaymentStrategy extends PaymentStrategy {
-  static TREASURY_ADDRESS = "0x71C694F4aF6F1657A958f331F2A79B37E4a13A9E"; // Dragon Dynasty Arena Vault
+  static TREASURY_ADDRESS = "0xc28ea2bFa3E5539C4f4c777D5eFe5C86b335e01f"; // Dragon Dynasty Arena Vault
 
   constructor() {
     super("MetaMask (ETH)");
