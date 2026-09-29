@@ -28,7 +28,7 @@ import TransactionReceiptModal from "./TransactionReceiptModal.jsx";
 export default function TransactionHistory({ title = "Dragon Treasury Transaction Ledger", showHeader = true, limit = null }) {
   const navigate = useNavigate();
   const { transactions, loadingTransactions, fetchTransactions, items } = usePayment();
-  const { user, wallet } = useAuthWallet();
+  const { user, wallet, isAdmin } = useAuthWallet();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all"); // all, gold, crypto, pass, brush
@@ -68,11 +68,34 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
     };
   };
 
-  // Filter and sort transactions
+  // Filter and sort transactions (strictly for current player account, or all transactions for Admin)
   const filteredTransactions = useMemo(() => {
     if (!Array.isArray(transactions)) return [];
 
-    let list = [...transactions];
+    let list = [];
+
+    if (isAdmin || user?.role === "admin" || user?.accountType === "admin") {
+      // Admins view overall transactions of ALL players
+      list = [...transactions];
+    } else {
+      const hasAccount = Boolean(
+        (user?.isAuthenticated && (user?.id || user?.email)) ||
+        user?.id ||
+        user?.email ||
+        (wallet?.isConnected && wallet?.address)
+      );
+
+      if (!hasAccount) {
+        return [];
+      }
+
+      list = transactions.filter((t) => {
+        const matchUser = user?.id && String(t.userId || "") === String(user.id);
+        const matchEmail = user?.email && String(t.email || "").toLowerCase().trim() === String(user.email).toLowerCase().trim();
+        const matchWallet = wallet?.address && String(t.walletAddress || "").toLowerCase().trim() === String(wallet.address).toLowerCase().trim();
+        return Boolean(matchUser || matchEmail || matchWallet);
+      });
+    }
 
     // Filter by category or payment rail
     if (filterCategory !== "all") {
@@ -105,8 +128,11 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
         (t) =>
           (t.item && t.item.toLowerCase().includes(q)) ||
           (t.itemName && t.itemName.toLowerCase().includes(q)) ||
+          (t.userName && t.userName.toLowerCase().includes(q)) ||
+          (t.email && t.email.toLowerCase().includes(q)) ||
           (t.id && t.id.toLowerCase().includes(q)) ||
           (t.receiptId && t.receiptId.toLowerCase().includes(q)) ||
+          (t.walletAddress && t.walletAddress.toLowerCase().includes(q)) ||
           (t.hash && t.hash.toLowerCase().includes(q)) ||
           (t.txHash && t.txHash.toLowerCase().includes(q)) ||
           (t.method && t.method.toLowerCase().includes(q))
@@ -132,18 +158,18 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
     }
 
     return list;
-  }, [transactions, filterCategory, searchQuery, sortBy, limit]);
+  }, [transactions, user?.id, user?.email, user?.role, user?.accountType, user?.isAuthenticated, wallet?.isConnected, wallet?.address, isAdmin, filterCategory, searchQuery, sortBy, limit]);
 
   // Aggregate stats calculations
   const stats = useMemo(() => {
-    if (!Array.isArray(transactions)) {
-      return { totalCount: 0, totalGold: 0, totalEth: 0, latestDate: "N/A" };
+    if (!Array.isArray(filteredTransactions)) {
+      return { totalCount: 0, totalGold: 0, totalEth: "0.0000", latestDate: "N/A" };
     }
 
     let goldSum = 0;
     let ethSum = 0;
 
-    transactions.forEach((tx) => {
+    filteredTransactions.forEach((tx) => {
       if (tx.goldAmount) {
         goldSum += Number(tx.goldAmount);
       }
@@ -154,23 +180,23 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
       }
     });
 
-    const latestTx = transactions[0];
+    const latestTx = filteredTransactions[0];
     const latestDate = latestTx ? latestTx.date || (latestTx.createdAt ? new Date(latestTx.createdAt).toLocaleDateString() : "Recent") : "No Orders";
 
     return {
-      totalCount: transactions.length,
+      totalCount: filteredTransactions.length,
       totalGold: goldSum,
       totalEth: ethSum.toFixed(4),
       latestDate,
     };
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   // Export to CSV
   const handleExportCsv = () => {
-    if (!transactions || transactions.length === 0) return;
+    if (!filteredTransactions || filteredTransactions.length === 0) return;
 
     const headers = ["Invoice ID", "Date", "Item", "Category", "Amount", "Gold Credited", "Payment Method", "Status", "Tx Hash", "Payer Wallet"];
-    const rows = transactions.map((t) => [
+    const rows = filteredTransactions.map((t) => [
       `"${t.receiptId || t.id}"`,
       `"${t.date || t.createdAt || ""}"`,
       `"${t.item || t.itemName || ""}"`,
@@ -224,11 +250,23 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
             <div>
               <div className="tx-badge-pill">
                 <Sparkles size={13} />
-                <span>OFFICIAL TREASURY LEDGER</span>
+                <span>
+                  {isAdmin
+                    ? "👑 IMPERIAL SOVEREIGN OVERALL LEDGER (ALL PLAYERS)"
+                    : user?.email
+                    ? `LEDGER: ${user.email}`
+                    : user?.name && user.name !== "Guest Warrior"
+                    ? `WARRIOR: ${user.name}`
+                    : wallet?.address
+                    ? `WALLET: ${formatShortAddr(wallet.address)}`
+                    : "CURRENT ACCOUNT LEDGER"}
+                </span>
               </div>
-              <h2 className="tx-header-title">{title}</h2>
+              <h2 className="tx-header-title">{isAdmin ? "All Realm Player Transactions" : title}</h2>
               <p className="tx-header-sub">
-                Verified smart contract transactions, in-game item acquisitions, and official invoice receipts.
+                {isAdmin
+                  ? "Real-time audit ledger of all item purchases, gold top-ups, and Web3 settlements executed by all players across the Dragon Dynasty."
+                  : "Verified smart contract transactions, in-game item acquisitions, and official invoice receipts for your account."}
               </p>
             </div>
           </div>
@@ -243,7 +281,7 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
               <span>Refresh</span>
             </button>
 
-            {transactions.length > 0 && (
+            {filteredTransactions.length > 0 && (
               <button className="tx-action-btn export-btn" onClick={handleExportCsv} title="Export CSV ledger">
                 <Download size={15} />
                 <span>Export CSV</span>
@@ -260,7 +298,7 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
             <Coins size={18} />
           </div>
           <div className="metric-content">
-            <span className="metric-label">GOLD ACQUIRED</span>
+            <span className="metric-label">{isAdmin ? "REALM GOLD SPENT" : "GOLD ACQUIRED"}</span>
             <strong className="metric-value gold">
               +{stats.totalGold.toLocaleString()}
             </strong>
@@ -308,7 +346,7 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
           <input
             type="text"
             className="tx-search-input"
-            placeholder="Search by item, invoice ID, hash, or payment method…"
+            placeholder={isAdmin ? "Search by player name, email, item, invoice ID, hash, or method…" : "Search by item, invoice ID, hash, or payment method…"}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -365,6 +403,8 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
           <p>
             {searchQuery || filterCategory !== "all"
               ? "No transactions match your active search filter. Try clearing your filters."
+              : isAdmin
+              ? "No transactions have been recorded in the realm ledger yet."
               : "You haven't made any purchases or token settlements yet. Explore the Dragon Emporium to power up your arsenal!"}
           </p>
 
@@ -380,12 +420,12 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
               >
                 Clear Filters
               </Button>
-            ) : (
+            ) : !isAdmin ? (
               <Button variant="flame" size="md" onClick={() => navigate("/store")}>
                 <ShoppingBag size={16} />
                 <span>Visit Dragon Emporium</span>
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       ) : (
@@ -395,6 +435,7 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
             <table className="tx-ledger-table">
               <thead>
                 <tr>
+                  {isAdmin && <th>WARRIOR / PLAYER</th>}
                   <th>ITEM / RELIC</th>
                   <th>INVOICE #</th>
                   <th>DATE & TIME</th>
@@ -417,6 +458,15 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
                       className="tx-table-row"
                       onClick={() => setSelectedReceipt(tx)}
                     >
+                      {/* Warrior Column for Admin */}
+                      {isAdmin && (
+                        <td className="warrior-cell">
+                          <div className="tx-warrior-info">
+                            <strong className="tx-warrior-name">{tx.userName || "Warrior"}</strong>
+                            <small className="tx-warrior-email">{tx.email || "N/A"}</small>
+                          </div>
+                        </td>
+                      )}
                       {/* Item Column with Icon */}
                       <td className="item-cell">
                         <div className="tx-item-flex">

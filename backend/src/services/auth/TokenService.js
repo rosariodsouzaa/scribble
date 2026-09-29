@@ -8,11 +8,13 @@ export class TokenService {
    * @returns {string}
    */
   static generateToken(user) {
+    const isAdm = user.accountType === "admin" || user.role === "admin";
     const payload = {
       id: user.id || (user._id ? user._id.toString() : ""),
       email: user.email,
       name: user.name,
-      role: user.role || "user",
+      role: isAdm ? "admin" : (user.role || "user"),
+      accountType: isAdm ? "admin" : "player",
     };
 
     return jwt.sign(payload, config.jwtSecret, {

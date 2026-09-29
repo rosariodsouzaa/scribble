@@ -4,6 +4,7 @@ import { sound } from "../lib/sound.js";
 import confetti from "canvas-confetti";
 import { PaymentProcessorFactory } from "../services/payment/index.js";
 import { storeCatalog } from "../services/store/index.js";
+import { AuthService } from "../services/auth/AuthService.js";
 
 const PaymentContext = createContext(null);
 
@@ -37,29 +38,24 @@ export function PaymentProvider({ children }) {
     }
   });
 
-  // Transaction history
+  // Get active account identifier
+  const getAccountKey = useCallback(() => {
+    if (user?.id) return `user_${user.id}`;
+    if (user?.email) return `email_${String(user.email).toLowerCase().trim()}`;
+    if (wallet?.isConnected && wallet?.address) return `wallet_${String(wallet.address).toLowerCase().trim()}`;
+    return null;
+  }, [user?.id, user?.email, wallet?.isConnected, wallet?.address]);
+
+  const currentAccountKey = getAccountKey();
+
+  // Transaction history - strictly scoped to current account
   const [transactions, setTransactions] = useState(() => {
     try {
-      const saved = localStorage.getItem("sr_transactions");
-      return saved
-        ? JSON.parse(saved)
-        : [
-            {
-              id: "TX-94821",
-              receiptId: "TX-94821",
-              date: "Aug 26, 2026, 2:22 PM",
-              item: "Novice Pouch (5,000 Gold)",
-              itemName: "Novice Pouch (5,000 Gold)",
-              category: "gold",
-              amount: "0.0025 ETH",
-              goldAmount: 5000,
-              method: "MetaMask (ETH)",
-              paymentMethod: "MetaMask (ETH)",
-              status: "COMPLETED",
-              hash: "0x3f8a9e41b72a0c49f81d5926c04f",
-              txHash: "0x3f8a9e41b72a0c49f81d5926c04f",
-            },
-          ];
+      localStorage.removeItem("sr_transactions"); // Purge legacy un-scoped cache
+      const key = (user?.id ? `user_${user.id}` : (user?.email ? `email_${String(user.email).toLowerCase().trim()}` : (wallet?.isConnected && wallet?.address ? `wallet_${String(wallet.address).toLowerCase().trim()}` : null)));
+      if (!key) return [];
+      const saved = localStorage.getItem(`sr_tx_${key}`);
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
@@ -84,51 +80,107 @@ export function PaymentProvider({ children }) {
     } catch {}
   }, [equippedBrush]);
 
+  // Sync transactions to account-scoped local storage
   useEffect(() => {
     try {
-      localStorage.setItem("sr_transactions", JSON.stringify(transactions));
+      if (currentAccountKey) {
+        localStorage.setItem(`sr_tx_${currentAccountKey}`, JSON.stringify(transactions));
+      }
     } catch {}
-  }, [transactions]);
+  }, [transactions, currentAccountKey]);
 
-  // Fetch transactions from backend API
+  // When active account changes, reload account-specific transactions
+  useEffect(() => {
+    if (!currentAccountKey) {
+      setTransactions([]);
+      return;
+    }
+    try {
+      const saved = localStorage.getItem(`sr_tx_${currentAccountKey}`);
+      if (saved) {
+        setTransactions(JSON.parse(saved));
+      } else {
+        setTransactions([]);
+      }
+    } catch {
+      setTransactions([]);
+    }
+  }, [currentAccountKey]);
+
+  // Fetch transactions from backend API (strictly scoped for players, overall kingdom for Admins)
   const fetchTransactions = useCallback(async () => {
+    const isAdm = Boolean(user?.role === "admin" || user?.accountType === "admin");
+
+    if (isAdm) {
+      setLoadingTransactions(true);
+      try {
+        const allTx = await AuthService.getAdminTransactions();
+        setTransactions(Array.isArray(allTx) ? allTx : []);
+      } catch (err) {
+        console.warn("[PaymentContext] Could not fetch admin overall transactions:", err.message);
+      } finally {
+        setLoadingTransactions(false);
+      }
+      return;
+    }
+
+    const accKey = getAccountKey();
+    if (!accKey) {
+      setTransactions([]);
+      setLoadingTransactions(false);
+      return;
+    }
+
     setLoadingTransactions(true);
     try {
       const params = new URLSearchParams();
-      if (user?.id) params.append("userId", user.id);
-      if (user?.email) params.append("email", user.email);
+      if (user?.id) params.append("userId", String(user.id));
+      if (user?.email) params.append("email", String(user.email));
+      if (wallet?.address) params.append("walletAddress", String(wallet.address));
 
       const res = await fetch(`/api/payments/history?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.transactions) && data.transactions.length > 0) {
-          // Merge server transactions with local transactions by id
-          setTransactions((prev) => {
-            const map = new Map();
-            // Start with server records
-            data.transactions.forEach((tx) => map.set(tx.id || tx.receiptId, tx));
-            // Layer in local records that might not be on server yet
-            prev.forEach((tx) => {
-              const id = tx.id || tx.receiptId;
-              if (id && !map.has(id)) {
-                map.set(id, tx);
-              }
-            });
-            const merged = Array.from(map.values());
-            return merged.sort((a, b) => {
-              const dateA = new Date(a.createdAt || a.date || 0).getTime();
-              const dateB = new Date(b.createdAt || b.date || 0).getTime();
-              return dateB - dateA;
-            });
+        const serverTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+
+        // Strict verification: only retain transactions belonging to this current account
+        const filteredServer = serverTransactions.filter((tx) => {
+          const matchUser = user?.id && String(tx.userId || "") === String(user.id);
+          const matchEmail = user?.email && String(tx.email || "").toLowerCase().trim() === String(user.email).toLowerCase().trim();
+          const matchWallet = wallet?.address && String(tx.walletAddress || "").toLowerCase().trim() === String(wallet.address).toLowerCase().trim();
+          return Boolean(matchUser || matchEmail || matchWallet);
+        });
+
+        setTransactions((prev) => {
+          const map = new Map();
+          // Insert verified server transactions
+          filteredServer.forEach((tx) => map.set(tx.id || tx.receiptId, tx));
+
+          // Retain local transactions only if they belong to this current account
+          prev.forEach((tx) => {
+            const id = tx.id || tx.receiptId;
+            const matchUser = user?.id && String(tx.userId || "") === String(user.id);
+            const matchEmail = user?.email && String(tx.email || "").toLowerCase().trim() === String(user.email).toLowerCase().trim();
+            const matchWallet = wallet?.address && String(tx.walletAddress || "").toLowerCase().trim() === String(wallet.address).toLowerCase().trim();
+            if (id && (matchUser || matchEmail || matchWallet) && !map.has(id)) {
+              map.set(id, tx);
+            }
           });
-        }
+
+          const merged = Array.from(map.values());
+          return merged.sort((a, b) => {
+            const dateA = new Date(a.createdAt || a.date || 0).getTime();
+            const dateB = new Date(b.createdAt || b.date || 0).getTime();
+            return dateB - dateA;
+          });
+        });
       }
     } catch (err) {
       console.warn("[PaymentContext] Could not fetch server transactions:", err.message);
     } finally {
       setLoadingTransactions(false);
     }
-  }, [user?.id, user?.email]);
+  }, [getAccountKey, user?.id, user?.email, user?.role, user?.accountType, wallet?.address]);
 
   useEffect(() => {
     fetchTransactions();
@@ -170,9 +222,10 @@ export function PaymentProvider({ children }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.id || null,
           userName: user?.name || "Warrior",
           email: user?.email || "",
+          walletAddress: wallet?.address || "",
           item,
           amount: `🪙 ${item.goldCost?.toLocaleString()} Gold`,
           paymentMethod: "Dragon Gold Vault",
@@ -196,6 +249,9 @@ export function PaymentProvider({ children }) {
       const finalTx = {
         ...result.transaction,
         receiptId: result.transaction.id,
+        userId: user?.id || null,
+        email: user?.email || "",
+        walletAddress: wallet?.address || "",
         item: item.name,
         itemName: item.name,
         category: item.category || "brush",
@@ -250,10 +306,10 @@ export function PaymentProvider({ children }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.id || null,
           userName: user?.name || "Warrior",
-          email: email || user?.email,
-          walletAddress: wallet?.address || result.transaction?.walletAddress,
+          email: email || user?.email || "",
+          walletAddress: wallet?.address || result.transaction?.walletAddress || "",
           txHash: result.transaction?.hash,
           network: wallet?.network || result.transaction?.network,
           item,
@@ -314,6 +370,9 @@ export function PaymentProvider({ children }) {
     const finalTx = backendTx || {
       id: result.receipt.id,
       receiptId: result.receipt.id,
+      userId: user?.id || null,
+      email: email || user?.email || "",
+      walletAddress: wallet?.address || result.transaction?.walletAddress || "",
       item: item.name,
       itemName: item.name,
       category: item.category || "gold",
@@ -324,9 +383,7 @@ export function PaymentProvider({ children }) {
       status: "COMPLETED",
       hash: result.transaction?.hash || result.receipt?.txHash,
       txHash: result.transaction?.hash || result.receipt?.txHash,
-      walletAddress: wallet?.address || result.transaction?.walletAddress,
       network: wallet?.network || result.transaction?.network,
-      email: email || user?.email,
       initialBalance: initialWalletBalance,
       remainingBalance,
       date: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),

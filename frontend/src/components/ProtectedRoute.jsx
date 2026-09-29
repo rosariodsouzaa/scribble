@@ -6,8 +6,8 @@ import { useAuthWallet } from "../context/AuthWalletContext.jsx";
  * ProtectedRoute Guard
  * Blocks access to game rooms, lobby, dashboard, store, and profile unless authenticated.
  */
-export default function ProtectedRoute({ children }) {
-  const { user, token, authLoading } = useAuthWallet();
+export default function ProtectedRoute({ children, playerOnly = false }) {
+  const { user, token, isAdmin, authLoading } = useAuthWallet();
   const location = useLocation();
 
   // Show sleek loading state while verifying JWT token on app startup
@@ -16,7 +16,7 @@ export default function ProtectedRoute({ children }) {
       <div className="auth-guard-loading-screen">
         <div className="dragon-spinner-ring" />
         <div className="guard-loading-text">
-          <span className="gold-shimmer-text"> Verifying Dynasty Access...</span>
+          <span className="gold-shimmer-text">🐉 Verifying Dynasty Access...</span>
         </div>
       </div>
     );
@@ -27,6 +27,11 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // If this is a player-specific route and current account is Admin, direct to Imperial Control Center
+  if (playerOnly && isAdmin) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

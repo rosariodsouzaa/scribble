@@ -5224,10 +5224,128 @@ body {
   gap: 8px;
 }
 
+/* Account Type Selection ("Who are you logging in as?") */
+.auth-account-type-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.account-type-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted-light);
+  margin-bottom: 12px;
+}
+
+.account-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.account-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font);
+  position: relative;
+  overflow: hidden;
+}
+
+.account-type-card:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(251, 191, 36, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.account-type-card.active.admin {
+  background: linear-gradient(145deg, rgba(220, 38, 38, 0.2), rgba(185, 28, 28, 0.08));
+  border: 1.5px solid #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3), inset 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+.account-type-card.active.player {
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.08));
+  border: 1.5px solid #fbbf24;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 12px rgba(245, 158, 11, 0.15);
+}
+
+.account-type-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.account-type-icon-badge.admin {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.account-type-card.active.admin .account-type-icon-badge.admin {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+}
+
+.account-type-icon-badge.player {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.account-type-card.active.player .account-type-icon-badge.player {
+  background: #f59e0b;
+  color: #111;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.account-type-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+.account-type-card.active.admin .account-type-title {
+  color: #fca5a5;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.account-type-card.active.player .account-type-title {
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+.account-type-sub {
+  font-size: 11px;
+  color: var(--muted-light);
+  opacity: 0.85;
+}
+
 /* Demo Credentials Section */
 .auth-demo-section {
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 20px;
+  padding-top: 16px;
   border-top: 1px solid rgba(245, 158, 11, 0.2);
 }
 
@@ -8737,5 +8855,184 @@ body {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   Imperial Admin Panel - Modal & Room Management Enhancements
+   ========================================================================== */
+
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.admin-modal-card {
+  background: linear-gradient(145deg, #18100c 0%, #0d0806 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius, 16px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 158, 11, 0.2);
+  width: 100%;
+  max-width: 520px;
+  padding: 28px 24px;
+  position: relative;
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.admin-modal-card.danger {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.2);
+}
+
+.admin-modal-card h3 {
+  font-family: var(--font-display, "Cinzel", serif);
+  font-size: 20px;
+  color: #ffd700;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-modal-card.danger h3 {
+  color: #ef4444;
+}
+
+.admin-modal-card p {
+  color: #d1d5db;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.danger-note-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px dashed rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #fca5a5;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.danger-note-box strong {
+  color: #fff;
+}
+
+.action-btn.game {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.action-btn.game:hover {
+  background: rgba(245, 158, 11, 0.35);
+  border-color: #ffd700;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.action-btn.info {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+}
+
+.action-btn.info:hover {
+  background: rgba(59, 130, 246, 0.35);
+  border-color: #3b82f6;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.chamber-players-interactive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.chamber-player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.chamber-player-row:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.chamber-player-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #fef3c7;
+}
+
+.chamber-player-meta .score-badge {
+  color: #ffd700;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.remove-player-room-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remove-player-room-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.status-badge.in-battle {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #ffd700;
+}
+
+.status-badge.online {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+
+.status-badge.offline {
+  background: rgba(107, 114, 128, 0.15);
+  border: 1px solid rgba(107, 114, 128, 0.4);
+  color: #9ca3af;
+}
+
 
 

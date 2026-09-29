@@ -49,11 +49,11 @@ export class AuthService {
 
   // --- Auth API ---
 
-  static async sendOtp(email, purpose = "signup") {
+  static async sendOtp(email, purpose = "signup", accountType = "player") {
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, purpose }),
+      body: JSON.stringify({ email, purpose, accountType }),
     });
     return AuthService._parseResponse(res, "Failed to send verification code");
   }
@@ -67,31 +67,31 @@ export class AuthService {
     return AuthService._parseResponse(res, "Invalid verification code");
   }
 
-  static async resetPassword({ email, otp, newPassword }) {
+  static async resetPassword({ email, otp, newPassword, accountType = "player" }) {
     const res = await fetch("/api/auth/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, newPassword }),
+      body: JSON.stringify({ email, otp, newPassword, accountType }),
     });
     return AuthService._parseResponse(res, "Failed to reset passcode");
   }
 
-  static async signup({ name, email, password, otp, avatarColor, title }) {
+  static async signup({ name, email, password, otp, avatarColor, title, accountType = "player" }) {
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, otp, avatarColor, title }),
+      body: JSON.stringify({ name, email, password, otp, avatarColor, title, accountType }),
     });
     const data = await AuthService._parseResponse(res, "Signup failed");
     if (data.token) AuthService.setToken(data.token);
     return data;
   }
 
-  static async login({ email, password }) {
+  static async login({ email, password, accountType = "player" }) {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, accountType }),
     });
     const data = await AuthService._parseResponse(res, "Login failed");
     if (data.token) AuthService.setToken(data.token);
@@ -153,13 +153,42 @@ export class AuthService {
     return data.stats;
   }
 
-  static async getAdminUsers(filters = {}) {
+  static async getAdminPlayers(filters = {}) {
     const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`/api/admin/users?${query}`, {
+    const res = await fetch(`/api/admin/players?${query}`, {
       headers: AuthService.getAuthHeaders(),
     });
-    const data = await AuthService._parseResponse(res, "Failed to fetch users");
-    return data.users;
+    const data = await AuthService._parseResponse(res, "Failed to fetch players");
+    return data.players || data.users || [];
+  }
+
+  static async getAdminUsers(filters = {}) {
+    return AuthService.getAdminPlayers(filters);
+  }
+
+  static async getAdminPlayerById(id) {
+    const res = await fetch(`/api/admin/players/${id}`, {
+      headers: AuthService.getAuthHeaders(),
+    });
+    const data = await AuthService._parseResponse(res, "Failed to fetch player details");
+    return data.player;
+  }
+
+  static async addPlayerToRoom(roomId, { userId, playerName, name }) {
+    const res = await fetch(`/api/admin/rooms/${roomId}/players`, {
+      method: "POST",
+      headers: AuthService.getAuthHeaders(),
+      body: JSON.stringify({ userId, playerName: playerName || name }),
+    });
+    return AuthService._parseResponse(res, "Failed to add player to chamber");
+  }
+
+  static async removePlayerFromRoom(roomId, playerId) {
+    const res = await fetch(`/api/admin/rooms/${roomId}/players/${playerId}`, {
+      method: "DELETE",
+      headers: AuthService.getAuthHeaders(),
+    });
+    return AuthService._parseResponse(res, "Failed to remove player from chamber");
   }
 
   static async updateUserRole(userId, role) {
@@ -223,6 +252,31 @@ export class AuthService {
       body: JSON.stringify({ category, words }),
     });
     return AuthService._parseResponse(res, "Failed to add word pack");
+  }
+
+  static async getAdminTransactions(filters = {}) {
+    const query = new URLSearchParams(filters).toString();
+    const res = await fetch(`/api/admin/transactions?${query}`, {
+      headers: AuthService.getAuthHeaders(),
+    });
+    const data = await AuthService._parseResponse(res, "Failed to fetch admin transactions");
+    return data.transactions || [];
+  }
+
+  static async deleteUser(userId) {
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: "DELETE",
+      headers: AuthService.getAuthHeaders(),
+    });
+    return AuthService._parseResponse(res, "Failed to delete account");
+  }
+
+  static async purgeDummyAccounts() {
+    const res = await fetch("/api/admin/purge-dummy-accounts", {
+      method: "POST",
+      headers: AuthService.getAuthHeaders(),
+    });
+    return AuthService._parseResponse(res, "Failed to purge dummy accounts");
   }
 }
 

@@ -57,13 +57,13 @@ export default function Navbar() {
   return (
     <header className="dragon-navbar">
       {/* Brand */}
-      <Link to="/dashboard" className="nav-brand">
+      <Link to={isAdmin ? "/admin" : "/dashboard"} className="nav-brand">
         <div className="nav-logo-icon">
           <DragonEmblem size="sm" animated={true} glow={true} />
         </div>
         <div className="nav-brand-text">
           <span className="brand-title">SCRIBBLE ROYALE</span>
-          <span className="brand-subtitle">DRAGON DYNASTY</span>
+          <span className="brand-subtitle">{isAdmin ? "IMPERIAL SANCTUARY" : "DRAGON DYNASTY"}</span>
         </div>
       </Link>
 
@@ -84,22 +84,24 @@ export default function Navbar() {
         {/* Authenticated Controls */}
         {user?.isAuthenticated && user?.email ? (
           <>
-            {/* Dragon Gold Coins Pill */}
-            <div
-              className="nav-coins-pill"
-              onClick={() => navigate("/store")}
-              title="Your Dragon Gold earnings — Click to Top Up"
-            >
-              <Coins size={16} className="coins-icon" />
-              <span className="coins-amount">{(user?.coins || 0).toLocaleString()}</span>
-              <span className="coins-label">GOLD</span>
-              <button className="coins-topup-btn" title="Purchase Gold Coins">
-                <Plus size={12} />
-              </button>
-            </div>
+            {/* Dragon Gold Coins Pill (Players only) */}
+            {!isAdmin && (
+              <div
+                className="nav-coins-pill"
+                onClick={() => navigate("/store")}
+                title="Your Dragon Gold earnings — Click to Top Up"
+              >
+                <Coins size={16} className="coins-icon" />
+                <span className="coins-amount">{(user?.coins || 0).toLocaleString()}</span>
+                <span className="coins-label">GOLD</span>
+                <button className="coins-topup-btn" title="Purchase Gold Coins">
+                  <Plus size={12} />
+                </button>
+              </div>
+            )}
 
-            {/* Web3 Wallet Pill */}
-            {wallet?.isConnected ? (
+            {/* Web3 Wallet Pill (Players only) */}
+            {!isAdmin && (wallet?.isConnected ? (
               <WalletStatus
                 isConnected={true}
                 address={wallet.address}
@@ -116,7 +118,7 @@ export default function Navbar() {
                 <WalletIcon size={15} />
                 <span>Connect Wallet</span>
               </button>
-            )}
+            ))}
 
             {/* Sound Toggle */}
             <button
@@ -157,91 +159,108 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  <div className="dropdown-stats-grid">
-                    <div className="dropdown-stat">
-                      <span className="stat-num">{user?.wins || 0}</span>
-                      <span className="stat-lbl">Victories</span>
+                  {!isAdmin && (
+                    <div className="dropdown-stats-grid">
+                      <div className="dropdown-stat">
+                        <span className="stat-num">{user?.wins || 0}</span>
+                        <span className="stat-lbl">Victories</span>
+                      </div>
+                      <div className="dropdown-stat">
+                        <span className="stat-num">🪙 {user?.coins || 0}</span>
+                        <span className="stat-lbl">Gold</span>
+                      </div>
+                      <div className="dropdown-stat">
+                        <span className="stat-num">LVL {user?.level || 1}</span>
+                        <span className="stat-lbl">Rank</span>
+                      </div>
                     </div>
-                    <div className="dropdown-stat">
-                      <span className="stat-num">🪙 {user?.coins || 0}</span>
-                      <span className="stat-lbl">Gold</span>
-                    </div>
-                    <div className="dropdown-stat">
-                      <span className="stat-num">LVL {user?.level || 1}</span>
-                      <span className="stat-lbl">Rank</span>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="dropdown-divider" />
 
                   <div className="dropdown-actions">
-                    <button
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        navigate("/profile");
-                      }}
-                    >
-                      <User size={16} color="#3b82f6" />
-                      <span>Warrior Dossier (Profile)</span>
-                    </button>
+                    {isAdmin ? (
+                      <>
+                        <button
+                          className="dropdown-item-btn admin-highlight"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/admin");
+                          }}
+                        >
+                          <Crown size={16} color="#ffd700" />
+                          <span>Imperial Admin Panel</span>
+                        </button>
 
-                    <button
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        navigate("/transactions");
-                      }}
-                    >
-                      <Receipt size={16} color="#10b981" />
-                      <span>Transaction History</span>
-                    </button>
+                        <button
+                          className="dropdown-item-btn"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/transactions");
+                          }}
+                        >
+                          <Receipt size={16} color="#10b981" />
+                          <span>All Player Transactions</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="dropdown-item-btn"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/profile");
+                          }}
+                        >
+                          <User size={16} color="#3b82f6" />
+                          <span>Warrior Dossier (Profile)</span>
+                        </button>
 
-                    {isAdmin && (
-                      <button
-                        className="dropdown-item-btn admin-highlight"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          navigate("/admin");
-                        }}
-                      >
-                        <Crown size={16} color="#ffd700" />
-                        <span>Imperial Admin Panel</span>
-                      </button>
+                        <button
+                          className="dropdown-item-btn"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/transactions");
+                          }}
+                        >
+                          <Receipt size={16} color="#10b981" />
+                          <span>Transaction History</span>
+                        </button>
+
+                        <button
+                          className="dropdown-item-btn"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/practice");
+                          }}
+                        >
+                          <Sparkles size={16} color="#fbbf24" />
+                          <span>AI Practice Dojo</span>
+                        </button>
+
+                        <button
+                          className="dropdown-item-btn"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/store");
+                          }}
+                        >
+                          <ShoppingBag size={16} color="#fbbf24" />
+                          <span>Dragon Emporium Store</span>
+                        </button>
+
+                        <button
+                          className="dropdown-item-btn"
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            navigate("/lobby");
+                          }}
+                        >
+                          <Flame size={16} color="#f59e0b" />
+                          <span>Summon Battle Chamber</span>
+                        </button>
+                      </>
                     )}
-
-                    <button
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        navigate("/practice");
-                      }}
-                    >
-                      <Sparkles size={16} color="#fbbf24" />
-                      <span>AI Practice Dojo</span>
-                    </button>
-
-                    <button
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        navigate("/store");
-                      }}
-                    >
-                      <ShoppingBag size={16} color="#fbbf24" />
-                      <span>Dragon Emporium Store</span>
-                    </button>
-
-                    <button
-                      className="dropdown-item-btn"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        navigate("/lobby");
-                      }}
-                    >
-                      <Flame size={16} color="#f59e0b" />
-                      <span>Summon Battle Chamber</span>
-                    </button>
                   </div>
 
                   <div className="dropdown-divider" />
@@ -249,7 +268,7 @@ export default function Navbar() {
                   <div className="dropdown-footer">
                     <button className="dropdown-logout-btn" onClick={handleLogout}>
                       <LogOut size={15} />
-                      <span>Log Out Warrior</span>
+                      <span>{isAdmin ? "Log Out Admin" : "Log Out Warrior"}</span>
                     </button>
                   </div>
                 </div>

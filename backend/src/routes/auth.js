@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { UserRepository } from "../models/User.js";
+import { AdminRepository } from "../models/Admin.js";
 import { OtpService } from "../services/auth/OtpService.js";
 import { TokenService } from "../services/auth/TokenService.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
@@ -9,14 +10,14 @@ const router = Router();
 
 // Helper to validate email string
 function isValidEmail(email) {
-  if (typeof email!== "string") return false;
+  if (typeof email !== "string") return false;
   const clean = email.trim();
   if (clean.includes("..")) return false; // Reject consecutive dots
   if (clean.length > 254) return false;
   return /^[^\s@]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(clean);
 }
 
-// Helper to sanitize & validate warrior name
+// Helper to sanitize & validate warrior / admin name
 function sanitizeName(name) {
   if (typeof name !== "string") return "";
   return name
@@ -33,21 +34,31 @@ function sanitizeName(name) {
  */
 router.post("/send-otp", async (req, res) => {
   try {
-    const { email, purpose = "signup" } = req.body;
+    const { email, purpose = "signup", accountType = "player" } = req.body;
 
     if (!isValidEmail(email)) {
       return res.status(400).json({ error: "Please enter a valid email address." });
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const existing = await UserRepository.findByEmail(cleanEmail);
+    const isAdmin = accountType === "admin";
 
-    if (purpose === "signup" && existing) {
-      return res.status(409).json({ error: "A warrior account already exists with this email address." });
-    }
-
-    if (purpose === "reset_password" &&!existing) {
-      return res.status(404).json({ error: "No warrior account found with this email." });
+    if (isAdmin) {
+      const existing = await AdminRepository.findByEmail(cleanEmail);
+      if (purpose === "signup" && existing) {
+        return res.status(409).json({ error: "An Imperial Admin account already exists with this email address." });
+      }
+      if (purpose === "reset_password" && !existing) {
+        return res.status(404).json({ error: "No Imperial Admin account found with this email." });
+      }
+    } else {
+      const existing = await UserRepository.findByEmail(cleanEmail);
+      if (purpose === "signup" && existing) {
+        return res.status(409).json({ error: "A warrior account already exists with this email address." });
+      }
+      if (purpose === "reset_password" && !existing) {
+        return res.status(404).json({ error: "No warrior account found with this email." });
+      }
     }
 
     const result = await OtpService.sendOtp(cleanEmail, purpose);
@@ -66,7 +77,7 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const { email, otp, purpose = "signup" } = req.body;
 
-    if (!isValidEmail(email) ||!otp) {
+    if (!isValidEmail(email) || !otp) {
       return res.status(400).json({ error: "Email and verification code are required." });
     }
 
@@ -85,11 +96,11 @@ router.post("/verify-otp", async (req, res) => {
 
 /**
  * POST /api/auth/reset-password
- * Resets user battle passcode after verifying OTP
+ * Resets account passcode after verifying OTP
  */
 router.post("/reset-password", async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, otp, newPassword, accountType = "player" } = req.body;
 
     if (!isValidEmail(email)) {
       return res.status(400).json({ error: "Please enter a valid email address." });
@@ -104,9 +115,14 @@ router.post("/reset-password", async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const user = await UserRepository.findByEmail(cleanEmail);
-    if (!user) {
-      return res.status(404).json({ error: "No warrior account found with this email." });
+    const isAdmin = accountType === "admin";
+    const repo = isAdmin ? AdminRepository : UserRepository;
+
+    const account = await repo.findByEmail(cleanEmail);
+    if (!account) {
+      return res.status(404).json({
+        error: isAdmin ? "No Imperial Admin account found with this email." : "No warrior account found with this email.",
+      });
     }
 
     // Verify and consume OTP for reset_password
@@ -119,14 +135,14 @@ router.post("/reset-password", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
-    // Update user password in database
-    await UserRepository.updateById(user.id || user._id, { passwordHash });
+    // Update account password in database
+    await repo.updateById(account.id || account._id, { passwordHash });
 
-    console.log(`[Auth]  Passcode reset successfully for warrior: ${user.name} (${cleanEmail})`);
+    console.log(`[Auth] Passcode reset successfully for ${account.name} (${cleanEmail}) [${isAdmin ? "ADMIN" : "PLAYER"}]`);
 
     res.json({
       success: true,
-      message: "Battle passcode reset successfully! You may now enter the battle arena.",
+      message: "Passcode reset successfully! You may now enter the sanctuary.",
     });
   } catch (err) {
     console.error("[Auth] reset-password error:", err);
@@ -136,15 +152,23 @@ router.post("/reset-password", async (req, res) => {
 
 /**
  * POST /api/auth/signup
- * Registers a new user after verifying OTP code
+ * Registers a new player into `users` table or admin into `admins` table after verifying OTP code
  */
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, otp, avatarColor = "#f59e0b", title = "Dragon Novice" } = req.body;
+    const {
+      name,
+      email,
+      password,
+      otp,
+      avatarColor,
+      title,
+      accountType = "player",
+    } = req.body;
 
     const cleanName = sanitizeName(name);
     if (!cleanName || cleanName.length < 2) {
-      return res.status(400).json({ error: "Warrior nickname must be at least 2 valid characters." });
+      return res.status(400).json({ error: "Nickname must be at least 2 valid characters." });
     }
 
     if (!isValidEmail(email)) {
@@ -160,8 +184,55 @@ router.post("/signup", async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const existing = await UserRepository.findByEmail(cleanEmail);
-    if (existing) {
+    const isAdmin = accountType === "admin";
+
+    if (isAdmin) {
+      // Admin signup inserts into `admins` ONLY
+      const existingAdmin = await AdminRepository.findByEmail(cleanEmail);
+      if (existingAdmin) {
+        return res.status(409).json({ error: "An Imperial Admin account already exists with this email." });
+      }
+
+      // Verify and consume OTP permanently
+      const verification = await OtpService.verifyOtp(cleanEmail, otp, "signup", true);
+      if (!verification.valid) {
+        return res.status(400).json({ error: verification.error || "Invalid or expired OTP." });
+      }
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      // Create admin account in `admins` table
+      const newAdmin = await AdminRepository.create({
+        name: cleanName.slice(0, 30),
+        email: cleanEmail,
+        passwordHash,
+        avatarColor: avatarColor || "#ef4444",
+        bio: "Imperial Sovereign of the Dragon Dynasty.",
+        title: title || "Imperial Grandmaster",
+      });
+
+      const token = TokenService.generateToken({
+        ...newAdmin,
+        role: "admin",
+        accountType: "admin",
+      });
+      const adminJson = newAdmin.toPublicJSON ? newAdmin.toPublicJSON() : newAdmin;
+
+      console.log(`[Auth] New Imperial Admin registered: ${newAdmin.name} (${cleanEmail})`);
+
+      return res.status(201).json({
+        success: true,
+        message: "Imperial Admin registered successfully!",
+        token,
+        user: { ...adminJson, role: "admin", accountType: "admin" },
+      });
+    }
+
+    // Player signup inserts into `users` ONLY
+    const existingPlayer = await UserRepository.findByEmail(cleanEmail);
+    if (existingPlayer) {
       return res.status(409).json({ error: "A warrior account already exists with this email." });
     }
 
@@ -175,8 +246,8 @@ router.post("/signup", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create user
-    const newUser = await UserRepository.create({
+    // Create player account in `users` table
+    const newPlayer = await UserRepository.create({
       name: cleanName.slice(0, 30),
       email: cleanEmail,
       passwordHash,
@@ -187,21 +258,25 @@ router.post("/signup", async (req, res) => {
       xp: 0,
       wins: 0,
       matches: 0,
-      avatarColor,
+      avatarColor: avatarColor || "#f59e0b",
       bio: "Fierce dragon warrior ready for battle.",
-      title,
+      title: title || "Dragon Novice",
     });
 
-    const token = TokenService.generateToken(newUser);
-    const userJson = newUser.toPublicJSON? newUser.toPublicJSON(): newUser;
+    const token = TokenService.generateToken({
+      ...newPlayer,
+      role: "user",
+      accountType: "player",
+    });
+    const playerJson = newPlayer.toPublicJSON ? newPlayer.toPublicJSON() : newPlayer;
 
-    console.log(`[Auth]  New warrior registered: ${newUser.name} (${cleanEmail})`);
+    console.log(`[Auth] New warrior registered: ${newPlayer.name} (${cleanEmail})`);
 
     res.status(201).json({
       success: true,
       message: "Warrior registered successfully!",
       token,
-      user: userJson,
+      user: { ...playerJson, role: "user", accountType: "player" },
     });
   } catch (err) {
     console.error("[Auth] signup error:", err);
@@ -212,46 +287,84 @@ router.post("/signup", async (req, res) => {
 /**
  * POST /api/auth/login
  * Authenticates user credentials and issues JWT token
+ * ADMIN query `admins` ONLY. PLAYER query `users` ONLY.
  */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, accountType = "player" } = req.body;
 
-    if (!isValidEmail(email) ||!password) {
+    if (!isValidEmail(email) || !password) {
       return res.status(400).json({ error: "Please enter your email and password." });
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const user = await UserRepository.findByEmail(cleanEmail);
+    const isAdmin = accountType === "admin";
 
-    if (!user) {
+    if (isAdmin) {
+      // Search ONLY admins table
+      const admin = await AdminRepository.findByEmail(cleanEmail);
+      if (!admin) {
+        return res.status(401).json({ error: "Invalid admin email or password." });
+      }
+
+      const isMatch = await bcrypt.compare(password, admin.passwordHash);
+      if (!isMatch) {
+        return res.status(401).json({ error: "Invalid admin email or password." });
+      }
+
+      // Update last login
+      await AdminRepository.updateById(admin.id || admin._id, { lastLoginAt: new Date() });
+
+      const token = TokenService.generateToken({
+        ...admin,
+        role: "admin",
+        accountType: "admin",
+      });
+      const adminJson = admin.toPublicJSON ? admin.toPublicJSON() : admin;
+
+      console.log(`[Auth] Imperial Admin logged in: ${admin.name} [Role: admin]`);
+
+      return res.json({
+        success: true,
+        token,
+        user: { ...adminJson, role: "admin", accountType: "admin" },
+      });
+    }
+
+    // Search ONLY users (player) table
+    const player = await UserRepository.findByEmail(cleanEmail);
+    if (!player) {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
-    if (user.isBanned) {
+    if (player.isBanned) {
       return res.status(403).json({
-        error: `Your account has been banished: ${user.banReason || "Terms of Service violation."}`,
+        error: `Your account has been banished: ${player.banReason || "Terms of Service violation."}`,
         isBanned: true,
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const isMatch = await bcrypt.compare(password, player.passwordHash);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
     // Update last login
-    await UserRepository.updateById(user.id || user._id, { lastLoginAt: new Date() });
+    await UserRepository.updateById(player.id || player._id, { lastLoginAt: new Date() });
 
-    const token = TokenService.generateToken(user);
-    const userJson = user.toPublicJSON? user.toPublicJSON(): user;
+    const token = TokenService.generateToken({
+      ...player,
+      role: "user",
+      accountType: "player",
+    });
+    const playerJson = player.toPublicJSON ? player.toPublicJSON() : player;
 
-    console.log(`[Auth]  Warrior logged in: ${user.name} [Role: ${user.role}]`);
+    console.log(`[Auth] Warrior logged in: ${player.name} [Role: ${player.role}]`);
 
-    res.json({
+    return res.json({
       success: true,
       token,
-      user: userJson,
+      user: { ...playerJson, role: player.role || "user", accountType: "player" },
     });
   } catch (err) {
     console.error("[Auth] login error:", err);
@@ -265,8 +378,15 @@ router.post("/login", async (req, res) => {
  */
 router.get("/me", requireAuth, async (req, res) => {
   try {
-    const userJson = req.user.toPublicJSON? req.user.toPublicJSON(): req.user;
-    res.json({ user: userJson });
+    const userJson = req.user.toPublicJSON ? req.user.toPublicJSON() : req.user;
+    const isAdm = req.user.role === "admin" || req.user.accountType === "admin";
+    res.json({
+      user: {
+        ...userJson,
+        role: isAdm ? "admin" : (userJson.role || "user"),
+        accountType: isAdm ? "admin" : "player",
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch user session." });
   }
@@ -274,7 +394,7 @@ router.get("/me", requireAuth, async (req, res) => {
 
 /**
  * PUT /api/auth/profile
- * Updates user profile details
+ * Updates user/admin profile details
  */
 router.put("/profile", requireAuth, async (req, res) => {
   try {
@@ -284,10 +404,10 @@ router.put("/profile", requireAuth, async (req, res) => {
     if (name !== undefined) {
       const cleanName = sanitizeName(name);
       if (!cleanName || cleanName.length < 2) {
-        return res.status(400).json({ error: "Warrior nickname must be at least 2 valid characters." });
+        return res.status(400).json({ error: "Nickname must be at least 2 valid characters." });
       }
       if (cleanName.length > 30) {
-        return res.status(400).json({ error: "Warrior nickname cannot exceed 30 characters." });
+        return res.status(400).json({ error: "Nickname cannot exceed 30 characters." });
       }
       updates.name = cleanName;
     }
@@ -301,13 +421,20 @@ router.put("/profile", requireAuth, async (req, res) => {
       updates.avatarColor = String(avatarColor).slice(0, 10);
     }
 
-    const updatedUser = await UserRepository.updateById(req.user.id || req.user._id, updates);
-    const userJson = updatedUser.toPublicJSON ? updatedUser.toPublicJSON() : updatedUser;
+    const isAdm = req.user.role === "admin" || req.user.accountType === "admin";
+    const repo = isAdm ? AdminRepository : UserRepository;
+
+    const updated = await repo.updateById(req.user.id || req.user._id, updates);
+    const userJson = updated.toPublicJSON ? updated.toPublicJSON() : updated;
 
     res.json({
       success: true,
-      message: "Warrior profile updated successfully.",
-      user: userJson,
+      message: "Profile updated successfully.",
+      user: {
+        ...userJson,
+        role: isAdm ? "admin" : (userJson.role || "user"),
+        accountType: isAdm ? "admin" : "player",
+      },
     });
   } catch (err) {
     console.error("[Auth] update profile error:", err);
@@ -317,7 +444,7 @@ router.put("/profile", requireAuth, async (req, res) => {
 
 /**
  * PATCH /api/auth/change-password
- * Allows an authenticated warrior to change their passcode by verifying current passcode
+ * Allows an authenticated account to change their passcode
  */
 router.patch("/change-password", requireAuth, async (req, res) => {
   try {
@@ -331,21 +458,24 @@ router.patch("/change-password", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "New passcode must be at least 6 non-space characters long." });
     }
 
-    const user = await UserRepository.findById(req.user.id || req.user._id);
-    if (!user) {
-      return res.status(404).json({ error: "Warrior not found." });
+    const isAdm = req.user.role === "admin" || req.user.accountType === "admin";
+    const repo = isAdm ? AdminRepository : UserRepository;
+
+    const account = await repo.findById(req.user.id || req.user._id);
+    if (!account) {
+      return res.status(404).json({ error: "Account not found." });
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isMatch = await bcrypt.compare(currentPassword, account.passwordHash);
     if (!isMatch) {
       return res.status(400).json({ error: "Current passcode is incorrect. Verification failed." });
     }
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(newPassword, salt);
-    await UserRepository.updateById(user.id || user._id, { passwordHash });
+    await repo.updateById(account.id || account._id, { passwordHash });
 
-    console.log(`[Auth] 🔐 Passcode updated securely for warrior: ${user.name} (${user.email})`);
+    console.log(`[Auth] Passcode updated securely for: ${account.name} (${account.email})`);
 
     res.json({
       success: true,
@@ -359,33 +489,26 @@ router.patch("/change-password", requireAuth, async (req, res) => {
 
 /**
  * POST /api/auth/seed-demo
- * Seeds initial demo admin and warrior accounts if absent
+ * Seeds initial demo admin in `admins` table and warrior in `users` table
  */
 router.post("/seed-demo", async (_req, res) => {
   try {
-    // Seed Admin
-    let admin = await UserRepository.findByEmail("admin@scribbleroyale.io");
+    // Seed Admin in admins table
+    let admin = await AdminRepository.findByEmail("admin@scribbleroyale.io");
     if (!admin) {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash("admin123", salt);
-      admin = await UserRepository.create({
+      admin = await AdminRepository.create({
         name: "Dragon Grandmaster",
         email: "admin@scribbleroyale.io",
         passwordHash: hash,
-        role: "admin",
-        isVerified: true,
-        coins: 99999,
-        level: 50,
-        xp: 15000,
-        wins: 142,
-        matches: 160,
         avatarColor: "#ef4444",
         bio: "Supreme Sovereign of the Dragon Dynasty.",
         title: "Imperial Grandmaster",
       });
     }
 
-    // Seed Demo User
+    // Seed Demo User in users table
     let demoUser = await UserRepository.findByEmail("warrior@scribbleroyale.io");
     if (!demoUser) {
       const salt = await bcrypt.genSalt(10);
@@ -411,8 +534,8 @@ router.post("/seed-demo", async (_req, res) => {
       success: true,
       message: "Demo accounts ready!",
       demoAccounts: {
-        admin: { email: "admin@scribbleroyale.io", password: "admin123", role: "admin" },
-        user: { email: "warrior@scribbleroyale.io", password: "warrior123", role: "user" },
+        admin: { email: "admin@scribbleroyale.io", password: "admin123", role: "admin", accountType: "admin" },
+        user: { email: "warrior@scribbleroyale.io", password: "warrior123", role: "user", accountType: "player" },
       },
     });
   } catch (err) {

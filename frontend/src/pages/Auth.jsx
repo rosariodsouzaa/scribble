@@ -57,6 +57,14 @@ const BATTLE_TITLES = [
   "Imperial Scholar",
 ];
 
+const ADMIN_TITLES = [
+  "Imperial Grandmaster",
+  "Dynasty Sovereign",
+  "High Chancellor",
+  "Chamber Overseer",
+  "Realm Arbiter",
+];
+
 export default function Auth() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -70,6 +78,7 @@ export default function Auth() {
   };
 
   const [activeTab, setActiveTab] = useState(() => getInitialTab(location.pathname));
+  const [accountType, setAccountType] = useState("player"); // "player" | "admin"
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -178,10 +187,10 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const res = await loginWithCredentials(cleanEmail, loginPassword);
+      const res = await loginWithCredentials(cleanEmail, loginPassword, accountType);
       setSuccessMsg(`Welcome back, ${res.user.name}!`);
       setTimeout(() => {
-        if (res.user.role === "admin") {
+        if (res.user.role === "admin" || accountType === "admin") {
           navigate("/admin");
         } else {
           const from = location.state?.from || "/dashboard";
@@ -206,13 +215,12 @@ export default function Auth() {
 ? seed.demoAccounts?.admin || { email: "admin@scribbleroyale.io", password: "admin123" }
 : seed.demoAccounts?.user || { email: "warrior@scribbleroyale.io", password: "warrior123" };
 
-      setLoginEmail(creds.email);
-      setLoginPassword(creds.password);
-
-      const res = await loginWithCredentials(creds.email, creds.password);
-      setSuccessMsg(`Logged in as ${res.user.name} (${res.user.role.toUpperCase()})`);
+      const targetType = role === "admin" ? "admin" : "player";
+      setAccountType(targetType);
+      const res = await loginWithCredentials(creds.email, creds.password, targetType);
+      setSuccessMsg(`Logged in as ${res.user.name} (${(res.user.role || targetType).toUpperCase()})`);
       setTimeout(() => {
-        if (res.user.role === "admin") {
+        if (targetType === "admin" || res.user.role === "admin") {
           navigate("/admin");
         } else {
           navigate("/dashboard");
@@ -249,7 +257,7 @@ export default function Auth() {
 
     setLoading(true);
     try {
-      const res = await AuthService.sendOtp(cleanEmail, "signup");
+      const res = await AuthService.sendOtp(cleanEmail, "signup", accountType);
       if (res.simulatedOtp) {
         setSignupLastDispatchedOtp(res.simulatedOtp);
       }
@@ -347,11 +355,16 @@ export default function Auth() {
         otp: enteredOtp,
         avatarColor: selectedColor,
         title: selectedTitle,
+        accountType,
       });
 
       setSuccessMsg(`Welcome to the Dragon Dynasty, ${res.user.name}!`);
       setTimeout(() => {
-        navigate("/profile");
+        if (accountType === "admin" || res.user.role === "admin" || res.user.accountType === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/profile");
+        }
       }, 700);
     } catch (err) {
       setErrorMsg(err.message || "Failed to finalize registration");
@@ -368,14 +381,14 @@ export default function Auth() {
     setErrorMsg("");
     setSuccessMsg("");
 
-    if (!forgotEmail.trim() ||!forgotEmail.includes("@")) {
-      setErrorMsg("Please enter a valid warrior email address.");
+    if (!forgotEmail.trim() || !forgotEmail.includes("@")) {
+      setErrorMsg("Please enter a valid account email address.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await AuthService.sendOtp(forgotEmail, "reset_password");
+      const res = await AuthService.sendOtp(forgotEmail, "reset_password", accountType);
       if (res.simulatedOtp) {
         setForgotLastDispatchedOtp(res.simulatedOtp);
       }
@@ -384,7 +397,7 @@ export default function Auth() {
       setForgotOtpTimer(60);
       setCanResendForgotOtp(false);
     } catch (err) {
-      setErrorMsg(err.message || "No warrior account found with this email.");
+      setErrorMsg(err.message || "No account found with this email.");
     } finally {
       setLoading(false);
     }
@@ -403,7 +416,7 @@ export default function Auth() {
   };
 
   const handleForgotOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" &&!forgotOtpDigits[index] && index > 0) {
+    if (e.key === "Backspace" && !forgotOtpDigits[index] && index > 0) {
       forgotOtpInputRefs.current[index - 1]?.focus();
     }
   };
@@ -476,6 +489,7 @@ export default function Auth() {
         email: cleanForgotEmail,
         otp: enteredOtp,
         newPassword,
+        accountType,
       });
 
       setSuccessMsg(res.message || "Battle passcode successfully reset!");
@@ -589,12 +603,12 @@ export default function Auth() {
             <div className="form-group">
               <label className="form-label">
                 <Mail size={15} />
-                <span>Warrior Email</span>
+                <span>{accountType === "admin" ? "Admin Email" : "Warrior Email"}</span>
               </label>
               <input
                 type="email"
                 className="dragon-input"
-                placeholder="warrior@scribbleroyale.io"
+                placeholder={accountType === "admin" ? "admin@scribbleroyale.io" : "warrior@scribbleroyale.io"}
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 required
@@ -619,9 +633,9 @@ export default function Auth() {
               </div>
               <div className="password-input-wrapper">
                 <input
-                  type={showLoginPassword? "text": "password"}
+                  type={showLoginPassword ? "text" : "password"}
                   className="dragon-input"
-                  placeholder="Enter your battle passcode"
+                  placeholder={accountType === "admin" ? "Enter your admin passcode" : "Enter your battle passcode"}
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   required
@@ -632,21 +646,58 @@ export default function Auth() {
                   className="password-toggle-btn"
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
                 >
-                  {showLoginPassword? <EyeOff size={16} />: <Eye size={16} />}
+                  {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
             <button type="submit" className="dragon-btn primary auth-submit-btn" disabled={loading}>
-              {loading? (
+              {loading ? (
                 <span>Channeling Dragon Qi...</span>
-              ): (
+              ) : (
                 <>
-                  <span>Enter Battle Arena</span>
+                  <span>{accountType === "admin" ? "Enter Admin Sanctuary" : "Enter Battle Arena"}</span>
                   <ArrowRight size={17} />
                 </>
               )}
             </button>
+
+            {/* Who are you logging in as? */}
+            <div className="auth-account-type-section">
+              <div className="account-type-label">
+                <Crown size={14} color="#ffd700" />
+                <span>Who are you logging in as?</span>
+              </div>
+              <div className="account-type-grid">
+                <button
+                  type="button"
+                  className={`account-type-card ${accountType === "admin" ? "active admin" : ""}`}
+                  onClick={() => setAccountType("admin")}
+                >
+                  <div className="account-type-icon-badge admin">
+                    <Crown size={20} />
+                  </div>
+                  <div className="account-type-content">
+                    <div className="account-type-title">👑 ADMIN</div>
+                    <div className="account-type-sub">Admin Sanctuary</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`account-type-card ${accountType === "player" ? "active player" : ""}`}
+                  onClick={() => setAccountType("player")}
+                >
+                  <div className="account-type-icon-badge player">
+                    <Swords size={20} />
+                  </div>
+                  <div className="account-type-content">
+                    <div className="account-type-title">⚔️ PLAYER</div>
+                    <div className="account-type-sub">Warrior Portal</div>
+                  </div>
+                </button>
+              </div>
+            </div>
 
             {/* Quick Demo Credentials */}
             <div className="auth-demo-section">
@@ -975,11 +1026,56 @@ export default function Auth() {
             {/* STEP 1: Name, Email, Password */}
             {signupStep === 1 && (
               <form className="auth-form" onSubmit={handleSendSignupOtpStep1}>
+                {/* Who are you signing up as? */}
+                <div className="auth-account-type-section" style={{ marginBottom: "18px" }}>
+                  <div className="account-type-label">
+                    <Crown size={14} color="#ffd700" />
+                    <span>Who are you signing up as?</span>
+                  </div>
+                  <div className="account-type-grid">
+                    <button
+                      type="button"
+                      className={`account-type-card ${accountType === "admin" ? "active admin" : ""}`}
+                      onClick={() => {
+                        setAccountType("admin");
+                        setSelectedTitle("Imperial Grandmaster");
+                        setSelectedColor("#ef4444");
+                      }}
+                    >
+                      <div className="account-type-icon-badge admin">
+                        <Crown size={20} />
+                      </div>
+                      <div className="account-type-content">
+                        <div className="account-type-title">👑 ADMIN</div>
+                        <div className="account-type-sub">Admin Sanctuary (admins table)</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`account-type-card ${accountType === "player" ? "active player" : ""}`}
+                      onClick={() => {
+                        setAccountType("player");
+                        setSelectedTitle("Dragon Novice");
+                        setSelectedColor("#f59e0b");
+                      }}
+                    >
+                      <div className="account-type-icon-badge player">
+                        <Swords size={20} />
+                      </div>
+                      <div className="account-type-content">
+                        <div className="account-type-title">⚔️ PLAYER</div>
+                        <div className="account-type-sub">Warrior Portal (users table)</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <div className="form-label-row">
                     <label className="form-label">
-                      <User size={15} />
-                      <span>Warrior Nickname</span>
+                      {accountType === "admin" ? <Crown size={15} color="#ef4444" /> : <User size={15} />}
+                      <span>{accountType === "admin" ? "Imperial Admin Name" : "Warrior Nickname"}</span>
                     </label>
                     <button type="button" className="dice-random-btn" onClick={handleRandomName}>
                       <Dices size={14} />
@@ -989,7 +1085,7 @@ export default function Auth() {
                   <input
                     type="text"
                     className="dragon-input"
-                    placeholder="e.g. DragonSlayer_99"
+                    placeholder={accountType === "admin" ? "e.g. ImperialGrandmaster" : "e.g. DragonSlayer_99"}
                     value={signupName}
                     onChange={(e) => setSignupName(e.target.value)}
                     required
@@ -1000,12 +1096,12 @@ export default function Auth() {
                 <div className="form-group">
                   <label className="form-label">
                     <Mail size={15} />
-                    <span>Email Address (OTP will be sent)</span>
+                    <span>{accountType === "admin" ? "Admin Email Address (OTP will be sent)" : "Email Address (OTP will be sent)"}</span>
                   </label>
                   <input
                     type="email"
                     className="dragon-input"
-                    placeholder="your.email@realm.io"
+                    placeholder={accountType === "admin" ? "admin.official@realm.io" : "your.email@realm.io"}
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
                     required
@@ -1016,11 +1112,11 @@ export default function Auth() {
                 <div className="form-group">
                   <label className="form-label">
                     <Lock size={15} />
-                    <span>Create Battle Passcode</span>
+                    <span>{accountType === "admin" ? "Create Admin Passcode" : "Create Battle Passcode"}</span>
                   </label>
                   <div className="password-input-wrapper">
                     <input
-                      type={showSignupPassword? "text": "password"}
+                      type={showSignupPassword ? "text" : "password"}
                       className="dragon-input"
                       placeholder="Minimum 6 characters"
                       value={signupPassword}
@@ -1034,17 +1130,17 @@ export default function Auth() {
                       className="password-toggle-btn"
                       onClick={() => setShowSignupPassword(!showSignupPassword)}
                     >
-                      {showSignupPassword? <EyeOff size={16} />: <Eye size={16} />}
+                      {showSignupPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
                 <button type="submit" className="dragon-btn primary auth-submit-btn" disabled={loading}>
-                  {loading? (
-                    <span>Dispatching Royal Scroll...</span>
-                  ): (
+                  {loading ? (
+                    <span>Dispatching {accountType === "admin" ? "Imperial Scroll" : "Royal Scroll"}...</span>
+                  ) : (
                     <>
-                      <span>Send Verification Code</span>
+                      <span>{accountType === "admin" ? "Send Admin Verification Code" : "Send Verification Code"}</span>
                       <ArrowRight size={17} />
                     </>
                   )}
@@ -1133,7 +1229,11 @@ export default function Auth() {
                   <div className="persona-preview-info">
                     <span className="persona-name">{signupName}</span>
                     <span className="persona-title">{selectedTitle}</span>
-                    <span className="persona-gold-bonus"> +2,500 Gold Welcome Bonus</span>
+                    <span className="persona-gold-bonus">
+                      {accountType === "admin"
+                        ? "👑 Imperial Sanctuary Access & Administrative Dominion"
+                        : "💰 +2,500 Gold Welcome Bonus"}
+                    </span>
                   </div>
                 </div>
 
@@ -1148,7 +1248,7 @@ export default function Auth() {
                       <button
                         key={c.hex}
                         type="button"
-                        className={`color-swatch-item ${selectedColor === c.hex? "active": ""}`}
+                        className={`color-swatch-item ${selectedColor === c.hex ? "active" : ""}`}
                         style={{ backgroundColor: c.hex }}
                         onClick={() => setSelectedColor(c.hex)}
                         title={c.name}
@@ -1160,15 +1260,15 @@ export default function Auth() {
                 {/* Title Selector */}
                 <div className="form-group">
                   <label className="form-label">
-                    <Crown size={15} />
-                    <span>Warrior Battle Title</span>
+                    <Crown size={15} color={accountType === "admin" ? "#ef4444" : "#f59e0b"} />
+                    <span>{accountType === "admin" ? "Imperial Office Title" : "Warrior Battle Title"}</span>
                   </label>
                   <select
                     className="dragon-select"
                     value={selectedTitle}
                     onChange={(e) => setSelectedTitle(e.target.value)}
                   >
-                    {BATTLE_TITLES.map((t) => (
+                    {(accountType === "admin" ? ADMIN_TITLES : BATTLE_TITLES).map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
@@ -1182,11 +1282,11 @@ export default function Auth() {
                   onClick={handleFinalizeSignup}
                   disabled={loading}
                 >
-                  {loading? (
-                    <span>Entering Dynasty...</span>
-                  ): (
+                  {loading ? (
+                    <span>{accountType === "admin" ? "Forging Imperial Seal..." : "Entering Dynasty..."}</span>
+                  ) : (
                     <>
-                      <span>Complete Dynasty Enrollment</span>
+                      <span>{accountType === "admin" ? "Claim Imperial Authority & Enter Sanctuary" : "Complete Dynasty Enrollment"}</span>
                       <Sparkles size={17} />
                     </>
                   )}

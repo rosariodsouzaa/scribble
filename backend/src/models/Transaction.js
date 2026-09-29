@@ -100,6 +100,25 @@ class MemoryTransactionStore {
     return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((t) => this._format(t));
   }
 
+  async findByAccount({ userId, email, walletAddress } = {}) {
+    const cleanEmail = email ? String(email).toLowerCase().trim() : null;
+    const cleanWallet = walletAddress ? String(walletAddress).toLowerCase().trim() : null;
+    const cleanUserId = userId ? String(userId).trim() : null;
+
+    if (!cleanUserId && !cleanEmail && !cleanWallet) {
+      return [];
+    }
+
+    const list = Array.from(this.transactions.values()).filter((t) => {
+      const matchUser = cleanUserId && String(t.userId || "") === cleanUserId;
+      const matchEmail = cleanEmail && String(t.email || "").toLowerCase().trim() === cleanEmail;
+      const matchWallet = cleanWallet && String(t.walletAddress || "").toLowerCase().trim() === cleanWallet;
+      return Boolean(matchUser || matchEmail || matchWallet);
+    });
+
+    return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((t) => this._format(t));
+  }
+
   async find(filter = {}) {
     let list = Array.from(this.transactions.values());
 
@@ -239,36 +258,47 @@ export const TransactionRepository = {
     return memoryStore.findByEmail(clean);
   },
 
-  async findByUserOrEmail(userId, email) {
+  async findByAccount({ userId, email, walletAddress } = {}) {
+    const cleanEmail = email ? String(email).toLowerCase().trim() : null;
+    const cleanWallet = walletAddress ? String(walletAddress).toLowerCase().trim() : null;
+    const cleanUserId = userId ? String(userId).trim() : null;
+
+    if (!cleanUserId && !cleanEmail && !cleanWallet) {
+      return [];
+    }
+
     if (pgStatus.isConnected) {
       try {
-        let sql = `SELECT * FROM transactions WHERE 1=0`;
+        const conditions = [];
         const params = [];
         let idx = 1;
 
-        if (userId && email) {
-          sql = `SELECT * FROM transactions WHERE user_id = $${idx++} OR LOWER(email) = $${idx++} ORDER BY created_at DESC;`;
-          params.push(String(userId), String(email).toLowerCase().trim());
-        } else if (userId) {
-          sql = `SELECT * FROM transactions WHERE user_id = $${idx++} ORDER BY created_at DESC;`;
-          params.push(String(userId));
-        } else if (email) {
-          sql = `SELECT * FROM transactions WHERE LOWER(email) = $${idx++} ORDER BY created_at DESC;`;
-          params.push(String(email).toLowerCase().trim());
+        if (cleanUserId) {
+          conditions.push(`user_id = $${idx++}`);
+          params.push(cleanUserId);
+        }
+        if (cleanEmail) {
+          conditions.push(`LOWER(email) = $${idx++}`);
+          params.push(cleanEmail);
+        }
+        if (cleanWallet) {
+          conditions.push(`LOWER(wallet_address) = $${idx++}`);
+          params.push(cleanWallet);
         }
 
+        const sql = `SELECT * FROM transactions WHERE (${conditions.join(" OR ")}) ORDER BY created_at DESC;`;
         const res = await query(sql, params);
         return res.rows.map(formatSqlTransaction);
       } catch (err) {
-        console.warn("[TransactionRepo] Postgres findByUserOrEmail failed:", err.message);
+        console.warn("[TransactionRepo] Postgres findByAccount failed:", err.message);
       }
     }
 
-    const byUser = userId ? await memoryStore.findByUserId(userId) : [];
-    const byEmail = email ? await memoryStore.findByEmail(email) : [];
-    const combined = [...byUser, ...byEmail];
-    const unique = Array.from(new Map(combined.map((t) => [t.id, t])).values());
-    return unique.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    return memoryStore.findByAccount({ userId: cleanUserId, email: cleanEmail, walletAddress: cleanWallet });
+  },
+
+  async findByUserOrEmail(userId, email) {
+    return this.findByAccount({ userId, email });
   },
 
   async find(filter = {}) {

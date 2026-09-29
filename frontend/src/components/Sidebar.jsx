@@ -18,18 +18,20 @@ export default function Sidebar() {
   const { user, isAdmin, logout } = useAuthWallet();
   const navigate = useNavigate();
 
-  const navItems = [
-    { to: "/dashboard", icon: <LayoutDashboard size={19} />, label: "Dashboard" },
-    { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
-    { to: "/practice", icon: <Sparkles size={19} color="#fbbf24" />, label: "AI Practice Dojo", badge: "AI NEW" },
-    { to: "/profile", icon: <User size={19} />, label: "Warrior Hub", badge: user?.isAuthenticated ? "MY HUB" : null },
-    ...(isAdmin
-      ? [{ to: "/admin", icon: <Crown size={19} color="#ffd700" />, label: "Admin Panel", badge: "VIP" }]
-      : []),
-    { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
-    { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
-    { to: "/transactions", icon: <Receipt size={19} color="#34d399" />, label: "Transactions", badge: "LEDGER" },
-  ];
+  const navItems = isAdmin
+    ? [
+        { to: "/admin", icon: <Crown size={19} color="#ffd700" />, label: "Admin Panel", badge: "VIP" },
+        { to: "/transactions", icon: <Receipt size={19} color="#34d399" />, label: "Transactions", badge: "ALL" },
+      ]
+    : [
+        { to: "/dashboard", icon: <LayoutDashboard size={19} />, label: "Dashboard" },
+        { to: "/lobby", icon: <Swords size={19} />, label: "Play Arena", badge: "LIVE" },
+        { to: "/practice", icon: <Sparkles size={19} color="#fbbf24" />, label: "AI Practice Dojo", badge: "AI NEW" },
+        { to: "/profile", icon: <User size={19} />, label: "Warrior Hub", badge: user?.isAuthenticated ? "MY HUB" : null },
+        { to: "/store", icon: <ShoppingBag size={19} />, label: "Emporium", badge: "HOT" },
+        { to: "/wallet", icon: <WalletIcon size={19} />, label: "Dragon Vault", badge: "WEB3" },
+        { to: "/transactions", icon: <Receipt size={19} color="#34d399" />, label: "Transactions", badge: "LEDGER" },
+      ];
 
   const handleLogout = () => {
     logout();
@@ -55,22 +57,33 @@ export default function Sidebar() {
 
       {/* Season 4 Pass Card & Logout */}
       <div className="sidebar-bottom-cluster">
-        <div className="sidebar-season-card" onClick={() => navigate("/store")} style={{ cursor: "pointer" }}>
-          <div className="season-card-top">
-            <Sparkles size={14} className="sparkle-icon" />
-            <span>SEASON 4 LIVE</span>
+        {isAdmin ? (
+          <div className="sidebar-season-card admin-mode" onClick={() => navigate("/admin")} style={{ cursor: "pointer" }}>
+            <div className="season-card-top">
+              <Crown size={14} color="#ffd700" className="sparkle-icon" />
+              <span>IMPERIAL DOMINION</span>
+            </div>
+            <div className="season-card-title">Sovereign Control</div>
+            <span className="season-level-text">Active Oversight & Analytics</span>
           </div>
-          <div className="season-card-title">Dragon Pass</div>
-          <div className="season-progress-bar">
-            <div className="season-progress-fill" style={{ width: "68%" }} />
+        ) : (
+          <div className="sidebar-season-card" onClick={() => navigate("/store")} style={{ cursor: "pointer" }}>
+            <div className="season-card-top">
+              <Sparkles size={14} className="sparkle-icon" />
+              <span>SEASON 4 LIVE</span>
+            </div>
+            <div className="season-card-title">Dragon Pass</div>
+            <div className="season-progress-bar">
+              <div className="season-progress-fill" style={{ width: "68%" }} />
+            </div>
+            <span className="season-level-text">Tier 14 / 20 • Upgrade VIP</span>
           </div>
-          <span className="season-level-text">Tier 14 / 20 • Upgrade VIP</span>
-        </div>
+        )}
 
         {user.isAuthenticated ? (
           <button className="sidebar-logout-btn" onClick={handleLogout} title="Log Out">
             <LogOut size={16} />
-            <span>Log Out Warrior</span>
+            <span>{isAdmin ? "Log Out Admin" : "Log Out Warrior"}</span>
           </button>
         ) : (
           <button className="sidebar-login-prompt-btn" onClick={() => navigate("/login")}>

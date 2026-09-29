@@ -175,6 +175,51 @@ async function runTests() {
   assert(allowedPackets === DrawRelayHandler.MAX_PACKETS_PER_SEC, `Rate limiter strictly caps at ${DrawRelayHandler.MAX_PACKETS_PER_SEC} packets/sec (got ${allowedPackets})`);
 
   // -------------------------------------------------------------
+  // Test 7: Transaction Repository Account Isolation
+  // -------------------------------------------------------------
+  console.log("\n[7] TransactionRepository Account Isolation Tests:");
+  const { TransactionRepository } = await import("./src/models/Transaction.js");
+
+  // Create transactions for Alice and Bob
+  const txAlice = await TransactionRepository.create({
+    userId: "usr_alice",
+    email: "alice@example.com",
+    userName: "Alice Warrior",
+    itemName: "Dragon Shield",
+    amount: "0.01 ETH",
+    walletAddress: "0xALICE123",
+  });
+
+  const txBob = await TransactionRepository.create({
+    userId: "usr_bob",
+    email: "bob@example.com",
+    userName: "Bob Warrior",
+    itemName: "Inferno Brush",
+    amount: "0.02 ETH",
+    walletAddress: "0xBOB456",
+  });
+
+  // Query for Alice: should ONLY return Alice's transaction
+  const aliceTxs = await TransactionRepository.findByAccount({ userId: "usr_alice", email: "alice@example.com" });
+  assert(aliceTxs.length >= 1, "Alice retrieved her transactions");
+  assert(aliceTxs.every((t) => t.userId === "usr_alice" || t.email === "alice@example.com"), "Alice's results contain ONLY Alice's transactions");
+  assert(!aliceTxs.some((t) => t.userId === "usr_bob" || t.email === "bob@example.com"), "Bob's transactions are NOT visible to Alice");
+
+  // Query for Bob: should ONLY return Bob's transaction
+  const bobTxs = await TransactionRepository.findByAccount({ userId: "usr_bob", email: "bob@example.com" });
+  assert(bobTxs.length >= 1, "Bob retrieved his transactions");
+  assert(bobTxs.every((t) => t.userId === "usr_bob" || t.email === "bob@example.com"), "Bob's results contain ONLY Bob's transactions");
+  assert(!bobTxs.some((t) => t.userId === "usr_alice" || t.email === "alice@example.com"), "Alice's transactions are NOT visible to Bob");
+
+  // Query with empty account: should return empty list
+  const emptyTxs = await TransactionRepository.findByAccount({});
+  assert(emptyTxs.length === 0, "Empty account query returns 0 transactions (no data leakage)");
+
+  // Query by wallet address
+  const walletTxs = await TransactionRepository.findByAccount({ walletAddress: "0xALICE123" });
+  assert(walletTxs.length >= 1 && walletTxs[0].walletAddress === "0xALICE123", "Wallet address query returns matched account transaction");
+
+  // -------------------------------------------------------------
   // Cleanup & Summary
   // -------------------------------------------------------------
   room.destroy();

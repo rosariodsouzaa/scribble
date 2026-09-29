@@ -45,7 +45,7 @@ export default function App() {
                 <Route
                   path="/"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Dashboard />
                     </ProtectedRoute>
                   }
@@ -53,7 +53,7 @@ export default function App() {
                 <Route
                   path="/dashboard"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Dashboard />
                     </ProtectedRoute>
                   }
@@ -61,7 +61,7 @@ export default function App() {
                 <Route
                   path="/profile"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <UserProfile />
                     </ProtectedRoute>
                   }
@@ -79,7 +79,7 @@ export default function App() {
                 <Route
                   path="/wallet"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Wallet />
                     </ProtectedRoute>
                   }
@@ -95,7 +95,7 @@ export default function App() {
                 <Route
                   path="/store"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Store />
                     </ProtectedRoute>
                   }
@@ -103,7 +103,7 @@ export default function App() {
                 <Route
                   path="/lobby"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Lobby />
                     </ProtectedRoute>
                   }
@@ -111,7 +111,7 @@ export default function App() {
                 <Route
                   path="/practice"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Practice />
                     </ProtectedRoute>
                   }
@@ -119,7 +119,7 @@ export default function App() {
                 <Route
                   path="/room/:code"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute playerOnly={true}>
                       <Room />
                     </ProtectedRoute>
                   }

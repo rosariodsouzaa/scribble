@@ -80,6 +80,23 @@ export async function initPostgres() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS admins (
+        id VARCHAR(64) PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'admin',
+        is_verified BOOLEAN DEFAULT true,
+        avatar_color VARCHAR(30) DEFAULT '#ef4444',
+        bio VARCHAR(255) DEFAULT 'Imperial Sovereign of the Dragon Dynasty.',
+        title VARCHAR(60) DEFAULT 'Imperial Grandmaster',
+        last_login_at TIMESTAMP DEFAULT NOW(),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_admins_email ON admins(LOWER(email));
+
       CREATE TABLE IF NOT EXISTS otps (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) NOT NULL,
@@ -115,10 +132,13 @@ export async function initPostgres() {
       CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
       CREATE INDEX IF NOT EXISTS idx_transactions_email ON transactions(LOWER(email));
       CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at DESC);
+
+      -- Ensure users table is PLAYERS ONLY: remove legacy admin rows from users table
+      DELETE FROM users WHERE role = 'admin' OR email = 'admin@scribbleroyale.io';
     `);
 
     client.release();
-    console.log("[PostgreSQL]  Database schema verified (users, otps & transactions tables ready).");
+    console.log("[PostgreSQL]  Database schema verified (users, admins, otps & transactions tables ready).");
     return true;
   } catch (err) {
     isConnected = false;

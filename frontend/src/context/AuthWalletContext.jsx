@@ -217,8 +217,8 @@ export function AuthWalletProvider({ children }) {
   };
 
   // Login via Email & Password with JWT
-  const loginWithCredentials = async (email, password) => {
-    const res = await AuthService.login({ email, password });
+  const loginWithCredentials = async (email, password, accountType = "player") => {
+    const res = await AuthService.login({ email, password, accountType });
     if (res.user && res.token) {
       setToken(res.token);
       const userProfile = {
@@ -235,8 +235,8 @@ export function AuthWalletProvider({ children }) {
   };
 
   // Signup with OTP verification and JWT
-  const signupWithOtp = async ({ name, email, password, otp, avatarColor, title }) => {
-    const res = await AuthService.signup({ name, email, password, otp, avatarColor, title });
+  const signupWithOtp = async ({ name, email, password, otp, avatarColor, title, accountType = "player" }) => {
+    const res = await AuthService.signup({ name, email, password, otp, avatarColor, title, accountType });
     if (res.user && res.token) {
       setToken(res.token);
       const userProfile = {
@@ -303,6 +303,7 @@ export function AuthWalletProvider({ children }) {
       name: "Guest Warrior",
       email: "",
       role: "user",
+      accountType: "player",
       title: "Novice Warrior",
       level: 1,
       coins: 0,
@@ -318,7 +319,7 @@ export function AuthWalletProvider({ children }) {
     localStorage.removeItem("skribl:username");
   };
 
-  const isAdmin = Boolean(user && user.role === "admin");
+  const isAdmin = Boolean(user && (user.role === "admin" || user.accountType === "admin"));
 
   return (
     <AuthWalletContext.Provider

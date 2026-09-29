@@ -124,6 +124,11 @@ class MemoryUserStore {
     return list.map((u) => this._format(u));
   }
 
+  async deleteById(id) {
+    const deleted = this.users.delete(String(id));
+    return deleted;
+  }
+
   async count(filter = {}) {
     const matches = await this.find(filter);
     return matches.length;
@@ -308,6 +313,18 @@ export const UserRepository = {
       }
     }
     return memoryStore.find(filter);
+  },
+
+  async deleteById(id) {
+    if (pgStatus.isConnected) {
+      try {
+        const res = await query("DELETE FROM users WHERE id = $1 RETURNING *;", [String(id)]);
+        return res.rowCount > 0;
+      } catch (err) {
+        console.warn("[UserRepo] Postgres deleteById failed, using memory:", err.message);
+      }
+    }
+    return memoryStore.deleteById(id);
   },
 
   async count(filter = {}) {

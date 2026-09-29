@@ -91,7 +91,11 @@ export class OtpService {
           }
         } else {
           console.log(`[OtpService]  Email sent successfully via Resend to ${cleanEmail} (ID: ${data.id})`);
-          return { success: true, message: `Verification code sent to ${cleanEmail}` };
+          return {
+            success: true,
+            message: `Verification code sent to ${cleanEmail}`,
+            ...(config.env !== "production" ? { simulatedOtp: otp } : {}),
+          };
         }
       } catch (err) {
         console.warn(`[OtpService] Resend dispatch error: ${err.message}.`);

@@ -175,17 +175,19 @@ router.post("/record", async (req, res) => {
 
 /**
  * GET /api/payments/history
- * Fetches transaction history for a user by userId and/or email
+ * Fetches transaction history for a user by userId, email, and/or walletAddress.
+ * Scoped strictly to the requesting account.
  */
 router.get("/history", async (req, res) => {
   try {
-    const { userId, email, search, category } = req.query;
+    const { userId, email, walletAddress, search, category } = req.query;
 
     let transactions = [];
-    if (userId || email) {
-      transactions = await TransactionRepository.findByUserOrEmail(userId, email);
+    if (userId || email || walletAddress) {
+      transactions = await TransactionRepository.findByAccount({ userId, email, walletAddress });
     } else {
-      transactions = await TransactionRepository.find({ search, category });
+      // If no account identifier is provided, return empty array to prevent leaking other accounts' records
+      transactions = [];
     }
 
     // Apply in-memory search and category filter if specified
@@ -195,7 +197,8 @@ router.get("/history", async (req, res) => {
         (t) =>
           (t.itemName && t.itemName.toLowerCase().includes(q)) ||
           (t.id && t.id.toLowerCase().includes(q)) ||
-          (t.hash && t.hash.toLowerCase().includes(q))
+          (t.hash && t.hash.toLowerCase().includes(q)) ||
+          (t.txHash && t.txHash.toLowerCase().includes(q))
       );
     }
 

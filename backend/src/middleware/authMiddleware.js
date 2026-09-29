@@ -1,5 +1,6 @@
 import { TokenService } from "../services/auth/TokenService.js";
 import { UserRepository } from "../models/User.js";
+import { AdminRepository } from "../models/Admin.js";
 
 /**
  * Middleware to require valid JWT authentication
@@ -17,9 +18,17 @@ export async function requireAuth(req, res, next) {
     return res.status(401).json({ error: "Invalid or expired authentication session. Please log in again." });
   }
 
-  const user = await UserRepository.findById(decoded.id);
+  const isAdminAccount = decoded.accountType === "admin" || decoded.role === "admin";
+  let user = null;
+
+  if (isAdminAccount) {
+    user = await AdminRepository.findById(decoded.id);
+  } else {
+    user = await UserRepository.findById(decoded.id);
+  }
+
   if (!user) {
-    return res.status(401).json({ error: "User account not found." });
+    return res.status(401).json({ error: "Account not found." });
   }
 
   if (user.isBanned) {
@@ -37,7 +46,7 @@ export async function requireAuth(req, res, next) {
  * Middleware to require Admin role
  */
 export function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== "admin") {
+  if (!req.user || (req.user.role !== "admin" && req.user.accountType !== "admin")) {
     return res.status(403).json({
       error: "Access denied. Imperial Admin credentials required to access this sanctuary.",
     });
@@ -54,7 +63,10 @@ export async function optionalAuth(req, _res, next) {
     const token = authHeader.split(" ")[1];
     const decoded = TokenService.verifyToken(token);
     if (decoded && decoded.id) {
-      const user = await UserRepository.findById(decoded.id);
+      const isAdminAccount = decoded.accountType === "admin" || decoded.role === "admin";
+      const user = isAdminAccount
+        ? await AdminRepository.findById(decoded.id)
+        : await UserRepository.findById(decoded.id);
       if (user && !user.isBanned) {
         req.user = user;
       }
