@@ -12,6 +12,7 @@
     "dev:api": "npm run dev --workspace backend",
     "dev:web": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
+    "start": "node backend/src/index.js",
     "start:api": "npm run start --workspace backend",
     "test": "node test-suite.mjs"
   },

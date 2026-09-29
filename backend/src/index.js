@@ -1,9 +1,13 @@
 import "dotenv/config";
 import http from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import compression from "compression";
 import { Server } from "socket.io";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { config } from "./config.js";
 import { initPostgres, pgStatus, cleanupExpiredOtps } from "./db/postgres.js";
@@ -57,6 +61,20 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/rooms", roomsRouter);
 app.use("/api/payments", paymentsRouter);
+
+// Serve frontend build in production
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.resolve(__dirname, "../../frontend/dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, "index.html"), (err) => {
+      if (err) next();
+    });
+  });
+}
 
 const server = http.createServer(app);
 
