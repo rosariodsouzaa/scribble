@@ -46,9 +46,14 @@ export async function requireAuth(req, res, next) {
  * Middleware to require Admin role
  */
 export function requireAdmin(req, res, next) {
-  if (!req.user || (req.user.role !== "admin" && req.user.accountType !== "admin")) {
+  const isAllowedAdmin =
+    req.user &&
+    (req.user.role === "admin" || req.user.accountType === "admin") &&
+    req.user.email?.toLowerCase().trim() === "rohansalkar02@gmail.com";
+
+  if (!isAllowedAdmin) {
     return res.status(403).json({
-      error: "Access denied. Imperial Admin credentials required to access this sanctuary.",
+      error: "Access denied. Only the authorized Imperial Administrator (rohansalkar02@gmail.com) can access this sanctuary.",
     });
   }
   next();

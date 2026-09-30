@@ -385,9 +385,15 @@ export default function TransactionHistory({ title = "Dragon Treasury Transactio
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="highest">Amount (High to Low)</option>
+            <option value="newest" style={{ backgroundColor: "#1e130c", color: "#fef3c7" }}>
+              Newest First
+            </option>
+            <option value="oldest" style={{ backgroundColor: "#1e130c", color: "#fef3c7" }}>
+              Oldest First
+            </option>
+            <option value="highest" style={{ backgroundColor: "#1e130c", color: "#fef3c7" }}>
+              Amount (High to Low)
+            </option>
           </select>
         </div>
       </div>

@@ -41,13 +41,14 @@ router.post("/send-otp", async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const isAdmin = accountType === "admin";
+    const isAdmin = accountType === "admin" || cleanEmail === "rohansalkar02@gmail.com";
+
+    if (purpose === "signup" && (accountType === "admin" || cleanEmail === "rohansalkar02@gmail.com")) {
+      return res.status(403).json({ error: "Admin registration is disabled. The sovereign admin account is already established." });
+    }
 
     if (isAdmin) {
       const existing = await AdminRepository.findByEmail(cleanEmail);
-      if (purpose === "signup" && existing) {
-        return res.status(409).json({ error: "An Imperial Admin account already exists with this email address." });
-      }
       if (purpose === "reset_password" && !existing) {
         return res.status(404).json({ error: "No Imperial Admin account found with this email." });
       }
@@ -184,50 +185,9 @@ router.post("/signup", async (req, res) => {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const isAdmin = accountType === "admin";
-
-    if (isAdmin) {
-      // Admin signup inserts into `admins` ONLY
-      const existingAdmin = await AdminRepository.findByEmail(cleanEmail);
-      if (existingAdmin) {
-        return res.status(409).json({ error: "An Imperial Admin account already exists with this email." });
-      }
-
-      // Verify and consume OTP permanently
-      const verification = await OtpService.verifyOtp(cleanEmail, otp, "signup", true);
-      if (!verification.valid) {
-        return res.status(400).json({ error: verification.error || "Invalid or expired OTP." });
-      }
-
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(password, salt);
-
-      // Create admin account in `admins` table
-      const newAdmin = await AdminRepository.create({
-        name: cleanName.slice(0, 30),
-        email: cleanEmail,
-        passwordHash,
-        avatarColor: avatarColor || "#ef4444",
-        bio: "Imperial Sovereign of the Dragon Dynasty.",
-        title: title || "Imperial Grandmaster",
-      });
-
-      const token = TokenService.generateToken({
-        ...newAdmin,
-        role: "admin",
-        accountType: "admin",
-      });
-      const adminJson = newAdmin.toPublicJSON ? newAdmin.toPublicJSON() : newAdmin;
-
-      console.log(`[Auth] New Imperial Admin registered: ${newAdmin.name} (${cleanEmail})`);
-
-      return res.status(201).json({
-        success: true,
-        message: "Imperial Admin registered successfully!",
-        token,
-        user: { ...adminJson, role: "admin", accountType: "admin" },
-      });
+    // Admin creation is strictly prohibited; rohansalkar02@gmail.com is the sole pre-provisioned admin
+    if (accountType === "admin" || cleanEmail === "rohansalkar02@gmail.com") {
+      return res.status(403).json({ error: "Admin registration is prohibited. Only warrior accounts can be created." });
     }
 
     // Player signup inserts into `users` ONLY
@@ -291,17 +251,18 @@ router.post("/signup", async (req, res) => {
  */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password, accountType = "player" } = req.body;
+    const { email, password } = req.body;
 
     if (!isValidEmail(email) || !password) {
       return res.status(400).json({ error: "Please enter your email and password." });
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const isAdmin = accountType === "admin";
+    const ALLOWED_ADMIN_EMAIL = "rohansalkar02@gmail.com";
+    const isAdmin = cleanEmail === ALLOWED_ADMIN_EMAIL;
 
     if (isAdmin) {
-      // Search ONLY admins table
+      // Search ONLY admins table for the single authorized admin
       const admin = await AdminRepository.findByEmail(cleanEmail);
       if (!admin) {
         return res.status(401).json({ error: "Invalid admin email or password." });
@@ -322,7 +283,7 @@ router.post("/login", async (req, res) => {
       });
       const adminJson = admin.toPublicJSON ? admin.toPublicJSON() : admin;
 
-      console.log(`[Auth] Imperial Admin logged in: ${admin.name} [Role: admin]`);
+      console.log(`[Auth] Imperial Admin logged in: ${admin.name} (${cleanEmail}) [Role: admin]`);
 
       return res.json({
         success: true,
@@ -359,7 +320,7 @@ router.post("/login", async (req, res) => {
     });
     const playerJson = player.toPublicJSON ? player.toPublicJSON() : player;
 
-    console.log(`[Auth] Warrior logged in: ${player.name} [Role: ${player.role}]`);
+    console.log(`[Auth] Warrior logged in: ${player.name} (${cleanEmail}) [Role: ${player.role}]`);
 
     return res.json({
       success: true,

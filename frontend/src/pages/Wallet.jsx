@@ -4,17 +4,16 @@ import {
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
-  Wallet as WalletIcon,
   Sparkles,
-  ExternalLink,
   Coins,
+  Receipt,
+  Copy,
+  Check,
   RefreshCw,
   ShoppingBag,
-  Receipt,
 } from "lucide-react";
 import { useAuthWallet } from "../context/AuthWalletContext.jsx";
 import Button from "../components/Button.jsx";
-import { formatAddress } from "../components/WalletStatus.jsx";
 
 const MetaMaskFoxSvg = () => (
   <svg className="metamask-svg" viewBox="0 0 318.6 318.6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -49,8 +48,9 @@ const MetaMaskFoxSvg = () => (
 
 export default function Wallet() {
   const navigate = useNavigate();
-  const { wallet, connectMetaMask, connectDemoWallet, disconnectWallet } = useAuthWallet();
+  const { wallet, connectMetaMask, connectDemoWallet, disconnectWallet, refreshWalletBalance } = useAuthWallet();
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleConnect = async () => {
     setBusy(true);
@@ -62,6 +62,13 @@ export default function Wallet() {
     connectDemoWallet();
   };
 
+  const handleCopyAddress = () => {
+    if (!wallet.address) return;
+    navigator.clipboard.writeText(wallet.address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="wallet-page-container">
       <div className="wallet-card-master dragon-card">
@@ -71,96 +78,134 @@ export default function Wallet() {
         <div className="imperial-bracket bl" />
         <div className="imperial-bracket br" />
 
+        {/* Card Header */}
         <div className="wallet-card-header">
           <div className="wallet-tag-badge">
-            <Sparkles size={14} />
+            <Sparkles size={13} className="badge-sparkle-icon" />
             <span>DRAGON VAULT & WEB3</span>
           </div>
-          <h1>Connect Your Web3 Wallet</h1>
-          <p>
+
+          <h1 className="wallet-card-title">
+            Connect Your Web3 Wallet
+          </h1>
+
+          <p className="wallet-card-desc">
             Connect your MetaMask wallet to authenticate your warrior identity, unlock tournament prize pools, and receive Dragon Gold rewards.
           </p>
         </div>
 
-        {/* MetaMask Provider Option */}
+        {/* Primary MetaMask Provider Card */}
         <div className={`wallet-provider-box ${wallet.isConnected ? "is-connected" : ""}`}>
           <div className="provider-left">
             <div className="metamask-icon-wrap">
               <MetaMaskFoxSvg />
             </div>
-            <div>
-              <h3>MetaMask</h3>
+            <div className="provider-text-wrap">
+              <div className="provider-title-row">
+                <h3>MetaMask</h3>
+                <span className="provider-sub-badge">WEB3 PROVIDER</span>
+              </div>
               <p>Connect using browser extension or mobile wallet</p>
             </div>
           </div>
 
-          <div>
+          <div className="provider-action-wrap">
             {wallet.isConnected ? (
               <div className="connected-badge">
-                <CheckCircle2 size={16} color="#10b981" />
+                <CheckCircle2 size={16} />
                 <span>Connected</span>
               </div>
             ) : (
-              <Button variant="primary" size="md" onClick={handleConnect} disabled={busy}>
+              <Button
+                variant="primary"
+                size="md"
+                className="metamask-connect-btn"
+                onClick={handleConnect}
+                disabled={busy}
+              >
                 {busy ? "Connecting…" : "Connect"}
               </Button>
             )}
           </div>
         </div>
 
-        {/* Connected Wallet Details */}
+        {/* Connected Wallet State */}
         {wallet.isConnected ? (
           <div className="wallet-details-box">
             <div className="details-row">
               <span className="details-label">Wallet Address:</span>
-              <span className="details-value address">{wallet.address}</span>
+              <div className="details-addr-group">
+                <span className="details-value address">{wallet.address}</span>
+                <button
+                  type="button"
+                  className="addr-copy-mini-btn"
+                  onClick={handleCopyAddress}
+                  title="Copy full address"
+                >
+                  {copied ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                  <span>{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
             </div>
+
             <div className="details-row">
               <span className="details-label">Network:</span>
-              <span className="details-value">{wallet.network}</span>
+              <span className="details-value network">
+                <span className="network-dot" />
+                {wallet.network || "Ethereum Sepolia"}
+              </span>
             </div>
+
             <div className="details-row">
               <span className="details-label">Live Token Balance:</span>
-              <span className="details-value gold">{wallet.balance}</span>
+              <span className="details-value gold">{wallet.balance || "0.0000 ETH"}</span>
             </div>
 
             <div className="wallet-actions-row">
               <Button variant="secondary" size="sm" onClick={disconnectWallet}>
-                Disconnect Wallet
+                Disconnect
               </Button>
-              <Button variant="emerald" size="md" onClick={() => navigate("/lobby")}>
-                Proceed to Arena <ArrowRight size={16} />
+              <Button variant="secondary" size="sm" onClick={refreshWalletBalance}>
+                <RefreshCw size={13} />
+                <span>Refresh</span>
               </Button>
-              <Button variant="flame" size="md" onClick={() => navigate("/store")}>
+              <Button variant="emerald" size="md" onClick={() => navigate("/store")}>
                 <ShoppingBag size={15} />
                 <span>Dragon Emporium</span>
+                <ArrowRight size={15} />
               </Button>
             </div>
           </div>
         ) : (
+          /* Disconnected State: Demo Wallet Option */
           <div className="demo-wallet-box">
             <div className="demo-wallet-desc">
-              <strong>Don't have MetaMask installed?</strong>
+              <strong>Don&apos;t have MetaMask installed?</strong>
               <p>Use the Instant Dragon Vault test mode to experience Web3 rewards right away.</p>
             </div>
-            <Button variant="secondary" size="md" onClick={handleDemo}>
-               Instant Demo Wallet
+            <Button variant="secondary" size="md" className="demo-wallet-action-btn" onClick={handleDemo}>
+              Instant Demo Wallet
             </Button>
           </div>
         )}
 
-        {/* Benefits Grid */}
+        {/* Benefits Grid (Two Cards) */}
         <div className="wallet-features-grid">
           <div className="feature-item">
-            <ShieldCheck size={22} className="feat-icon" />
-            <div>
+            <div className="feat-icon-box">
+              <ShieldCheck size={20} className="feat-icon" />
+            </div>
+            <div className="feat-content">
               <h4>Verifiable Identity</h4>
               <p>Your wins and battle achievements are permanently linked to your wallet.</p>
             </div>
           </div>
+
           <div className="feature-item">
-            <Coins size={22} className="feat-icon" />
-            <div>
+            <div className="feat-icon-box">
+              <Coins size={20} className="feat-icon" />
+            </div>
+            <div className="feat-content">
               <h4>Battle Rewards</h4>
               <p>Win multiplayer matches and challenges to earn Dragon Gold tokens.</p>
             </div>
@@ -168,17 +213,23 @@ export default function Wallet() {
         </div>
 
         {/* Dedicated Transaction Ledger Shortcut Card */}
-        <div className="wallet-ledger-shortcut-box" style={{ marginTop: "20px", paddingTop: "18px", borderTop: "1px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.4)", display: "grid", placeItems: "center", color: "#34d399" }}>
+        <div className="wallet-ledger-shortcut-box">
+          <div className="ledger-box-left">
+            <div className="ledger-receipt-icon-wrap">
               <Receipt size={18} />
             </div>
-            <div>
-              <strong style={{ color: "#ffffff", fontSize: "14px", display: "block" }}>Transaction History & Invoices</strong>
-              <span style={{ color: "#a3a3a3", fontSize: "12px" }}>Inspect all past Web3 token orders & official receipts</span>
+            <div className="ledger-receipt-text">
+              <strong>Transaction History & Invoices</strong>
+              <span>Inspect all past Web3 token orders & official receipts</span>
             </div>
           </div>
-          <Button variant="emerald" size="sm" onClick={() => navigate("/transactions")}>
+
+          <Button
+            variant="emerald"
+            size="sm"
+            className="ledger-open-action-btn"
+            onClick={() => navigate("/transactions")}
+          >
             <span>Open Transaction Ledger</span>
             <ArrowRight size={14} />
           </Button>

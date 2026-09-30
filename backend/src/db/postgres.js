@@ -135,6 +135,8 @@ export async function initPostgres() {
 
       -- Ensure users table is PLAYERS ONLY: remove legacy admin rows from users table
       DELETE FROM users WHERE role = 'admin' OR email = 'admin@scribbleroyale.io';
+      -- Ensure only designated admin exists: remove legacy demo admin
+      DELETE FROM admins WHERE email = 'admin@scribbleroyale.io';
     `);
 
     client.release();

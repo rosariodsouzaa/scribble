@@ -319,7 +319,12 @@ export function AuthWalletProvider({ children }) {
     localStorage.removeItem("skribl:username");
   };
 
-  const isAdmin = Boolean(user && (user.role === "admin" || user.accountType === "admin"));
+  const isAdmin = Boolean(
+    user &&
+      (user.role === "admin" ||
+        user.accountType === "admin" ||
+        user.email?.toLowerCase().trim() === "rohansalkar02@gmail.com")
+  );
 
   return (
     <AuthWalletContext.Provider
