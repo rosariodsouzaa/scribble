@@ -1,6 +1,7 @@
 import "dotenv/config";
 import http from "node:http";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
@@ -62,9 +63,9 @@ app.use("/api/admin", adminRouter);
 app.use("/api/rooms", roomsRouter);
 app.use("/api/payments", paymentsRouter);
 
-// Serve frontend build in production
-if (process.env.NODE_ENV === "production") {
-  const distPath = path.resolve(__dirname, "../../frontend/dist");
+// Serve frontend build if dist folder exists or in production
+const distPath = path.resolve(__dirname, "../../frontend/dist");
+if (fs.existsSync(distPath) || process.env.NODE_ENV === "production") {
   app.use(express.static(distPath));
   app.get("*", (req, res, next) => {
     if (req.path.startsWith("/api") || req.path.startsWith("/socket.io")) {
